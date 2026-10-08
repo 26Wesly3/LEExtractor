@@ -1,0 +1,55 @@
+{
+  "name": "leextractor-benchmark-v0.9.1-sample",
+  "frozen_on": "2026-10-08",
+  "label_guide": "benchmarks/LABEL_GUIDE.md",
+  "environment": {
+    "python": "3.13.1",
+    "note": "SYNTHETIC SAMPLE. Labels are machine-generated fixtures used only to exercise the harness and its metrics; they are NOT expert relevance judgements and no metric computed from this file may be reported as a result."
+  },
+  "cases": [
+    {
+      "case_id": "sample-plant-phenotyping",
+      "domain": "plant phenotyping / crops",
+      "query": "deep learning for plant phenotyping using UAV imagery",
+      "search_date": "2026-10-08",
+      "providers": ["semantic_scholar", "openalex", "arxiv"],
+      "notes": "SYNTHETIC fixture for harness testing only.",
+      "labelled_by": "SYNTHETIC-SAMPLE-NOT-A-HUMAN",
+      "papers": [
+        {"paper_id": "10.0000/sample.core.1", "label": "core_relevant", "title": "Sample: UAV image based phenotyping with CNNs", "year": 2021, "evidence_notes": "fixture"},
+        {"paper_id": "10.0000/sample.core.2", "label": "core_relevant", "title": "Sample: field phenotyping from aerial imagery", "year": 2020, "evidence_notes": "fixture"},
+        {"paper_id": "10.0000/sample.periph.1", "label": "peripheral_relevant", "title": "Sample: sensor platforms for field trials", "year": 2019, "evidence_notes": "fixture"},
+        {"paper_id": "10.0000/sample.review.1", "label": "key_review", "title": "Sample: review of image based plant phenotyping", "year": 2022, "evidence_notes": "fixture"},
+        {"paper_id": "10.0000/sample.irrel.1", "label": "known_irrelevant", "title": "Sample: marine carbon export", "year": 2018, "evidence_notes": "fixture"},
+        {"paper_id": "10.0000/sample.irrel.2", "label": "known_irrelevant", "title": "Sample: galaxy morphology classification", "year": 2017, "evidence_notes": "fixture"},
+        {"paper_id": "10.0000/sample.seed.1", "label": "seed", "title": "Sample: seed paper used to start snowballing", "year": 2021, "evidence_notes": "fixture"}
+      ]
+    },
+    {
+      "case_id": "sample-molecular-biology",
+      "domain": "molecular biology",
+      "query": "CRISPR interference screens for gene function",
+      "search_date": "2026-10-08",
+      "providers": ["semantic_scholar", "openalex"],
+      "notes": "SYNTHETIC fixture for harness testing only.",
+      "labelled_by": "SYNTHETIC-SAMPLE-NOT-A-HUMAN",
+      "papers": [
+        {"paper_id": "10.0000/sample.crispr.1", "label": "core_relevant", "title": "Sample: CRISPRi screen design", "year": 2021, "evidence_notes": "fixture"},
+        {"paper_id": "10.0000/sample.crispr.2", "label": "peripheral_relevant", "title": "Sample: pooled guide RNA libraries", "year": 2019, "evidence_notes": "fixture"},
+        {"paper_id": "10.0000/sample.crispr.3", "label": "known_irrelevant", "title": "Sample: unrelated enzymology", "year": 2016, "evidence_notes": "fixture"}
+      ]
+    },
+    {
+      "case_id": "sample-unlabelled-placeholder",
+      "domain": "physical AI / robotics",
+      "query": "sim-to-real transfer for robotic manipulation",
+      "search_date": "2026-10-08",
+      "providers": ["semantic_scholar", "openalex", "arxiv"],
+      "notes": "Placeholder showing what an unlabelled case looks like: the harness must refuse to score it rather than invent numbers.",
+      "labelled_by": "",
+      "papers": [
+        {"paper_id": "10.0000/sample.robotics.seed", "label": "seed", "title": "Sample: domain randomisation seed", "year": 2020, "evidence_notes": "fixture"}
+      ]
+    }
+  ]
+}

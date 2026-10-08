@@ -1,0 +1,7 @@
+# Runtime dependencies are declared in pyproject.toml; the verified pins for the
+# validated environment are in constraints.txt.
+#
+#   pip install -e .                      # ranges from pyproject.toml
+#   pip install -e . -c constraints.txt   # the exact versions this release was tested with
+-e .
+-c constraints.txt

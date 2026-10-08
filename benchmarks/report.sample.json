@@ -1,0 +1,214 @@
+{
+  "systems": [
+    "lexical",
+    "lexical_bc",
+    "lexical_cc",
+    "lexical_snowball",
+    "lexical_snowball_bc_cc"
+  ],
+  "shared_candidate_set": true,
+  "label_coverage": {
+    "cases_total": 3,
+    "cases_labelled": 2,
+    "domains": [
+      "molecular biology",
+      "physical AI / robotics",
+      "plant phenotyping / crops"
+    ],
+    "label_gaps": [
+      "sample-unlabelled-placeholder: no human labeller recorded"
+    ]
+  },
+  "per_case": {
+    "sample-plant-phenotyping": {
+      "lexical": {
+        "recall_denominator": 4,
+        "relevant_labelled": 4,
+        "top_k_unlabelled": 0,
+        "mrr": 1.0,
+        "requests": 3,
+        "latency_seconds": 1.25,
+        "rate_limited": 0,
+        "failures": 0,
+        "candidates": 6,
+        "recall@20": 1.0,
+        "precision@20": 0.2,
+        "ndcg@20": 0.8863,
+        "recall@50": 1.0,
+        "precision@50": 0.08,
+        "ndcg@50": 0.8863
+      },
+      "lexical_snowball": {
+        "recall_denominator": 4,
+        "relevant_labelled": 4,
+        "top_k_unlabelled": 0,
+        "mrr": 1.0,
+        "requests": 9,
+        "latency_seconds": 4.5,
+        "rate_limited": 1,
+        "failures": 0,
+        "candidates": 5,
+        "recall@20": 1.0,
+        "precision@20": 0.2,
+        "ndcg@20": 0.9806,
+        "recall@50": 1.0,
+        "precision@50": 0.08,
+        "ndcg@50": 0.9806
+      },
+      "lexical_bc": {
+        "recall_denominator": 4,
+        "relevant_labelled": 4,
+        "top_k_unlabelled": 0,
+        "mrr": 0.5,
+        "requests": 4,
+        "latency_seconds": 2.0,
+        "rate_limited": 0,
+        "failures": 0,
+        "candidates": 3,
+        "recall@20": 0.25,
+        "precision@20": 0.05,
+        "ndcg@20": 0.2802,
+        "recall@50": 0.25,
+        "precision@50": 0.02,
+        "ndcg@50": 0.2802
+      },
+      "lexical_cc": {
+        "recall_denominator": 4,
+        "relevant_labelled": 4,
+        "top_k_unlabelled": 0,
+        "mrr": 1.0,
+        "requests": 4,
+        "latency_seconds": 2.1,
+        "rate_limited": 0,
+        "failures": 1,
+        "candidates": 4,
+        "recall@20": 0.75,
+        "precision@20": 0.15,
+        "ndcg@20": 0.7095,
+        "recall@50": 0.75,
+        "precision@50": 0.06,
+        "ndcg@50": 0.7095
+      },
+      "lexical_snowball_bc_cc": {
+        "recall_denominator": 4,
+        "relevant_labelled": 4,
+        "top_k_unlabelled": 0,
+        "mrr": 1.0,
+        "requests": 12,
+        "latency_seconds": 6.0,
+        "rate_limited": 1,
+        "failures": 1,
+        "candidates": 4,
+        "recall@20": 1.0,
+        "precision@20": 0.2,
+        "ndcg@20": 0.9157,
+        "recall@50": 1.0,
+        "precision@50": 0.08,
+        "ndcg@50": 0.9157
+      }
+    },
+    "sample-molecular-biology": {
+      "lexical": {
+        "recall_denominator": 2,
+        "relevant_labelled": 2,
+        "top_k_unlabelled": 0,
+        "mrr": 1.0,
+        "requests": 3,
+        "latency_seconds": 0.9,
+        "rate_limited": 0,
+        "failures": 0,
+        "candidates": 2,
+        "recall@20": 0.5,
+        "precision@20": 0.05,
+        "ndcg@20": 0.7039,
+        "recall@50": 0.5,
+        "precision@50": 0.02,
+        "ndcg@50": 0.7039
+      },
+      "lexical_snowball_bc_cc": {
+        "recall_denominator": 2,
+        "relevant_labelled": 2,
+        "top_k_unlabelled": 0,
+        "mrr": 1.0,
+        "requests": 8,
+        "latency_seconds": 3.2,
+        "rate_limited": 0,
+        "failures": 0,
+        "candidates": 3,
+        "recall@20": 1.0,
+        "precision@20": 0.1,
+        "ndcg@20": 0.9134,
+        "recall@50": 1.0,
+        "precision@50": 0.04,
+        "ndcg@50": 0.9134
+      }
+    },
+    "sample-unlabelled-placeholder": {
+      "lexical": {
+        "skipped": "case 'sample-unlabelled-placeholder' has no expert labels; scoring it would produce invented numbers"
+      }
+    }
+  },
+  "aggregate": {
+    "candidates": 3.8571,
+    "failures": 0.2857,
+    "latency_seconds": 2.85,
+    "mrr": 0.9286,
+    "ndcg@20": 0.7699,
+    "ndcg@50": 0.7699,
+    "precision@20": 0.1357,
+    "precision@50": 0.0543,
+    "rate_limited": 0.2857,
+    "recall@20": 0.7857,
+    "recall@50": 0.7857,
+    "requests": 6.1429,
+    "top_k_unlabelled": 0.0,
+    "cases_scored": 2,
+    "cases_skipped": 1
+  },
+  "dataset": {
+    "name": "leextractor-benchmark-v0.9.1-sample",
+    "frozen_on": "2026-10-08",
+    "cases_total": 3,
+    "cases_labelled": 2,
+    "domains": [
+      "molecular biology",
+      "physical AI / robotics",
+      "plant phenotyping / crops"
+    ],
+    "label_gaps": [
+      "sample-unlabelled-placeholder: no human labeller recorded"
+    ]
+  },
+  "environment": {
+    "python": "3.13.1",
+    "note": "SYNTHETIC SAMPLE. Labels are machine-generated fixtures used only to exercise the harness and its metrics; they are NOT expert relevance judgements and no metric computed from this file may be reported as a result.",
+    "platform": "Windows-11-10.0.22631-SP0",
+    "generated_at": "2026-10-08T11:08:45+0800",
+    "dependencies": {
+      "streamlit": "1.54.0",
+      "scikit-learn": "1.8.0",
+      "networkx": "3.6.1",
+      "requests": "2.32.5",
+      "fastmcp": "3.2.4"
+    }
+  },
+  "baselines_expected": [
+    "lexical",
+    "lexical_snowball",
+    "lexical_bc",
+    "lexical_cc",
+    "lexical_snowball_bc_cc"
+  ],
+  "semantic_baselines_expected": [
+    "semantic_only",
+    "lexical_semantic_rrf",
+    "lexical_semantic_citation",
+    "lexical_semantic_weighted_sum"
+  ],
+  "warnings": [
+    "Unlabelled cases were skipped, not scored: sample-unlabelled-placeholder: no human labeller recorded. Metrics below cover only the labelled cases.",
+    "This dataset contains SYNTHETIC labels. No metric here is a result; it only demonstrates that the harness computes what it claims to.",
+    "Scored from a recorded snapshot, so every system ranked the same candidate pool: this measures ranking quality only and CANNOT show that a paper outside the pool was recovered."
+  ]
+}
