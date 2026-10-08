@@ -1,0 +1,95 @@
+{
+  "cases": {
+    "sample-plant-phenotyping": {
+      "lexical": {
+        "ranked_ids": [
+          "10.0000/sample.core.1",
+          "10.0000/sample.irrel.1",
+          "10.0000/sample.core.2",
+          "10.0000/sample.irrel.2",
+          "10.0000/sample.periph.1",
+          "10.0000/sample.review.1"
+        ],
+        "requests": 3,
+        "latency_seconds": 1.25,
+        "rate_limited": 0,
+        "failures": 0
+      },
+      "lexical_snowball": {
+        "ranked_ids": [
+          "10.0000/sample.core.2",
+          "10.0000/sample.review.1",
+          "10.0000/sample.core.1",
+          "10.0000/sample.periph.1",
+          "10.0000/sample.irrel.1"
+        ],
+        "requests": 9,
+        "latency_seconds": 4.5,
+        "rate_limited": 1,
+        "failures": 0
+      },
+      "lexical_bc": {
+        "ranked_ids": [
+          "10.0000/sample.irrel.1",
+          "10.0000/sample.core.1",
+          "10.0000/sample.irrel.2"
+        ],
+        "requests": 4,
+        "latency_seconds": 2.0,
+        "rate_limited": 0,
+        "failures": 0
+      },
+      "lexical_cc": {
+        "ranked_ids": [
+          "10.0000/sample.periph.1",
+          "10.0000/sample.irrel.1",
+          "10.0000/sample.core.1",
+          "10.0000/sample.core.2"
+        ],
+        "requests": 4,
+        "latency_seconds": 2.1,
+        "rate_limited": 0,
+        "failures": 1
+      },
+      "lexical_snowball_bc_cc": {
+        "ranked_ids": [
+          "10.0000/sample.review.1",
+          "10.0000/sample.core.1",
+          "10.0000/sample.periph.1",
+          "10.0000/sample.core.2"
+        ],
+        "requests": 12,
+        "latency_seconds": 6.0,
+        "rate_limited": 1,
+        "failures": 1
+      }
+    },
+    "sample-molecular-biology": {
+      "lexical": {
+        "ranked_ids": ["10.0000/sample.crispr.1", "10.0000/sample.crispr.3"],
+        "requests": 3,
+        "latency_seconds": 0.9,
+        "rate_limited": 0,
+        "failures": 0
+      },
+      "lexical_snowball_bc_cc": {
+        "ranked_ids": [
+          "10.0000/sample.crispr.2",
+          "10.0000/sample.crispr.1",
+          "10.0000/sample.crispr.3"
+        ],
+        "requests": 8,
+        "latency_seconds": 3.2,
+        "rate_limited": 0,
+        "failures": 0
+      }
+    },
+    "sample-unlabelled-placeholder": {
+      "lexical": {
+        "ranked_ids": ["10.0000/sample.robotics.seed"],
+        "requests": 1,
+        "latency_seconds": 0.2
+      }
+    }
+  }
+}
