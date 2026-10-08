@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Database / cache
+*.db
+*.db-journal
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Sessions (autosaved review progress)
+.sessions/
+
+# Local secrets (.env holds S2_API_KEY etc.)
+.env
+
+# Test / build artifacts
+.pytest_cache/
+# Repo-local test temp tree (see tests/conftest.py). The system temp dir is not
+# usable on every Windows setup, so fixtures keep their scratch files here.
+tests/_workspace_tmp/
+# Scratch dirs that pytest/pip created directly under the root before conftest
+# took over temp handling. Empty and harmless, but they must never be packaged
+# or committed.
+.pytest_bt/
+.pytest_le/
+.pytest_tmp/
+.piptmp/
+_pip_tmp/
+pytest-cache-files-*/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Downloads (PDFs)
+Downloads/
+
+.reference/
+.venv/
+artifacts/
+deliverables/
+.ruff_cache/

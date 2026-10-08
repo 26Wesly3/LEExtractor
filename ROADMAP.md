@@ -1,0 +1,56 @@
+# ROADMAP — 未完成与后续项
+
+本文件**只写尚未完成或属于后续版本的内容**。已完成能力见 [README.md](README.md)，已完成改动见 [CHANGES.md](CHANGES.md)。
+
+状态用词：`planned`（已计划）/ `in_progress`（进行中）/ `deferred`（本版不做）/ `pending_external`（等外部条件：人工标签、凭据、机构权限）/ `verified`（本版已实现并有回归测试；仅用于纠正过期的「未完成」条目）。
+
+## 1. 正确性收口（v0.9.1 内仍未完成的部分）
+
+| 项 | 状态 | 说明 |
+| --- | --- | --- |
+| 【v0.9.1 已修复，此处保留供核对】PRISMA「未获取」与「全文排除」分开 | `verified` | 已修复：`mark_full_text_retrieved(..., False)` 不再自动置 `REJECT`，记录保持 `PENDING`，只计入 `reports_not_retrieved`；`retrieval_attempted` 区分「尝试过但失败」与「尚未尝试」；人工仍可显式排除并计入 `full_text_excluded`。回归测试：`tests/test_acceptance_abc.py::test_acceptance_g6_*`（3 项）。 |
+| 跨浏览器会话隔离 | `in_progress` | v0.9.1 已提供 `project_id`、按项目独立保存路径与写入冲突检测（`litsearch/session_schema.py`），但尚未在 UI/持久化全链路接线；多人部署还需要认证与用户级隔离。 |
+| 重复来源的计数一致性 | `planned` | 目前计数单位是 record/report；同一研究的多个报告尚未合并到研究层面。 |
+
+## 2. Benchmark 与评测
+
+**v0.9.1 已交付的部分（`verified`）**：评测数据格式、标签语义与分母规则（`benchmarks/LABEL_GUIDE.md`）、指标与对照报告实现（`litsearch/benchmark.py`）、运行脚本（`scripts/run_benchmark.py`）、合成样例与录制快照（`benchmarks/dataset.sample.json`、`systems.json`），27 项测试覆盖指标算术与「未标注必须跳过而非臆造」。**这些都不是评测结果。**
+
+**仍未完成的部分：**
+
+- `pending_external`：3–5 个真实案例的冻结数据集 `benchmarks/dataset.json`（植物表型/作物、分子生物学、Physical AI/Robotics、医学或生命科学、跨学科方向各一）。标签含 core relevant / peripheral relevant / known irrelevant / key reviews / seed papers，并记录 query、检索日期、provider、canonical ID 与证据备注。**人工标签必须由人提供**，代码不生成假金标准。
+- `planned`：五组检索基线对照的实际运行与数字：Lexical、Lexical+Snowball、Lexical+BC、Lexical+CC、Lexical+Snowball+BC+CC（BC 与 CC 必须分开，不能合并成一组）。框架已支持这五组命名，但需要先有 `dataset.json`。
+- `planned`：Graph Benchmark 的实际报告：已知核心论文的 PageRank 名次、社群与人工主题一致性、路径逐边可回溯性、BC/CC 对词法漏检的补回、按关系消融、节点/边/运行时间。
+- `planned`：标定集与最终评估集分离，冻结日期、去重规则、论文 ID 与配置，报告失败案例。
+
+## 3. Semantic Retrieval 与融合（基线冻结后）
+
+- `planned`：可替换的 sentence-transformers adapter（query 与 title+abstract 分别编码、cosine、缓存），manifest 记录模型标识、修订版本、预处理、配置与降级原因；向量存储与 `Paper` schema 解耦。
+- `planned`：RRF 与 weighted sum 两种融合对照；实验覆盖 Lexical、Semantic only、Lexical+Semantic RRF、Lexical+Semantic+Citation。
+- `planned`：候选检索与重排分别定义；若只实现后者，能力名称必须写明是 **semantic reranking**（重排无法找回候选集之外的论文）。
+- `deferred`：模型体积与离线可用性未定；模型不可用时本地工作流必须完整可用。
+
+## 4. 智能分析增强
+
+- `planned`：Research Intent v2 —— UI 编辑的检索式真正进入 provider 请求并写入 manifest；中文分词/概念拆分、中英文术语映射；可选 LLM 结构化解析（仅用于概念拆解与改写，论文与统计仍绑定真实数据）。
+- `planned`：Landscape v2 —— semantic clusters / citation communities / OpenAlex topics / 时间演变并列或融合，注明各层来源；Topic Card 含 Representative Papers、Why It Matters、Growth Trend、Current Density、Existing Reviews、Under-covered Combinations、Evidence Links；缺项显示「数据不足」。Leiden 对比、BERTopic 可行性、自动选 k 均为实验项。
+- `planned`：Novelty / Coverage v2 —— Object×Method×Task×Context×Outcome 五维覆盖矩阵、同义词归一化、5/5·4/5·3/5 组件重叠、semantic gap detection；结论一律用 Potential Gap，并评测误报与遗漏。
+- `planned`：大语料稀疏计算、分块相似度与 top-k（当前多处为稠密 N×N）。
+
+## 5. 集成与基础设施（比赛后）
+
+- `deferred`：FullTextResolver 完整顺序（本地/Zotero → OA resolver → arXiv → 机构 provider → 出版社落地页 → 人工兜底）、机构认证（用户授权流程，不保存校园密码）。
+- `deferred`：Zotero —— RIS/BibTeX/Evidence Pack → Pyzotero 本地读取 POC → 元数据同步 → collection 同步 → PDF 附件 → 双向同步（先解决冲突、删除与重复实体语义）。
+- `deferred`：Scientific PDF —— GROBID → 章节切分 → 参考文献解析 → 图表元数据 → 证据抽取 → 全文证据图/RAG；逐条绑定文件哈希、页码/区段与抽取来源。
+- `deferred`：REST/OpenAPI、CLI、MCP SDK 标准化；REST/CLI/MCP 复用同一业务层与数据合同。
+- `deferred`：Screening 从 PRISMA 状态容器中抽为通用组件，PRISMA/PRISMA-ScR 作为可选报告适配层（含数据迁移与计数单位说明）。
+- `deferred`：多用户隔离、Institution framework、多机构适配、Agent orchestration、大型向量服务；规模与场景决定是否实现。
+- `deferred`：自动综述写作、移动端、复杂代理系统（不阻塞比赛冻结）。
+
+## 6. 待补齐的验证材料
+
+- `pending_external`：真实专家标签（Benchmark 人工金标准）。
+- `pending_external`：API 凭据（`S2_API_KEY`、`OPENALEX_API_KEY`、`LEEXTRACTOR_UNPAYWALL_EMAIL`）下的真实 provider smoke —— 未配置时不得声称已跑通。
+- `pending_external`：Python 3.10 边界的安装测试（本机只有 3.13.1，见 VALIDATION：未执行）。
+- `planned`：CI 真实运行记录（`.github/workflows/ci.yml` 已声明 3.10/3.13 × ubuntu/windows；本机无法触发）。
+- `planned`：PPT / 展示材料核对（未收到材料时只能记录「待检查」）。
