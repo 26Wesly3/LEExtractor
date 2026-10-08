@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Database / cache
+*.db
+*.db-journal
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Sessions (autosaved review progress)
+.sessions/
+
+# Local secrets (.env holds S2_API_KEY etc.)
+.env
+
+# Test / build artifacts
+.pytest_cache/
+.ruff_cache/
+
+# Packaged release artifacts (dist bundles, do not track binaries)
+LEExtractor_Demo_v0.3_Source.zip
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Downloads (PDFs)
+Downloads/
