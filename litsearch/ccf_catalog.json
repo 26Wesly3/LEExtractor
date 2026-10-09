@@ -1,0 +1,5456 @@
+{
+  "edition": "2026 seventh edition",
+  "source": "https://www.ccf.org.cn/Academic_Evaluation/By_category/",
+  "pdf_mirror": "https://lib.zjgsu.edu.cn/_upload/article/files/f5/b1/f4f7201343b88c0f10564f590ebe/854a3c68-36a6-4698-a359-5184d5e30a0c.pdf",
+  "pdf_sha256": "271b630b576bf8a4f802e767f5694caded93680e22b3a19bef7902591c45c1d3",
+  "entries": [
+    {
+      "acronym": "TOCS",
+      "full_name": "ACMTransactionsonComputerSystems",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tocs/",
+      "page": 2
+    },
+    {
+      "acronym": "TOS",
+      "full_name": "ACMTransactionsonStorage",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tos/",
+      "page": 2
+    },
+    {
+      "acronym": "TCAD",
+      "full_name": "IEEETransactionsonComputer-AidedDesignofIntegrated CircuitsandSystems",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tcad/",
+      "page": 2
+    },
+    {
+      "acronym": "TC",
+      "full_name": "IEEETransactionsonComputers",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tc/index.html",
+      "page": 2
+    },
+    {
+      "acronym": "TPDS",
+      "full_name": "IEEETransactionsonParallelandDistributedSystems",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tpds/",
+      "page": 2
+    },
+    {
+      "acronym": "TACO",
+      "full_name": "ACMTransactionsonArchitectureandCodeOptimization",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/taco/",
+      "page": 2
+    },
+    {
+      "acronym": "TAAS",
+      "full_name": "ACMTransactionsonAutonomousandAdaptiveSystems",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/taas/",
+      "page": 3
+    },
+    {
+      "acronym": "TODAES",
+      "full_name": "ACMTransactionsonDesignAutomationofElectronicSystems",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/todaes/",
+      "page": 3
+    },
+    {
+      "acronym": "TECS",
+      "full_name": "ACMTransactionsonEmbeddedComputingSystems",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tecs/",
+      "page": 3
+    },
+    {
+      "acronym": "TRETS",
+      "full_name": "ACMTransactionsonReconfigurableTechnologyandSystems",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/trets/",
+      "page": 3
+    },
+    {
+      "acronym": "TVLSI",
+      "full_name": "IEEETransactionsonVeryLargeScaleIntegration(VLSI) Systems",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tvlsi/",
+      "page": 3
+    },
+    {
+      "acronym": "JPDC",
+      "full_name": "JournalofParallelandDistributedComputing",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/jpdc/",
+      "page": 3
+    },
+    {
+      "acronym": "JSA",
+      "full_name": "JournalofSystemsArchitecture:EmbeddedSoftwareDesign",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/jsa/",
+      "page": 3
+    },
+    {
+      "acronym": "",
+      "full_name": "ParallelComputing",
+      "rank": "B",
+      "kind": "journal",
+      "url": "https://dblp.org/db/journals/pc/index.html",
+      "page": 3
+    },
+    {
+      "acronym": "",
+      "full_name": "PerformanceEvaluation:AnInternationalJournal",
+      "rank": "B",
+      "kind": "journal",
+      "url": "https://dblp.org/db/journals/pe/index.html",
+      "page": 3
+    },
+    {
+      "acronym": "TCC",
+      "full_name": "IEEETransactionsonCloudComputing",
+      "rank": "B",
+      "kind": "journal",
+      "url": "https://dblp.uni-trier.de/db/journals/tcc/",
+      "page": 3
+    },
+    {
+      "acronym": "JETC",
+      "full_name": "ACMJournalonEmergingTechnologiesinComputingSystems",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/jetc/",
+      "page": 4
+    },
+    {
+      "acronym": "",
+      "full_name": "ConcurrencyandComputation:PracticeandExperience",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/concurrency/",
+      "page": 4
+    },
+    {
+      "acronym": "DC",
+      "full_name": "DistributedComputing",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/dc/",
+      "page": 4
+    },
+    {
+      "acronym": "FGCS",
+      "full_name": "FutureGenerationComputerSystems",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/fgcs",
+      "page": 4
+    },
+    {
+      "acronym": "Integration",
+      "full_name": "Integration,theVLSIJournal",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/integration",
+      "page": 4
+    },
+    {
+      "acronym": "JETTA",
+      "full_name": "JournalofElectronicTesting-TheoryandApplications",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://dblp.org/db/journals/et/index.html",
+      "page": 4
+    },
+    {
+      "acronym": "JGC",
+      "full_name": "JournalofGridcomputing",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://dblp.uni-trier.de/db/journals/grid/",
+      "page": 4
+    },
+    {
+      "acronym": "RTS",
+      "full_name": "Real-TimeSystems",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/rts/",
+      "page": 4
+    },
+    {
+      "acronym": "TJSC",
+      "full_name": "TheJournalofSupercomputing",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tjs/",
+      "page": 4
+    },
+    {
+      "acronym": "TCASI",
+      "full_name": "IEEETransactionsonCircuitsandSystemsI:RegularPapers",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://dblp.org/db/journals/tcasI/index.html",
+      "page": 4
+    },
+    {
+      "acronym": "CCF- THPC",
+      "full_name": "CCFTransactionsonHighPerformanceComputing",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://dblp.org/db/journals/ccfthpc/index.html",
+      "page": 4
+    },
+    {
+      "acronym": "TSUSC",
+      "full_name": "IEEETransactionsonSustainableComputing",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://dblp.org/db/journals/tsusc/index.html",
+      "page": 4
+    },
+    {
+      "acronym": "PPoPP",
+      "full_name": "ACMSIGPLANSymposiumonPrinciples&Practiceof ParallelProgramming",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ppopp/",
+      "page": 5
+    },
+    {
+      "acronym": "FAST",
+      "full_name": "USENIXConferenceonFileandStorageTechnologies",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/fast/",
+      "page": 5
+    },
+    {
+      "acronym": "DAC",
+      "full_name": "DesignAutomationConference",
+      "rank": "A",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/dac/",
+      "page": 5
+    },
+    {
+      "acronym": "HPCA",
+      "full_name": "IEEEInternationalSymposiumonHighPerformance ComputerArchitecture",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/hpca/",
+      "page": 5
+    },
+    {
+      "acronym": "MICRO",
+      "full_name": "IEEE/ACMInternationalSymposiumonMicroarchitecture",
+      "rank": "A",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/micro/index.html",
+      "page": 5
+    },
+    {
+      "acronym": "SC",
+      "full_name": "InternationalConferenceforHighPerformance Computing,Networking,Storage,andAnalysis",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/sc/",
+      "page": 5
+    },
+    {
+      "acronym": "ASPLOS",
+      "full_name": "InternationalConferenceonArchitecturalSupportfor ProgrammingLanguagesandOperatingSystems",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/asplos/",
+      "page": 5
+    },
+    {
+      "acronym": "ISCA",
+      "full_name": "InternationalSymposiumonComputerArchitecture",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/isca/",
+      "page": 5
+    },
+    {
+      "acronym": "ACMSIGOPSATC",
+      "full_name": "ACMSIGOPSAnnualTechnicalConference",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/usenix/index.html",
+      "page": 5
+    },
+    {
+      "acronym": "EuroSys",
+      "full_name": "EuropeanConferenceonComputerSystems",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/eurosys/",
+      "page": 5
+    },
+    {
+      "acronym": "HPDC",
+      "full_name": "TheInternationalACMSymposiumonHigh-Performance ParallelandDistributedComputing",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/hpdc/",
+      "page": 5
+    },
+    {
+      "acronym": "SoCC",
+      "full_name": "ACMSymposiumonCloudComputing",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/cloud/",
+      "page": 6
+    },
+    {
+      "acronym": "SPAA",
+      "full_name": "ACMSymposiumonParallelisminAlgorithmsand Architectures",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/spaa/",
+      "page": 6
+    },
+    {
+      "acronym": "PODC",
+      "full_name": "ACMSymposiumonPrinciplesofDistributedComputing",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/podc/",
+      "page": 6
+    },
+    {
+      "acronym": "FPGA",
+      "full_name": "ACM/SIGDAInternationalSymposiumonField-Programmable GateArrays",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/fpga/",
+      "page": 6
+    },
+    {
+      "acronym": "CGO",
+      "full_name": "TheInternationalSymposiumonCodeGenerationand Optimization",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/cgo/",
+      "page": 6
+    },
+    {
+      "acronym": "DATE",
+      "full_name": "Design,Automation&TestinEurope",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/date/",
+      "page": 6
+    },
+    {
+      "acronym": "HOT CHIPS",
+      "full_name": "HotChips:ASymposiumonHighPerformanceChips",
+      "rank": "B",
+      "kind": "conference",
+      "url": "https://dblp.org/db/conf/hotchips/index.html",
+      "page": 6
+    },
+    {
+      "acronym": "CLUSTER",
+      "full_name": "IEEEInternationalConferenceonClusterComputing",
+      "rank": "B",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/cluster/",
+      "page": 6
+    },
+    {
+      "acronym": "ICCD",
+      "full_name": "InternationalConferenceonComputerDesign",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/iccd/",
+      "page": 6
+    },
+    {
+      "acronym": "ICCAD",
+      "full_name": "InternationalConferenceonComputer-AidedDesign",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/iccad/",
+      "page": 6
+    },
+    {
+      "acronym": "ICDCS",
+      "full_name": "IEEEInternationalConferenceonDistributedComputing Systems",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/icdcs/",
+      "page": 6
+    },
+    {
+      "acronym": "CODES+ ISSS",
+      "full_name": "InternationalConferenceonHardware/SoftwareCo-designand SystemSynthesis",
+      "rank": "B",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/codesisss/index.html",
+      "page": 6
+    },
+    {
+      "acronym": "HiPEAC",
+      "full_name": "InternationalConferenceonHighPerformanceandEmbedded ArchitecturesandCompilers",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/hipeac/",
+      "page": 6
+    },
+    {
+      "acronym": "SIG- METRICS",
+      "full_name": "InternationalConferenceonMeasurementandModelingof ComputerSystems",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/sigmetrics/",
+      "page": 7
+    },
+    {
+      "acronym": "PACT",
+      "full_name": "InternationalConferenceonParallelArchitecturesand CompilationTechniques",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/IEEEpact/",
+      "page": 7
+    },
+    {
+      "acronym": "ICPP",
+      "full_name": "InternationalConferenceonParallelProcessing",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/icpp/",
+      "page": 7
+    },
+    {
+      "acronym": "ICS",
+      "full_name": "InternationalConferenceonSupercomputing",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ics/",
+      "page": 7
+    },
+    {
+      "acronym": "VEE",
+      "full_name": "InternationalConferenceonVirtualExecutionEnvironments",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/vee/",
+      "page": 7
+    },
+    {
+      "acronym": "IPDPS",
+      "full_name": "IEEEInternationalParallel&DistributedProcessing Symposium",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ipps/",
+      "page": 7
+    },
+    {
+      "acronym": "Performance",
+      "full_name": "InternationalSymposiumonComputerPerformance,Modeling, MeasurementsandEvaluation",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/performance/",
+      "page": 7
+    },
+    {
+      "acronym": "ITC",
+      "full_name": "InternationalTestConference",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/itc/",
+      "page": 7
+    },
+    {
+      "acronym": "LISA",
+      "full_name": "LargeInstallationSystemAdministrationConference",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/lisa/",
+      "page": 7
+    },
+    {
+      "acronym": "MSST",
+      "full_name": "MassStorageSystemsandTechnologies",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/mss/",
+      "page": 7
+    },
+    {
+      "acronym": "RTAS",
+      "full_name": "IEEEReal-TimeandEmbeddedTechnologyandApplications Symposium",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/rtas/",
+      "page": 7
+    },
+    {
+      "acronym": "Euro-Par",
+      "full_name": "EuropeanConferenceonParallelandDistributedComputing Springer",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/europar/",
+      "page": 7
+    },
+    {
+      "acronym": "ISCAS",
+      "full_name": "IEEEInternationalSymposiumonCircuitsandSystems",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/iscas/",
+      "page": 7
+    },
+    {
+      "acronym": "CF",
+      "full_name": "ACMInternationalConferenceonComputingFrontiers",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/cf",
+      "page": 8
+    },
+    {
+      "acronym": "SYSTOR",
+      "full_name": "ACMInternationalSystemsandStorageConference",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/systor/index.html",
+      "page": 8
+    },
+    {
+      "acronym": "NOCS",
+      "full_name": "ACM/IEEEInternationalSymposiumonNetworks-on-Chip",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/nocs",
+      "page": 8
+    },
+    {
+      "acronym": "ASAP",
+      "full_name": "IEEEInternationalConferenceonApplication-SpecificSystems, Architectures,andProcessors",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/asap",
+      "page": 8
+    },
+    {
+      "acronym": "ASP-DAC",
+      "full_name": "AsiaandSouthPacificDesignAutomationConference",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/aspdac",
+      "page": 8
+    },
+    {
+      "acronym": "ETS",
+      "full_name": "IEEEEuropeanTestSymposium",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ets/",
+      "page": 8
+    },
+    {
+      "acronym": "FPL",
+      "full_name": "InternationalConferenceonField-ProgrammableLogicand Applications",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/fpl/",
+      "page": 8
+    },
+    {
+      "acronym": "FCCM",
+      "full_name": "IEEESymposiumonField-ProgrammableCustomComputing Machines",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/fccm/",
+      "page": 8
+    },
+    {
+      "acronym": "GLSVLSI",
+      "full_name": "GreatLakesSymposiumonVLSI",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/glvlsi/",
+      "page": 8
+    },
+    {
+      "acronym": "ATS",
+      "full_name": "IEEEAsianTestSymposium",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ats/",
+      "page": 8
+    },
+    {
+      "acronym": "HPCC",
+      "full_name": "IEEEInternationalConferenceonHighPerformanceComputing andCommunications",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/hpcc/",
+      "page": 8
+    },
+    {
+      "acronym": "HiPC",
+      "full_name": "IEEEInternationalConferenceonHighPerformance Computing,DataandAnalytics",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/hipc/index.html",
+      "page": 8
+    },
+    {
+      "acronym": "MASCOTS",
+      "full_name": "InternationalSymposiumonModeling,Analysis,andSimulation ofComputerandTelecommunicationSystems",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/mascots/",
+      "page": 8
+    },
+    {
+      "acronym": "ISPA",
+      "full_name": "IEEEInternationalSymposiumonParallelandDistributed ProcessingwithApplications",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ispa/",
+      "page": 9
+    },
+    {
+      "acronym": "CCGRID",
+      "full_name": "IEEE/ACMInternationalSymposiumonCluster,Cloudand GridComputing",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ccgrid/",
+      "page": 9
+    },
+    {
+      "acronym": "NPC",
+      "full_name": "IFIPInternationalConferenceonNetworkandParallel Computing",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/npc/",
+      "page": 9
+    },
+    {
+      "acronym": "ICA3PP",
+      "full_name": "InternationalConferenceonAlgorithmsandArchitecturesfor ParallelProcessing",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ica3pp/",
+      "page": 9
+    },
+    {
+      "acronym": "CASES",
+      "full_name": "InternationalConferenceonCompilers,Architectures,and SynthesisforEmbeddedSystems",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/cases/index.html",
+      "page": 9
+    },
+    {
+      "acronym": "FPT",
+      "full_name": "InternationalConferenceonField-ProgrammableTechnology",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/fpt/",
+      "page": 9
+    },
+    {
+      "acronym": "ICPADS",
+      "full_name": "InternationalConferenceonParallelandDistributedSystems",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/icpads/",
+      "page": 9
+    },
+    {
+      "acronym": "ISLPED",
+      "full_name": "InternationalSymposiumonLowPowerElectronicsandDesign",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/islped/",
+      "page": 9
+    },
+    {
+      "acronym": "ISPD",
+      "full_name": "InternationalSymposiumonPhysicalDesign",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ispd/",
+      "page": 9
+    },
+    {
+      "acronym": "HOTI",
+      "full_name": "IEEESymposiumonHigh-PerformanceInterconnects",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/hoti/",
+      "page": 9
+    },
+    {
+      "acronym": "VTS",
+      "full_name": "IEEEVLSITestSymposium",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/vts/",
+      "page": 9
+    },
+    {
+      "acronym": "ITC-Asia",
+      "full_name": "InternationalTestConferenceinAsia",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/itc-asia/",
+      "page": 9
+    },
+    {
+      "acronym": "SEC",
+      "full_name": "ACM/IEEESymposiumonEdgeComputing",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/ieeesec/index.html",
+      "page": 9
+    },
+    {
+      "acronym": "NAS",
+      "full_name": "InternationalConferenceonNetworking,Architectureand Storages",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/nas/index.html",
+      "page": 9
+    },
+    {
+      "acronym": "HotStorage",
+      "full_name": "HotStorage",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/hotstorage/index.html",
+      "page": 9
+    },
+    {
+      "acronym": "APPT",
+      "full_name": "InternationalSymposiumonAdvancedParallelProcessing Technology",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/appt/index.html",
+      "page": 9
+    },
+    {
+      "acronym": "JCC",
+      "full_name": "InternationalConferenceonJointCloudComputing",
+      "rank": "C",
+      "kind": "conference",
+      "url": "",
+      "page": 9
+    },
+    {
+      "acronym": "JSAC",
+      "full_name": "IEEEJournalonSelectedAreasinCommunications",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/jsac/",
+      "page": 10
+    },
+    {
+      "acronym": "TMC",
+      "full_name": "IEEETransactionsonMobileComputing",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tmc/",
+      "page": 10
+    },
+    {
+      "acronym": "TON",
+      "full_name": "IEEETransactionsonNetworking （原IEEE/ACMTransactionsonNetworking）",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ton/",
+      "page": 10
+    },
+    {
+      "acronym": "TOIT",
+      "full_name": "ACMTransactionsonInternetTechnology",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/toit/",
+      "page": 11
+    },
+    {
+      "acronym": "TOMM",
+      "full_name": "ACMTransactionsonMultimediaComputing,Communications andApplications",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tomccap/",
+      "page": 11
+    },
+    {
+      "acronym": "TOSN",
+      "full_name": "ACMTransactionsonSensorNetworks",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tosn/",
+      "page": 11
+    },
+    {
+      "acronym": "CN",
+      "full_name": "ComputerNetworks",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/cn/",
+      "page": 11
+    },
+    {
+      "acronym": "TCOM",
+      "full_name": "IEEETransactionsonCommunications",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tcom/",
+      "page": 11
+    },
+    {
+      "acronym": "TWC",
+      "full_name": "IEEETransactionsonWirelessCommunications",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/twc/",
+      "page": 11
+    },
+    {
+      "acronym": "",
+      "full_name": "AdHocNetworks",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/adhoc/",
+      "page": 12
+    },
+    {
+      "acronym": "CC",
+      "full_name": "ComputerCommunications",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/comcom/",
+      "page": 12
+    },
+    {
+      "acronym": "TNSM",
+      "full_name": "IEEETransactionsonNetworkandServiceManagement",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tnsm/",
+      "page": 12
+    },
+    {
+      "acronym": "",
+      "full_name": "IETCommunications",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/iet-com/",
+      "page": 12
+    },
+    {
+      "acronym": "JNCA",
+      "full_name": "JournalofNetworkandComputerApplications",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/jnca/",
+      "page": 12
+    },
+    {
+      "acronym": "MONET",
+      "full_name": "MobileNetworksandApplications",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/monet/",
+      "page": 12
+    },
+    {
+      "acronym": "",
+      "full_name": "Networks",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/networks/",
+      "page": 12
+    },
+    {
+      "acronym": "PPNA",
+      "full_name": "Peer-to-PeerNetworkingandApplications",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ppna/",
+      "page": 12
+    },
+    {
+      "acronym": "WCMC",
+      "full_name": "WirelessCommunicationsandMobileComputing",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/wicomm/",
+      "page": 12
+    },
+    {
+      "acronym": "",
+      "full_name": "WirelessNetworks",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/winet/",
+      "page": 12
+    },
+    {
+      "acronym": "IOT",
+      "full_name": "IEEEInternetofThingsJournal",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://dblp.org/db/journals/iotj/index.html",
+      "page": 12
+    },
+    {
+      "acronym": "TIOT",
+      "full_name": "ACMTransactionsonInternetofThings",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://dblp.uni-trier.de/db/journals/tiot/index.html",
+      "page": 12
+    },
+    {
+      "acronym": "SIGCOMM",
+      "full_name": "ACMInternationalConferenceonApplications,Technologies, Architectures,andProtocolsforComputerCommunication",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/sigcomm/index.html",
+      "page": 13
+    },
+    {
+      "acronym": "MobiCom",
+      "full_name": "ACMInternationalConferenceonMobileComputingand Networking",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/mobicom/",
+      "page": 13
+    },
+    {
+      "acronym": "INFOCOM",
+      "full_name": "IEEEInternationalConferenceonComputerCommunications",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/infocom/",
+      "page": 13
+    },
+    {
+      "acronym": "NSDI",
+      "full_name": "SymposiumonNetworkSystemDesignandImplementation",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/nsdi/",
+      "page": 13
+    },
+    {
+      "acronym": "SenSys",
+      "full_name": "ACMConferenceonEmbeddedNetworkedSensorSystems",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/sensys/",
+      "page": 14
+    },
+    {
+      "acronym": "CoNEXT",
+      "full_name": "ACMInternationalConferenceonEmergingNetworking ExperimentsandTechnologies",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/conext/",
+      "page": 14
+    },
+    {
+      "acronym": "SECON",
+      "full_name": "IEEEInternationalConferenceonSensing,Communication,and Networking",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/secon/",
+      "page": 14
+    },
+    {
+      "acronym": "IPSN",
+      "full_name": "InternationalConferenceonInformationProcessinginSensor Networks",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ipsn/",
+      "page": 14
+    },
+    {
+      "acronym": "MobiSys",
+      "full_name": "ACMInternationalConferenceonMobileSystems, Applications, andServices",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/mobisys/",
+      "page": 14
+    },
+    {
+      "acronym": "ICNP",
+      "full_name": "IEEEInternationalConferenceonNetworkProtocols",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/icnp/",
+      "page": 14
+    },
+    {
+      "acronym": "MobiHoc",
+      "full_name": "InternationalSymposiumonTheory,AlgorithmicFoundations, andProtocolDesignforMobileNetworksandMobile Computing",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/mobihoc/",
+      "page": 14
+    },
+    {
+      "acronym": "NOSSDAV",
+      "full_name": "InternationalWorkshoponNetworkandOperatingSystem SupportforDigitalAudioandVideo",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/nossdav/",
+      "page": 14
+    },
+    {
+      "acronym": "IWQoS",
+      "full_name": "IEEE/ACMInternationalWorkshoponQualityofService",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/iwqos/",
+      "page": 14
+    },
+    {
+      "acronym": "IMC",
+      "full_name": "ACMInternetMeasurementConference",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/imc/",
+      "page": 14
+    },
+    {
+      "acronym": "ANCS",
+      "full_name": "ACM/IEEESymposiumonArchitecturesforNetworkingand CommunicationSystems",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ancs/",
+      "page": 15
+    },
+    {
+      "acronym": "APNOMS",
+      "full_name": "Asia-PacificNetworkOperationsandManagement Symposium",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/apnoms/",
+      "page": 15
+    },
+    {
+      "acronym": "FORTE",
+      "full_name": "InternationalConferenceonFormalTechniquesfor Distributed Objects,Components,andSystems",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/forte/",
+      "page": 15
+    },
+    {
+      "acronym": "LCN",
+      "full_name": "IEEEConferenceonLocalComputerNetworks",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/lcn/",
+      "page": 15
+    },
+    {
+      "acronym": "GLOBECOM",
+      "full_name": "IEEEGlobalCommunicationsConference",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/globecom/",
+      "page": 15
+    },
+    {
+      "acronym": "ICC",
+      "full_name": "IEEEInternationalConferenceonCommunications",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/icc/",
+      "page": 15
+    },
+    {
+      "acronym": "ICCCN",
+      "full_name": "IEEEInternationalConferenceonComputerCommunications andNetworks",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/icccn/",
+      "page": 15
+    },
+    {
+      "acronym": "MASS",
+      "full_name": "IEEEInternationalConferenceonMobileAdhocandSensor Systems",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/mass/index.html",
+      "page": 15
+    },
+    {
+      "acronym": "P2P",
+      "full_name": "IEEEInternationalConferenceonPeer-to-PeerComputing",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/p2p/",
+      "page": 15
+    },
+    {
+      "acronym": "IPCCC",
+      "full_name": "IEEEInternationalPerformanceComputingand CommunicationsConference",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ipccc/",
+      "page": 15
+    },
+    {
+      "acronym": "WoWMoM",
+      "full_name": "IEEEInternationalSymposiumonaWorldofWireless, MobileandMultimediaNetworks",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/wowmom/",
+      "page": 15
+    },
+    {
+      "acronym": "ISCC",
+      "full_name": "IEEESymposiumonComputersandCommunications",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/iscc/",
+      "page": 15
+    },
+    {
+      "acronym": "WCNC",
+      "full_name": "IEEEWirelessCommunicationsandNetworkingConference",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/wcnc/",
+      "page": 15
+    },
+    {
+      "acronym": "Networking",
+      "full_name": "IFIPInternationalConferencesonNetworking",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/networking/index.html",
+      "page": 16
+    },
+    {
+      "acronym": "IM",
+      "full_name": "IFIP/IEEEInternationalSymposiumonIntegratedNetwork Management",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/im/index.html",
+      "page": 16
+    },
+    {
+      "acronym": "MSN",
+      "full_name": "InternationalConferenceonMobility,Sensingand Networking",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/msn/",
+      "page": 16
+    },
+    {
+      "acronym": "MSWiM",
+      "full_name": "InternationalConferenceonModeling,Analysisand SimulationofWirelessandMobileSystems",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/mswim/",
+      "page": 16
+    },
+    {
+      "acronym": "WASA",
+      "full_name": "TheInternationalConferenceonWirelessArtificialIntelligent ComputingSystemsandApplications",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/wasa/",
+      "page": 16
+    },
+    {
+      "acronym": "HotNets",
+      "full_name": "ACMTheWorkshoponHotTopicsinNetworks",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/hotnets/",
+      "page": 16
+    },
+    {
+      "acronym": "APNet",
+      "full_name": "Asia-PacificWorkshoponNetworking",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.org/db/conf/apnet/index.html",
+      "page": 16
+    },
+    {
+      "acronym": "TDSC",
+      "full_name": "IEEETransactionsonDependableandSecureComputing",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tdsc/",
+      "page": 17
+    },
+    {
+      "acronym": "TIFS",
+      "full_name": "IEEETransactionsonInformationForensicsandSecurity",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tifs/",
+      "page": 17
+    },
+    {
+      "acronym": "",
+      "full_name": "JournalofCryptology",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/joc/",
+      "page": 17
+    },
+    {
+      "acronym": "TOPS",
+      "full_name": "ACMTransactionsonPrivacyandSecurity",
+      "rank": "B",
+      "kind": "journal",
+      "url": "https://dblp.org/db/journals/tissec/index.html",
+      "page": 18
+    },
+    {
+      "acronym": "",
+      "full_name": "Computers&Security",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/compsec/",
+      "page": 18
+    },
+    {
+      "acronym": "",
+      "full_name": "Designs,CodesandCryptography",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/dcc/",
+      "page": 18
+    },
+    {
+      "acronym": "JCS",
+      "full_name": "JournalofComputerSecurity",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/jcs/",
+      "page": 18
+    },
+    {
+      "acronym": "Cybersecurity",
+      "full_name": "Cybersecurity",
+      "rank": "B",
+      "kind": "journal",
+      "url": "https://dblp.uni- trier.de/db/journals/cybersec/index.html",
+      "page": 18
+    },
+    {
+      "acronym": "CLSR",
+      "full_name": "ComputerLaw&SecurityReview",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://dblp.org/db/journals/clsr/index.html",
+      "page": 19
+    },
+    {
+      "acronym": "",
+      "full_name": "EURASIPJournalonInformationSecurity",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ejisec/",
+      "page": 19
+    },
+    {
+      "acronym": "",
+      "full_name": "IETInformationSecurity",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/iet-ifs/",
+      "page": 19
+    },
+    {
+      "acronym": "IMCS",
+      "full_name": "InformationandComputerSecurity",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/imcs/",
+      "page": 19
+    },
+    {
+      "acronym": "IJICS",
+      "full_name": "InternationalJournalofInformationandComputerSecurity",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ijics/",
+      "page": 19
+    },
+    {
+      "acronym": "IJISP",
+      "full_name": "InternationalJournalofInformationSecurityandPrivacy",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ijisp/",
+      "page": 19
+    },
+    {
+      "acronym": "JISA",
+      "full_name": "JournalofInformationSecurityandApplications",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://dblp.uni-trier.de/db/journals/istr/",
+      "page": 19
+    },
+    {
+      "acronym": "SCN",
+      "full_name": "SecurityandCommunicationNetworks",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/scn/",
+      "page": 19
+    },
+    {
+      "acronym": "HCC",
+      "full_name": "High-ConfidenceComputing",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://www.journals.elsevier.com/high-confidence- computing",
+      "page": 19
+    },
+    {
+      "acronym": "CCS",
+      "full_name": "ACMConferenceonComputerandCommunications Security",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ccs/",
+      "page": 20
+    },
+    {
+      "acronym": "EUROCRYPT",
+      "full_name": "InternationalConferenceontheTheoryandApplications of CryptographicTechniques",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/eurocrypt/",
+      "page": 20
+    },
+    {
+      "acronym": "S&P",
+      "full_name": "IEEESymposiumonSecurityandPrivacy",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/sp/",
+      "page": 20
+    },
+    {
+      "acronym": "CRYPTO",
+      "full_name": "InternationalCryptologyConference",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/crypto/",
+      "page": 20
+    },
+    {
+      "acronym": "USENIXSecurity",
+      "full_name": "USENIXSecuritySymposium",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/uss/",
+      "page": 20
+    },
+    {
+      "acronym": "NDSS",
+      "full_name": "NetworkandDistributedSystemSecuritySymposium",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ndss/",
+      "page": 20
+    },
+    {
+      "acronym": "ACSAC",
+      "full_name": "AnnualComputerSecurityApplicationsConference",
+      "rank": "B",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/acsac/index.html",
+      "page": 21
+    },
+    {
+      "acronym": "ASIACRYPT",
+      "full_name": "AnnualInternationalConferenceontheTheoryand ApplicationofCryptologyandInformationSecurity",
+      "rank": "B",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/asiacrypt/index.html",
+      "page": 21
+    },
+    {
+      "acronym": "ESORICS",
+      "full_name": "EuropeanSymposiumonResearchinComputerSecurity",
+      "rank": "B",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/esorics/index.html",
+      "page": 21
+    },
+    {
+      "acronym": "FSE",
+      "full_name": "FastSoftwareEncryption",
+      "rank": "B",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/fse/index.html",
+      "page": 21
+    },
+    {
+      "acronym": "CSFW",
+      "full_name": "IEEEComputerSecurityFoundationsWorkshop",
+      "rank": "B",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/csfw/index.html",
+      "page": 21
+    },
+    {
+      "acronym": "SRDS",
+      "full_name": "IEEEInternationalSymposiumonReliableDistributed Systems",
+      "rank": "B",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/srds/index.html",
+      "page": 21
+    },
+    {
+      "acronym": "CHES",
+      "full_name": "InternationalConferenceonCryptographicHardwareand EmbeddedSystems",
+      "rank": "B",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/ches/index.html",
+      "page": 21
+    },
+    {
+      "acronym": "DSN",
+      "full_name": "InternationalConferenceonDependableSystemsand Networks",
+      "rank": "B",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/dsn/index.html",
+      "page": 21
+    },
+    {
+      "acronym": "RAID",
+      "full_name": "InternationalSymposiumonRecentAdvancesinIntrusion Detection",
+      "rank": "B",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/raid/index.html",
+      "page": 21
+    },
+    {
+      "acronym": "PKC",
+      "full_name": "InternationalWorkshoponPracticeandTheoryinPublicKey Cryptography",
+      "rank": "B",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/pkc/index.html",
+      "page": 21
+    },
+    {
+      "acronym": "TCC",
+      "full_name": "TheoryofCryptographyConference",
+      "rank": "B",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/tcc/index.html",
+      "page": 21
+    },
+    {
+      "acronym": "WiSec",
+      "full_name": "ACMConferenceonSecurityandPrivacyinWirelessand MobileNetworks",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/wisec/",
+      "page": 22
+    },
+    {
+      "acronym": "SACMAT",
+      "full_name": "ACMSymposiumonAccessControlModelsand Technologies",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/sacmat/",
+      "page": 22
+    },
+    {
+      "acronym": "DRM",
+      "full_name": "ACMWorkshoponDigitalRightsManagement",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/drm/",
+      "page": 22
+    },
+    {
+      "acronym": "IH&MMSec",
+      "full_name": "ACMWorkshoponInformationHidingandMultimedia Security",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ih/",
+      "page": 22
+    },
+    {
+      "acronym": "ACNS",
+      "full_name": "InternationalConferenceonAppliedCryptographyand NetworkSecurity",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/acns/",
+      "page": 22
+    },
+    {
+      "acronym": "AsiaCCS",
+      "full_name": "ACMAsiaConferenceonComputerandCommunications Security",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ccs/",
+      "page": 22
+    },
+    {
+      "acronym": "ACISP",
+      "full_name": "AustralasiaConferenceonInformationSecurityandPrivacy",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/acisp/",
+      "page": 22
+    },
+    {
+      "acronym": "CT-RSA",
+      "full_name": "TheCryptographer'sTrackatRSAConference",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ctrsa/",
+      "page": 22
+    },
+    {
+      "acronym": "DIMVA",
+      "full_name": "ConferenceonDetectionofIntrusionsandMalware& VulnerabilityAssessment",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/dimva/",
+      "page": 22
+    },
+    {
+      "acronym": "DFRWS",
+      "full_name": "DigitalForensicResearchWorkshop",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/dfrws/",
+      "page": 22
+    },
+    {
+      "acronym": "FC",
+      "full_name": "FinancialCryptographyandDataSecurity",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/fc/",
+      "page": 22
+    },
+    {
+      "acronym": "TrustCom",
+      "full_name": "IEEEInternationalConferenceonTrust,SecurityandPrivacy inComputingandCommunications",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/trustcom/",
+      "page": 22
+    },
+    {
+      "acronym": "SEC",
+      "full_name": "IFIPInternationalInformationSecurityConference",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/sec/",
+      "page": 22
+    },
+    {
+      "acronym": "IFIPWG11.9",
+      "full_name": "IFIPWorkingGroup11.9InternationalConferenceon DigitalForensics",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.org/db/conf/ifip11-9/index.html",
+      "page": 23
+    },
+    {
+      "acronym": "ISC",
+      "full_name": "InformationSecurityConference",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/isw/",
+      "page": 23
+    },
+    {
+      "acronym": "ICDF2C",
+      "full_name": "InternationalConferenceonDigitalForensics&CyberCrime",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/icdf2c/",
+      "page": 23
+    },
+    {
+      "acronym": "ICICS",
+      "full_name": "InternationalConferenceonInformationand CommunicationsSecurity",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/icics/",
+      "page": 23
+    },
+    {
+      "acronym": "SecureComm",
+      "full_name": "InternationalConferenceonSecurityandPrivacyin CommunicationNetworks",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/securecomm/",
+      "page": 23
+    },
+    {
+      "acronym": "NSPW",
+      "full_name": "NewSecurityParadigmsWorkshop",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/nspw/",
+      "page": 23
+    },
+    {
+      "acronym": "PAM",
+      "full_name": "PassiveandActiveMeasurementConference",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/pam/",
+      "page": 23
+    },
+    {
+      "acronym": "PETS",
+      "full_name": "PrivacyEnhancingTechnologiesSymposium",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/pet/",
+      "page": 23
+    },
+    {
+      "acronym": "SAC",
+      "full_name": "SelectedAreasinCryptography",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/sacrypt/",
+      "page": 23
+    },
+    {
+      "acronym": "SOUPS",
+      "full_name": "SymposiumOnUsablePrivacyandSecurity",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/soups/",
+      "page": 23
+    },
+    {
+      "acronym": "HotSec",
+      "full_name": "USENIXWorkshoponHotTopicsinSecurity",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://www.usenix.org/events/",
+      "page": 23
+    },
+    {
+      "acronym": "EuroS&P",
+      "full_name": "IEEEEuropeanSymposiumonSecurityandPrivacy",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.org/db/conf/eurosp/index.html",
+      "page": 23
+    },
+    {
+      "acronym": "Inscrypt",
+      "full_name": "InternationalConferenceonInformationSecurityand Cryptology",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.org/db/conf/cisc/index.html",
+      "page": 23
+    },
+    {
+      "acronym": "CODASPY",
+      "full_name": "ConferenceonDataandApplicationSecurityandPrivacy",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/codaspy/index.html",
+      "page": 23
+    },
+    {
+      "acronym": "BlockSys",
+      "full_name": "InternationalConferenceonBlockchain,Artificial Intelligence,andTrustworthySystems",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/blocksys/index.html",
+      "page": 23
+    },
+    {
+      "acronym": "CSCloud",
+      "full_name": "InternationalConferenceonCyberSecurityandCloud Computing",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/cscloud/index.html",
+      "page": 23
+    },
+    {
+      "acronym": "TOPLAS",
+      "full_name": "ACMTransactionsonProgrammingLanguagesand Systems",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/toplas/",
+      "page": 24
+    },
+    {
+      "acronym": "TOSEM",
+      "full_name": "ACMTransactionsonSoftwareEngineeringand Methodology",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tosem/",
+      "page": 24
+    },
+    {
+      "acronym": "TSE",
+      "full_name": "IEEETransactionsonSoftwareEngineering",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tse/",
+      "page": 24
+    },
+    {
+      "acronym": "TSC",
+      "full_name": "IEEETransactionsonServicesComputing",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tsc/",
+      "page": 24
+    },
+    {
+      "acronym": "ASE",
+      "full_name": "AutomatedSoftwareEngineering",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ase/",
+      "page": 25
+    },
+    {
+      "acronym": "ESE",
+      "full_name": "EmpiricalSoftwareEngineering",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ese/",
+      "page": 25
+    },
+    {
+      "acronym": "IETS",
+      "full_name": "IETSoftware",
+      "rank": "B",
+      "kind": "journal",
+      "url": "https://dblp.uni-trier.de/db/journals/iet-sen/",
+      "page": 25
+    },
+    {
+      "acronym": "IST",
+      "full_name": "InformationandSoftwareTechnology",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/infsof/index.html",
+      "page": 25
+    },
+    {
+      "acronym": "JFP",
+      "full_name": "JournalofFunctionalProgramming",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/jfp/",
+      "page": 25
+    },
+    {
+      "acronym": "",
+      "full_name": "JournalofSoftware:EvolutionandProcess",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/smr/",
+      "page": 25
+    },
+    {
+      "acronym": "JSS",
+      "full_name": "JournalofSystemsandSoftware",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/jss/",
+      "page": 25
+    },
+    {
+      "acronym": "RE",
+      "full_name": "RequirementsEngineering",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/re/",
+      "page": 25
+    },
+    {
+      "acronym": "SCP",
+      "full_name": "ScienceofComputerProgramming",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/scp/",
+      "page": 25
+    },
+    {
+      "acronym": "SoSyM",
+      "full_name": "SoftwareandSystemsModeling",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/sosym/",
+      "page": 25
+    },
+    {
+      "acronym": "STVR",
+      "full_name": "SoftwareTesting,VerificationandReliability",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/stvr/index.html",
+      "page": 25
+    },
+    {
+      "acronym": "SPE",
+      "full_name": "Software:PracticeandExperience",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/spe/",
+      "page": 25
+    },
+    {
+      "acronym": "CL",
+      "full_name": "ComputerLanguages,SystemsandStructures",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/cl/index.html",
+      "page": 26
+    },
+    {
+      "acronym": "IJSEKE",
+      "full_name": "InternationalJournalofSoftwareEngineeringandKnowledge Engineering",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ijseke/index.html",
+      "page": 26
+    },
+    {
+      "acronym": "STTT",
+      "full_name": "InternationalJournalofSoftwareToolsforTechnology Transfer",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/sttt/",
+      "page": 26
+    },
+    {
+      "acronym": "JLAMP",
+      "full_name": "JournalofLogicalandAlgebraicMethodsinProgramming",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://dblp.uni-trier.de/db/journals/jlap/index.html",
+      "page": 26
+    },
+    {
+      "acronym": "JWE",
+      "full_name": "JournalofWebEngineering",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/jwe/",
+      "page": 26
+    },
+    {
+      "acronym": "SOCA",
+      "full_name": "ServiceOrientedComputingandApplications",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/soca/",
+      "page": 26
+    },
+    {
+      "acronym": "SQJ",
+      "full_name": "SoftwareQualityJournal",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/sqj/",
+      "page": 26
+    },
+    {
+      "acronym": "TPLP",
+      "full_name": "TheoryandPracticeofLogicProgramming",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tplp/",
+      "page": 26
+    },
+    {
+      "acronym": "PACMPL",
+      "full_name": "ProceedingsoftheACMonProgrammingLanguages",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://dblp.org/db/journals/pacmpl/index.html",
+      "page": 26
+    },
+    {
+      "acronym": "PLDI",
+      "full_name": "ACMSIGPLANConferenceonProgrammingLanguage DesignandImplementation",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/pldi/",
+      "page": 27
+    },
+    {
+      "acronym": "POPL",
+      "full_name": "ACMSIGPLAN-SIGACTSymposiumonPrinciplesof ProgrammingLanguages",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/popl/",
+      "page": 27
+    },
+    {
+      "acronym": "FSE",
+      "full_name": "ACMInternationalConferenceontheFoundationsof SoftwareEngineering",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/sigsoft/",
+      "page": 27
+    },
+    {
+      "acronym": "SOSP",
+      "full_name": "ACMSymposiumonOperatingSystemsPrinciples",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/sosp/",
+      "page": 27
+    },
+    {
+      "acronym": "OOPSLA",
+      "full_name": "ConferenceonObject-OrientedProgrammingSystems, Languages,andApplications",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/oopsla/",
+      "page": 27
+    },
+    {
+      "acronym": "ASE",
+      "full_name": "InternationalConferenceonAutomatedSoftwareEngineering",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/kbse/",
+      "page": 27
+    },
+    {
+      "acronym": "ICSE",
+      "full_name": "InternationalConferenceonSoftwareEngineering",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/icse/",
+      "page": 27
+    },
+    {
+      "acronym": "ISSTA",
+      "full_name": "InternationalSymposiumonSoftwareTestingandAnalysis",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/issta/",
+      "page": 27
+    },
+    {
+      "acronym": "OSDI",
+      "full_name": "USENIXSymposiumonOperatingSystemsDesignand Implementation",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/osdi/",
+      "page": 27
+    },
+    {
+      "acronym": "FM",
+      "full_name": "InternationalSymposiumonFormalMethods",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/fm/",
+      "page": 27
+    },
+    {
+      "acronym": "ECOOP",
+      "full_name": "EuropeanConferenceonObject-OrientedProgramming",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ecoop/",
+      "page": 28
+    },
+    {
+      "acronym": "ETAPS",
+      "full_name": "EuropeanJointConferencesonTheoryandPracticeof Software",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/etaps/",
+      "page": 28
+    },
+    {
+      "acronym": "ICPC",
+      "full_name": "IEEEInternationalConferenceonProgramComprehension",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/iwpc/",
+      "page": 28
+    },
+    {
+      "acronym": "RE",
+      "full_name": "IEEEInternationalRequirementsEngineeringConference",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/re/",
+      "page": 28
+    },
+    {
+      "acronym": "CAiSE",
+      "full_name": "InternationalConferenceonAdvancedInformationSystems Engineering",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/caise/",
+      "page": 28
+    },
+    {
+      "acronym": "ICFP",
+      "full_name": "ACMSIGPLANInternationalConferenceonFunction Programming",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/icfp/",
+      "page": 28
+    },
+    {
+      "acronym": "LCTES",
+      "full_name": "ACMSIGPLAN/SIGBEDInternationalConferenceon Languages,CompilersandToolsforEmbeddedSystems",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/lctrts/",
+      "page": 28
+    },
+    {
+      "acronym": "MoDELS",
+      "full_name": "ACM/IEEEInternationalConferenceonModelDriven EngineeringLanguagesandSystems",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/models/",
+      "page": 28
+    },
+    {
+      "acronym": "CP",
+      "full_name": "InternationalConferenceonPrinciplesandPracticeof ConstraintProgramming",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/cp/",
+      "page": 28
+    },
+    {
+      "acronym": "ICSOC",
+      "full_name": "InternationalConferenceonServiceOrientedComputing",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/icsoc/",
+      "page": 28
+    },
+    {
+      "acronym": "SANER",
+      "full_name": "IEEEInternationalConferenceonSoftwareAnalysis, Evolution, andReengineering",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/wcre/",
+      "page": 29
+    },
+    {
+      "acronym": "ICSME",
+      "full_name": "InternationalConferenceonSoftwareMaintenanceand Evolution",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/icsm/",
+      "page": 29
+    },
+    {
+      "acronym": "VMCAI",
+      "full_name": "InternationalConferenceonVerification,ModelChecking andAbstractInterpretation",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/vmcai/",
+      "page": 29
+    },
+    {
+      "acronym": "ICWS",
+      "full_name": "IEEEInternationalConferenceonWebServices",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/icws/",
+      "page": 29
+    },
+    {
+      "acronym": "Middleware",
+      "full_name": "InternationalMiddlewareConference",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/middleware/",
+      "page": 29
+    },
+    {
+      "acronym": "SAS",
+      "full_name": "InternationalStaticAnalysisSymposium",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/sas/",
+      "page": 29
+    },
+    {
+      "acronym": "ESEM",
+      "full_name": "InternationalSymposiumonEmpiricalSoftwareEngineering andMeasurement",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/esem/",
+      "page": 29
+    },
+    {
+      "acronym": "ISSRE",
+      "full_name": "IEEEInternationalSymposiumonSoftwareReliability Engineering",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/issre/",
+      "page": 29
+    },
+    {
+      "acronym": "HotOS",
+      "full_name": "USENIXWorkshoponHotTopicsinOperatingSystems",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/hotos/",
+      "page": 29
+    },
+    {
+      "acronym": "CC",
+      "full_name": "InternationalConferenceonCompilerConstruction",
+      "rank": "B",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/cc/index.html",
+      "page": 29
+    },
+    {
+      "acronym": "PEPM",
+      "full_name": "ACMSIGPLANWorkshoponPartialEvaluationand ProgramManipulation",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/pepm/",
+      "page": 30
+    },
+    {
+      "acronym": "PASTE",
+      "full_name": "ACMSIGPLAN-SIGSOFTWorkshoponProgramAnalysis forSoftwareToolsandEngineering",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/paste/",
+      "page": 30
+    },
+    {
+      "acronym": "APLAS",
+      "full_name": "AsianSymposiumonProgrammingLanguagesandSystems",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/aplas/",
+      "page": 30
+    },
+    {
+      "acronym": "APSEC",
+      "full_name": "Asia-PacificSoftwareEngineeringConference",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/apsec/",
+      "page": 30
+    },
+    {
+      "acronym": "EASE",
+      "full_name": "InternationalConferenceonEvaluationandAssessmentin SoftwareEngineering",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ease/",
+      "page": 30
+    },
+    {
+      "acronym": "ICECCS",
+      "full_name": "InternationalConferenceonEngineeringofComplex ComputerSystems",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/iceccs/",
+      "page": 30
+    },
+    {
+      "acronym": "ICST",
+      "full_name": "IEEEInternationalConferenceonSoftwareTesting, VerificationandValidation",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/icst/",
+      "page": 30
+    },
+    {
+      "acronym": "ISPASS",
+      "full_name": "IEEEInternationalSymposiumonPerformanceAnalysisof SystemsandSoftware",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ispass/",
+      "page": 30
+    },
+    {
+      "acronym": "SCAM",
+      "full_name": "IEEEInternationalWorkingConferenceonSourceCode AnalysisandManipulation",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/scam/",
+      "page": 30
+    },
+    {
+      "acronym": "COMPSAC",
+      "full_name": "InternationalComputerSoftwareandApplicationsConference",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/compsac/",
+      "page": 30
+    },
+    {
+      "acronym": "ICFEM",
+      "full_name": "InternationalConferenceonFormalEngineeringMethods",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/icfem/",
+      "page": 30
+    },
+    {
+      "acronym": "SSE",
+      "full_name": "IEEEInternationalConferenceonSoftwareServices Engineering",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/IEEEscc/",
+      "page": 30
+    },
+    {
+      "acronym": "ICSSP",
+      "full_name": "InternationalConferenceonSoftwareandSystemProcess",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/ispw/index.html",
+      "page": 30
+    },
+    {
+      "acronym": "SEKE",
+      "full_name": "InternationalConferenceonSoftwareEngineeringand KnowledgeEngineering",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/seke/",
+      "page": 31
+    },
+    {
+      "acronym": "QRS",
+      "full_name": "InternationalConferenceonSoftwareQuality,Reliabilityand Security",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/qrs/",
+      "page": 31
+    },
+    {
+      "acronym": "ICSR",
+      "full_name": "InternationalConferenceonSoftwareReuse",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/icsr/",
+      "page": 31
+    },
+    {
+      "acronym": "ICWE",
+      "full_name": "InternationalConferenceonWebEngineering",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/icwe/",
+      "page": 31
+    },
+    {
+      "acronym": "SPIN",
+      "full_name": "InternationalSymposiumonModelCheckingofSoftware",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/spin/index.html",
+      "page": 31
+    },
+    {
+      "acronym": "ATVA",
+      "full_name": "InternationalSymposiumonAutomatedTechnologyfor VerificationandAnalysis",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/atva/",
+      "page": 31
+    },
+    {
+      "acronym": "LOPSTR",
+      "full_name": "InternationalSymposiumonLogic-basedProgramSynthesis andTransformation",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/lopstr/",
+      "page": 31
+    },
+    {
+      "acronym": "TASE",
+      "full_name": "TheoreticalAspectsofSoftwareEngineeringConference",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/tase/",
+      "page": 31
+    },
+    {
+      "acronym": "MSR",
+      "full_name": "MiningSoftwareRepositories",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/msr/",
+      "page": 31
+    },
+    {
+      "acronym": "REFSQ",
+      "full_name": "RequirementsEngineering:FoundationforSoftwareQuality",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/refsq/",
+      "page": 31
+    },
+    {
+      "acronym": "WICSA",
+      "full_name": "WorkingIEEE/IFIPConferenceonSoftwareArchitecture",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/wicsa/",
+      "page": 31
+    },
+    {
+      "acronym": "Internetware",
+      "full_name": "Asia-PacificSymposiumonInternetware",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.org/db/conf/internetware/index.html",
+      "page": 31
+    },
+    {
+      "acronym": "RV",
+      "full_name": "InternationalConferenceonRuntimeVerification",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.org/db/conf/rv/index.html",
+      "page": 31
+    },
+    {
+      "acronym": "MEMOCODE",
+      "full_name": "InternationalConferenceonFormalMethodsandModelsfor Co-Design",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/memocode/index.html",
+      "page": 31
+    },
+    {
+      "acronym": "TODS",
+      "full_name": "ACMTransactionsonDatabaseSystems",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tods/",
+      "page": 32
+    },
+    {
+      "acronym": "TOIS",
+      "full_name": "ACMTransactionsonInformationSystems",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tois/",
+      "page": 32
+    },
+    {
+      "acronym": "TKDE",
+      "full_name": "IEEETransactionsonKnowledgeandDataEngineering",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tkde/",
+      "page": 32
+    },
+    {
+      "acronym": "VLDBJ",
+      "full_name": "TheVLDBJournal",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/vldb/",
+      "page": 32
+    },
+    {
+      "acronym": "TKDD",
+      "full_name": "ACMTransactionsonKnowledgeDiscoveryfromData",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tkdd/",
+      "page": 33
+    },
+    {
+      "acronym": "TWEB",
+      "full_name": "ACMTransactionsontheWeb",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tweb/",
+      "page": 33
+    },
+    {
+      "acronym": "AEI",
+      "full_name": "AdvancedEngineeringInformatics",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/aei/",
+      "page": 33
+    },
+    {
+      "acronym": "DKE",
+      "full_name": "Data&KnowledgeEngineering",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/dke/",
+      "page": 33
+    },
+    {
+      "acronym": "DMKD",
+      "full_name": "DataMiningandKnowledgeDiscovery",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/datamine/",
+      "page": 33
+    },
+    {
+      "acronym": "EJIS",
+      "full_name": "EuropeanJournalofInformationSystems",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ejis/",
+      "page": 33
+    },
+    {
+      "acronym": "",
+      "full_name": "GeoInformatica",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/geoinformatica/",
+      "page": 33
+    },
+    {
+      "acronym": "IPM",
+      "full_name": "InformationProcessingandManagement",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ipm/",
+      "page": 33
+    },
+    {
+      "acronym": "",
+      "full_name": "InformationSciences",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/isci/",
+      "page": 33
+    },
+    {
+      "acronym": "IS",
+      "full_name": "InformationSystems",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/is/",
+      "page": 33
+    },
+    {
+      "acronym": "JASIST",
+      "full_name": "JournaloftheAssociationforInformationScienceand Technology",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/jasis/",
+      "page": 33
+    },
+    {
+      "acronym": "JWS",
+      "full_name": "JournalofWebSemantics",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ws/",
+      "page": 33
+    },
+    {
+      "acronym": "KAIS",
+      "full_name": "KnowledgeandInformationSystems",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/kais/",
+      "page": 33
+    },
+    {
+      "acronym": "DSE",
+      "full_name": "DataScienceandEngineering",
+      "rank": "B",
+      "kind": "journal",
+      "url": "https://dblp.org/db/journals/dase/index.html",
+      "page": 33
+    },
+    {
+      "acronym": "DPD",
+      "full_name": "DistributedandParallelDatabases",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/dpd/",
+      "page": 34
+    },
+    {
+      "acronym": "I&M",
+      "full_name": "Information&Management",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/iam/",
+      "page": 34
+    },
+    {
+      "acronym": "IPL",
+      "full_name": "InformationProcessingLetters",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ipl/",
+      "page": 34
+    },
+    {
+      "acronym": "",
+      "full_name": "DiscoverComputing （原InformationRetrievalJournal）",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ir/",
+      "page": 34
+    },
+    {
+      "acronym": "IJCIS",
+      "full_name": "InternationalJournalofCooperativeInformationSystems",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ijcis/",
+      "page": 34
+    },
+    {
+      "acronym": "IJGIS",
+      "full_name": "InternationalJournalofGeographicalInformationScience",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/gis/",
+      "page": 34
+    },
+    {
+      "acronym": "IJIS",
+      "full_name": "InternationalJournalofIntelligentSystems",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ijis/",
+      "page": 34
+    },
+    {
+      "acronym": "IJKM",
+      "full_name": "InternationalJournalofKnowledgeManagement",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ijkm/",
+      "page": 34
+    },
+    {
+      "acronym": "IJSWIS",
+      "full_name": "InternationalJournalonSemanticWebandInformation Systems",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ijswis/",
+      "page": 34
+    },
+    {
+      "acronym": "JCIS",
+      "full_name": "JournalofComputerInformationSystems",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/jcis/",
+      "page": 34
+    },
+    {
+      "acronym": "JDM",
+      "full_name": "JournalofDatabaseManagement",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/jdm/",
+      "page": 34
+    },
+    {
+      "acronym": "JGITM",
+      "full_name": "JournalofGlobalInformationTechnologyManagement",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://dblp.org/db/journals/jgim/index.html",
+      "page": 34
+    },
+    {
+      "acronym": "JIIS",
+      "full_name": "JournalofIntelligentInformationSystems",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/jiis/",
+      "page": 34
+    },
+    {
+      "acronym": "JSIS",
+      "full_name": "TheJournalofStrategicInformationSystems",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/jsis/",
+      "page": 34
+    },
+    {
+      "acronym": "TIST",
+      "full_name": "ACMTransactionsonIntelligentSystemsandTechnology",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://dblp.uni-trier.de/db/journals/tist/index.html",
+      "page": 34
+    },
+    {
+      "acronym": "TORS",
+      "full_name": "ACMTransactionsonRecommenderSystems",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://dblp.uni-trier.de/db/journals/tors/index.html",
+      "page": 34
+    },
+    {
+      "acronym": "SIGMOD",
+      "full_name": "ACMSIGMODConference",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/sigmod/",
+      "page": 35
+    },
+    {
+      "acronym": "SIGKDD",
+      "full_name": "ACMSIGKDDConferenceonKnowledgeDiscoveryand DataMining",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/kdd/",
+      "page": 35
+    },
+    {
+      "acronym": "ICDE",
+      "full_name": "IEEEInternationalConferenceonDataEngineering",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/icde/",
+      "page": 35
+    },
+    {
+      "acronym": "SIGIR",
+      "full_name": "InternationalACMSIGIRConferenceonResearchand DevelopmentinInformationRetrieval",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/sigir/",
+      "page": 35
+    },
+    {
+      "acronym": "VLDB",
+      "full_name": "InternationalConferenceonVeryLargeDataBases",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/vldb/",
+      "page": 35
+    },
+    {
+      "acronym": "CIKM",
+      "full_name": "ACMInternationalConferenceonInformationand KnowledgeManagement",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/cikm/",
+      "page": 36
+    },
+    {
+      "acronym": "WSDM",
+      "full_name": "ACMInternationalConferenceonWebSearchandData Mining",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/wsdm/",
+      "page": 36
+    },
+    {
+      "acronym": "PODS",
+      "full_name": "ACMSIGMOD-SIGACT-SIGAISymposiumonPrinciplesof DatabaseSystems",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/pods/",
+      "page": 36
+    },
+    {
+      "acronym": "DASFAA",
+      "full_name": "InternationalConferenceonDatabaseSystemsforAdvanced Applications",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/dasfaa/",
+      "page": 36
+    },
+    {
+      "acronym": "ECML-PKDD",
+      "full_name": "EuropeanConferenceonMachineLearning andPrinciples andPracticeofKnowledgeDiscoveryinDatabases",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ecml/ http://dblp.uni-trier.de/db/conf/pkdd/",
+      "page": 36
+    },
+    {
+      "acronym": "ISWC",
+      "full_name": "IEEEInternationalSemanticWebConference",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/semweb/",
+      "page": 36
+    },
+    {
+      "acronym": "ICDM",
+      "full_name": "IEEEInternationalConferenceonDataMining",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/icdm/",
+      "page": 36
+    },
+    {
+      "acronym": "ICDT",
+      "full_name": "InternationalConferenceonDatabaseTheory",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/icdt/",
+      "page": 36
+    },
+    {
+      "acronym": "EDBT",
+      "full_name": "InternationalConferenceonExtendingDatabaseTechnology",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/edbt/",
+      "page": 36
+    },
+    {
+      "acronym": "CIDR",
+      "full_name": "ConferenceonInnovativeDataSystemsResearch",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/cidr/",
+      "page": 36
+    },
+    {
+      "acronym": "SDM",
+      "full_name": "SIAMInternationalConferenceonDataMining",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/sdm/",
+      "page": 36
+    },
+    {
+      "acronym": "RecSys",
+      "full_name": "ACMConferenceonRecommenderSystems",
+      "rank": "B",
+      "kind": "conference",
+      "url": "https://dblp.org/db/conf/recsys/index.html",
+      "page": 36
+    },
+    {
+      "acronym": "WISE",
+      "full_name": "WebInformationSystemsEngineeringConference",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/wise/",
+      "page": 36
+    },
+    {
+      "acronym": "APWeb",
+      "full_name": "AsiaPacificWebConference",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/apweb/",
+      "page": 37
+    },
+    {
+      "acronym": "DEXA",
+      "full_name": "InternationalConferenceonDatabaseandExpertSystem Applications",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/dexa/",
+      "page": 37
+    },
+    {
+      "acronym": "ECIR",
+      "full_name": "EuropeanConferenceonInformationRetrieval",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ecir/",
+      "page": 37
+    },
+    {
+      "acronym": "ESWC",
+      "full_name": "ExtendedSemanticWebConference",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/esws/",
+      "page": 37
+    },
+    {
+      "acronym": "WebDB",
+      "full_name": "InternationalWorkshoponWeband Databases",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/webdb/",
+      "page": 37
+    },
+    {
+      "acronym": "ER",
+      "full_name": "InternationalConferenceonConceptualModeling",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/er/",
+      "page": 37
+    },
+    {
+      "acronym": "MDM",
+      "full_name": "InternationalConferenceonMobileDataManagement",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/mdm/",
+      "page": 37
+    },
+    {
+      "acronym": "SSDBM",
+      "full_name": "InternationalConferenceonScientificandStatisticalDatabase Management",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ssdbm/",
+      "page": 37
+    },
+    {
+      "acronym": "WAIM",
+      "full_name": "InternationalConferenceonWebAgeInformation Management",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/waim/",
+      "page": 37
+    },
+    {
+      "acronym": "SSTD",
+      "full_name": "InternationalSymposiumonSpatialandTemporalDatabases",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/ssd/index.html",
+      "page": 37
+    },
+    {
+      "acronym": "PAKDD",
+      "full_name": "Pacific-AsiaConferenceonKnowledgeDiscoveryandData Mining",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/pakdd/",
+      "page": 37
+    },
+    {
+      "acronym": "ADMA",
+      "full_name": "InternationalConferenceonAdvancedDataMiningand Applications",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.org/db/conf/adma/index.html",
+      "page": 37
+    },
+    {
+      "acronym": "WISA",
+      "full_name": "WebInformationSystemsandApplications",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/IEEEwisa/index.html",
+      "page": 37
+    },
+    {
+      "acronym": "TIT",
+      "full_name": "IEEETransactionsonInformationTheory",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tit/",
+      "page": 38
+    },
+    {
+      "acronym": "IANDC",
+      "full_name": "InformationandComputation",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/iandc/",
+      "page": 38
+    },
+    {
+      "acronym": "SICOMP",
+      "full_name": "SIAMJournalonComputing",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/siamcomp/",
+      "page": 38
+    },
+    {
+      "acronym": "TALG",
+      "full_name": "ACMTransactionsonAlgorithms",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/talg/",
+      "page": 39
+    },
+    {
+      "acronym": "TOCL",
+      "full_name": "ACMTransactionsonComputationalLogic",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tocl/",
+      "page": 39
+    },
+    {
+      "acronym": "TOMS",
+      "full_name": "ACMTransactionsonMathematicalSoftware",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/toms/",
+      "page": 39
+    },
+    {
+      "acronym": "Algorithmica",
+      "full_name": "Algorithmica",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/algorithmica/",
+      "page": 39
+    },
+    {
+      "acronym": "CC",
+      "full_name": "ComputationalComplexity",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/cc/",
+      "page": 39
+    },
+    {
+      "acronym": "FAC",
+      "full_name": "FormalAspectsofComputing",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/fac/",
+      "page": 39
+    },
+    {
+      "acronym": "FMSD",
+      "full_name": "FormalMethodsinSystemDesign",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/fmsd/",
+      "page": 39
+    },
+    {
+      "acronym": "INFORMS",
+      "full_name": "INFORMSJournalonComputing",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/informs/",
+      "page": 39
+    },
+    {
+      "acronym": "JCSS",
+      "full_name": "JournalofComputerandSystemSciences",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/jcss/",
+      "page": 39
+    },
+    {
+      "acronym": "JGO",
+      "full_name": "JournalofGlobalOptimization",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/jgo/",
+      "page": 39
+    },
+    {
+      "acronym": "JSC",
+      "full_name": "JournalofSymbolicComputation",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/jsc/",
+      "page": 39
+    },
+    {
+      "acronym": "MSCS",
+      "full_name": "MathematicalStructuresinComputerScience",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/mscs/",
+      "page": 39
+    },
+    {
+      "acronym": "TCS",
+      "full_name": "TheoreticalComputerScience",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tcs/",
+      "page": 39
+    },
+    {
+      "acronym": "ACTA",
+      "full_name": "ActaInformatica",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/acta/",
+      "page": 40
+    },
+    {
+      "acronym": "APAL",
+      "full_name": "AnnalsofPureandAppliedLogic",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/apal/",
+      "page": 40
+    },
+    {
+      "acronym": "DAM",
+      "full_name": "DiscreteAppliedMathematics",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/dam/",
+      "page": 40
+    },
+    {
+      "acronym": "FUIN",
+      "full_name": "FundamentaInformaticae",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/fuin/",
+      "page": 40
+    },
+    {
+      "acronym": "IPL",
+      "full_name": "InformationProcessingLetters",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ipl/",
+      "page": 40
+    },
+    {
+      "acronym": "JCOMPLEXI TY",
+      "full_name": "JournalofComplexity",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/jc/",
+      "page": 40
+    },
+    {
+      "acronym": "LOGCOM",
+      "full_name": "JournalofLogicandComputation",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/logcom/",
+      "page": 40
+    },
+    {
+      "acronym": "JSL",
+      "full_name": "TheJournalofSymbolicLogic",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/jsyml/",
+      "page": 40
+    },
+    {
+      "acronym": "LMCS",
+      "full_name": "LogicalMethodsinComputerScience",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/lmcs/",
+      "page": 40
+    },
+    {
+      "acronym": "SIDMA",
+      "full_name": "SIAMJournalonDiscreteMathematics",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/siamdm/",
+      "page": 40
+    },
+    {
+      "acronym": "",
+      "full_name": "TheoryofComputingSystems",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/mst/",
+      "page": 40
+    },
+    {
+      "acronym": "TQC",
+      "full_name": "ACMTransactionsinQuantumComputing",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://dblp.org/db/journals/tqc/index.html",
+      "page": 40
+    },
+    {
+      "acronym": "STOC",
+      "full_name": "ACMSymposiumontheTheoryofComputing",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/stoc/",
+      "page": 41
+    },
+    {
+      "acronym": "SODA",
+      "full_name": "ACM-SIAMSymposiumonDiscreteAlgorithms",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/soda/",
+      "page": 41
+    },
+    {
+      "acronym": "CAV",
+      "full_name": "InternationalConferenceonComputerAidedVerification",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/cav/",
+      "page": 41
+    },
+    {
+      "acronym": "FOCS",
+      "full_name": "IEEEAnnualSymposiumonFoundationsofComputer Science",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/focs/",
+      "page": 41
+    },
+    {
+      "acronym": "LICS",
+      "full_name": "ACM/IEEESymposiumonLogicinComputerScience",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/lics/",
+      "page": 41
+    },
+    {
+      "acronym": "SoCG",
+      "full_name": "InternationalSymposiumonComputationalGeometry",
+      "rank": "B",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/compgeom/index.html",
+      "page": 42
+    },
+    {
+      "acronym": "ESA",
+      "full_name": "EuropeanSymposiumonAlgorithms",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/esa/",
+      "page": 42
+    },
+    {
+      "acronym": "CCC",
+      "full_name": "ConferenceonComputationalComplexity",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/coco/",
+      "page": 42
+    },
+    {
+      "acronym": "ICALP",
+      "full_name": "InternationalColloquiumonAutomata,Languagesand Programming",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/icalp/",
+      "page": 42
+    },
+    {
+      "acronym": "CADE",
+      "full_name": "ConferenceonAutomatedDeduction",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/cade/",
+      "page": 42
+    },
+    {
+      "acronym": "CONCUR",
+      "full_name": "InternationalConferenceonConcurrencyTheory",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/concur/",
+      "page": 42
+    },
+    {
+      "acronym": "HSCC",
+      "full_name": "InternationalConferenceonHybridSystems:Computation andControl",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/hybrid/",
+      "page": 42
+    },
+    {
+      "acronym": "SAT",
+      "full_name": "InternationalConferenceonTheoryandApplicationsof SatisfiabilityTesting",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/sat/",
+      "page": 42
+    },
+    {
+      "acronym": "COCOON",
+      "full_name": "InternationalComputingandCombinatoricsConference",
+      "rank": "B",
+      "kind": "conference",
+      "url": "https://dblp.org/db/conf/cocoon/index.html",
+      "page": 42
+    },
+    {
+      "acronym": "FMCAD",
+      "full_name": "FormalMethodsinComputer-AidedDesign",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/fmcad/",
+      "page": 42
+    },
+    {
+      "acronym": "CSL",
+      "full_name": "ComputerScienceLogic",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/csl/",
+      "page": 43
+    },
+    {
+      "acronym": "FSTTCS",
+      "full_name": "FoundationsofSoftwareTechnologyandTheoretical ComputerScience",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/fsttcs/",
+      "page": 43
+    },
+    {
+      "acronym": "DSAA",
+      "full_name": "IEEEInternationalConferenceonDataScienceand AdvancedAnalytics",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/dsaa/",
+      "page": 43
+    },
+    {
+      "acronym": "ICTAC",
+      "full_name": "InternationalColloquiumonTheoreticalAspectsof Computing",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ictac/",
+      "page": 43
+    },
+    {
+      "acronym": "IPCO",
+      "full_name": "InternationalConferenceonIntegerProgrammingand CombinatorialOptimization",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ipco/",
+      "page": 43
+    },
+    {
+      "acronym": "FSCD",
+      "full_name": "InternationalConferenceonFormalStructuresfor ComputationandDeduction",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/rta/",
+      "page": 43
+    },
+    {
+      "acronym": "ISAAC",
+      "full_name": "InternationalSymposiumonAlgorithmsand Computation",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/isaac/",
+      "page": 43
+    },
+    {
+      "acronym": "MFCS",
+      "full_name": "InternationalConferenceonMathematical FoundationsofComputerScience",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/mfcs/",
+      "page": 43
+    },
+    {
+      "acronym": "STACS",
+      "full_name": "SymposiumonTheoreticalAspectsofComputer Science",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/stacs/",
+      "page": 43
+    },
+    {
+      "acronym": "SETTA",
+      "full_name": "InternationalSymposiumonSoftwareEngineering: Theories,Tools,andApplications",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.org/db/conf/setta/index.html",
+      "page": 43
+    },
+    {
+      "acronym": "TOG",
+      "full_name": "ACMTransactionsonGraphics",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tog/",
+      "page": 44
+    },
+    {
+      "acronym": "TIP",
+      "full_name": "IEEETransactionsonImageProcessing",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tip/",
+      "page": 44
+    },
+    {
+      "acronym": "TVCG",
+      "full_name": "IEEETransactionsonVisualizationandComputer Graphics",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tvcg/",
+      "page": 44
+    },
+    {
+      "acronym": "TMM",
+      "full_name": "IEEETransactionsonMultimedia",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tmm/",
+      "page": 44
+    },
+    {
+      "acronym": "TOMM",
+      "full_name": "ACMTransactionsonMultimediaComputing, CommunicationsandApplications",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni- trier.de/db/journals/tomccap/",
+      "page": 45
+    },
+    {
+      "acronym": "CAGD",
+      "full_name": "ComputerAidedGeometricDesign",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni- trier.de/db/journals/cagd/",
+      "page": 45
+    },
+    {
+      "acronym": "CGF",
+      "full_name": "ComputerGraphicsForum",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni- trier.de/db/journals/cgf/",
+      "page": 45
+    },
+    {
+      "acronym": "CAD",
+      "full_name": "Computer-AidedDesign",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni- trier.de/db/journals/cad/",
+      "page": 45
+    },
+    {
+      "acronym": "TCSVT",
+      "full_name": "IEEETransactionsonCircuitsandSystemsforVideo Technology",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni- trier.de/db/journals/tcsv/",
+      "page": 45
+    },
+    {
+      "acronym": "JASA",
+      "full_name": "TheJournaloftheAcousticalSocietyofAmerica",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://scitation.aip.org/content/asa/jo urnal/jasa",
+      "page": 45
+    },
+    {
+      "acronym": "SIIMS",
+      "full_name": "SIAMJournalonImagingSciences",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni- trier.de/db/journals/siamis/",
+      "page": 45
+    },
+    {
+      "acronym": "SPECOM",
+      "full_name": "SpeechCommunication",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni- trier.de/db/journals/speech/",
+      "page": 45
+    },
+    {
+      "acronym": "CVMJ",
+      "full_name": "ComputationalVisualMedia",
+      "rank": "B",
+      "kind": "journal",
+      "url": "https://dblp.org/db/journals/cvm/inde x.html",
+      "page": 45
+    },
+    {
+      "acronym": "CGTA",
+      "full_name": "ComputationalGeometry:TheoryandApplications",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/comgeo/",
+      "page": 46
+    },
+    {
+      "acronym": "CAVW",
+      "full_name": "Computeranimation&virtualworlds",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://dblp.org/db/journals/jvca/index.html",
+      "page": 46
+    },
+    {
+      "acronym": "C&G",
+      "full_name": "Computers&Graphics",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/cg/",
+      "page": 46
+    },
+    {
+      "acronym": "DCG",
+      "full_name": "Discrete&ComputationalGeometry",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/dcg/",
+      "page": 46
+    },
+    {
+      "acronym": "SPL",
+      "full_name": "IEEESignalProcessingLetters",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/spl/",
+      "page": 46
+    },
+    {
+      "acronym": "IET-IPR",
+      "full_name": "IETImageProcessing",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/iet-ipr/",
+      "page": 46
+    },
+    {
+      "acronym": "JVCIR",
+      "full_name": "JournalofVisualCommunicationandImage Representation",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/jvcir/",
+      "page": 46
+    },
+    {
+      "acronym": "MS",
+      "full_name": "MultimediaSystems",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/mms/",
+      "page": 46
+    },
+    {
+      "acronym": "MTA",
+      "full_name": "MultimediaToolsandApplications",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/mta/",
+      "page": 46
+    },
+    {
+      "acronym": "SIGPRO",
+      "full_name": "SignalProcessing",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/sigpro/",
+      "page": 46
+    },
+    {
+      "acronym": "IMAGE",
+      "full_name": "SignalProcessing:ImageCommunication",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/spic/",
+      "page": 46
+    },
+    {
+      "acronym": "TVC",
+      "full_name": "TheVisualComputer",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/vc/",
+      "page": 46
+    },
+    {
+      "acronym": "VI",
+      "full_name": "VisualInformatics",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://dblp.uni-trier.de/db/journals/vi/index.html",
+      "page": 46
+    },
+    {
+      "acronym": "VRIH",
+      "full_name": "VirtualReality&IntelligentHardware",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://dblp.uni-trier.de/db/journals/vrih/index.html",
+      "page": 46
+    },
+    {
+      "acronym": "GMOD",
+      "full_name": "GraphicalModels",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/cvgip/",
+      "page": 46
+    },
+    {
+      "acronym": "ACMMM",
+      "full_name": "ACMInternationalConferenceonMultimedia",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/mm/",
+      "page": 47
+    },
+    {
+      "acronym": "SIGGRAPH",
+      "full_name": "ACMSpecialInterestGrouponComputerGraphics",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni- trier.de/db/conf/siggraph/index.html",
+      "page": 47
+    },
+    {
+      "acronym": "VR",
+      "full_name": "IEEEConferenceonVirtualRealityand3DUserInterfaces （原IEEEVirtualReality）",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/vr/",
+      "page": 47
+    },
+    {
+      "acronym": "IEEEVIS",
+      "full_name": "IEEEVisualizationConference",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni- trier.de/db/conf/visualization/index.html",
+      "page": 47
+    },
+    {
+      "acronym": "ICMR",
+      "full_name": "ACMSIGMMInternationalConferenceonMultimedia Retrieval",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/mir/",
+      "page": 48
+    },
+    {
+      "acronym": "I3D",
+      "full_name": "ACMSIGGRAPHSymposiumonInteractive3DGraphics andGames",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/si3d/",
+      "page": 48
+    },
+    {
+      "acronym": "SCA",
+      "full_name": "ACMSIGGRAPH/EurographicsSymposiumonComputer Animation",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/sca/index.html",
+      "page": 48
+    },
+    {
+      "acronym": "DCC",
+      "full_name": "DataCompressionConference",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/dcc/",
+      "page": 48
+    },
+    {
+      "acronym": "Eurographics",
+      "full_name": "AnnualConferenceoftheEuropeanAssociationforComputer Graphics",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/eurographics/",
+      "page": 48
+    },
+    {
+      "acronym": "EuroVis",
+      "full_name": "EurographicsConferenceonVisualization",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/vissym/",
+      "page": 48
+    },
+    {
+      "acronym": "SGP",
+      "full_name": "EurographicsSymposiumonGeometryProcessing",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/sgp/",
+      "page": 48
+    },
+    {
+      "acronym": "EGSR",
+      "full_name": "EurographicsSymposiumonRendering",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/rt/",
+      "page": 48
+    },
+    {
+      "acronym": "ICASSP",
+      "full_name": "IEEEInternationalConferenceonAcoustics,Speechand SignalProcessing",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/icassp/",
+      "page": 48
+    },
+    {
+      "acronym": "ICME",
+      "full_name": "IEEEInternationalConferenceon Multimedia&Expo",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/icmcs/",
+      "page": 48
+    },
+    {
+      "acronym": "ISMAR",
+      "full_name": "InternationalSymposiumonMixedandAugmentedReality",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ismar/",
+      "page": 48
+    },
+    {
+      "acronym": "PG",
+      "full_name": "PacificConferenceonComputerGraphicsandApplications",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/pg/index.html",
+      "page": 48
+    },
+    {
+      "acronym": "SPM",
+      "full_name": "SymposiumonSolidandPhysicalModeling",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/sma/",
+      "page": 48
+    },
+    {
+      "acronym": "INTER- SPEECH",
+      "full_name": "ConferenceoftheInternationalSpeechCommunication Association",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/interspeech/index.html",
+      "page": 48
+    },
+    {
+      "acronym": "VRST",
+      "full_name": "ACMSymposiumonVirtualRealitySoftwareandTechnology",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp2.uni-trier.de/db/conf/vrst/",
+      "page": 49
+    },
+    {
+      "acronym": "CASAXR",
+      "full_name": "InternationalConferenceonComputerAnimation,SocialAgents,and ExtendedReality （原InternationalConferenceonComputerAnimationandSocialAgents）",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ca/",
+      "page": 49
+    },
+    {
+      "acronym": "CGI",
+      "full_name": "ComputerGraphicsInternational",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/cgi/",
+      "page": 49
+    },
+    {
+      "acronym": "GMP",
+      "full_name": "GeometricModelingandProcessing",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/gmp/",
+      "page": 49
+    },
+    {
+      "acronym": "PacificVis",
+      "full_name": "IEEEPacificVisualizationSymposium",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/apvis/",
+      "page": 49
+    },
+    {
+      "acronym": "3DV",
+      "full_name": "InternationalConferenceon3DVision",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/3dim/",
+      "page": 49
+    },
+    {
+      "acronym": "CAD/Graphics",
+      "full_name": "InternationalConferenceonComputer-AidedDesignandComputerGraphics Processing",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.uni- trier.de/db/conf/cadgraphics/",
+      "page": 49
+    },
+    {
+      "acronym": "ICIP",
+      "full_name": "IEEEInternationalConferenceonImageProcessing",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/icip/",
+      "page": 49
+    },
+    {
+      "acronym": "MMM",
+      "full_name": "InternationalConferenceonMultimediaModeling",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni- trier.de/db/conf/mmm/index.html",
+      "page": 49
+    },
+    {
+      "acronym": "MMAsia",
+      "full_name": "ACMMultimediaAsia",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.uni- trier.de/db/conf/mmasia/index.html",
+      "page": 49
+    },
+    {
+      "acronym": "SMI",
+      "full_name": "ShapeModelingInternational",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/smi/",
+      "page": 49
+    },
+    {
+      "acronym": "CVM",
+      "full_name": "ComputationalVisualMedia",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.org/db/conf/cvm/index.htm l",
+      "page": 49
+    },
+    {
+      "acronym": "PRCV",
+      "full_name": "ChineseConferenceonPatternRecognitionandComputerVision",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.org/db/conf/prcv/index.ht ml",
+      "page": 49
+    },
+    {
+      "acronym": "ICIG",
+      "full_name": "InternationalConferenceonImageandGraphics",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/icig/index.html",
+      "page": 50
+    },
+    {
+      "acronym": "NCMMSC",
+      "full_name": "NationalConferenceonMan-Machine SpeechCommunication",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/search?q=NCMMSC",
+      "page": 50
+    },
+    {
+      "acronym": "ASRU",
+      "full_name": "AutomaticSpeechRecognitionandUnderstanding Workshop",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/asru/index.html",
+      "page": 50
+    },
+    {
+      "acronym": "SLT",
+      "full_name": "SpokenLanguageTechnology",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/slt/index.html",
+      "page": 50
+    },
+    {
+      "acronym": "AI",
+      "full_name": "ArtificialIntelligence",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ai/",
+      "page": 51
+    },
+    {
+      "acronym": "TPAMI",
+      "full_name": "IEEETransactionsonPatternAnalysisandMachine Intelligence",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/pami/",
+      "page": 51
+    },
+    {
+      "acronym": "IJCV",
+      "full_name": "InternationalJournalofComputerVision",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ijcv/",
+      "page": 51
+    },
+    {
+      "acronym": "JMLR",
+      "full_name": "JournalofMachineLearningResearch",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/jmlr/",
+      "page": 51
+    },
+    {
+      "acronym": "TAP",
+      "full_name": "ACMTransactionsonAppliedPerception",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tap/",
+      "page": 52
+    },
+    {
+      "acronym": "AAMAS",
+      "full_name": "AutonomousAgentsandMulti-AgentSystems",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/aamas/",
+      "page": 52
+    },
+    {
+      "acronym": "",
+      "full_name": "ComputationalLinguistics",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/coling/",
+      "page": 52
+    },
+    {
+      "acronym": "CVIU",
+      "full_name": "ComputerVisionandImageUnderstanding",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/cviu/",
+      "page": 52
+    },
+    {
+      "acronym": "DKE",
+      "full_name": "Data&KnowledgeEngineering",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/dke/index.html",
+      "page": 52
+    },
+    {
+      "acronym": "",
+      "full_name": "EvolutionaryComputation",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ec/",
+      "page": 52
+    },
+    {
+      "acronym": "TAC",
+      "full_name": "IEEETransactionsonAffectiveComputing",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/taffco/",
+      "page": 52
+    },
+    {
+      "acronym": "TASLP",
+      "full_name": "IEEETransactionsonAudio,SpeechandLanguage Processing （原IEEE/ACMTransactionsonAudio,Speechand LanguageProcessing）",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/taslp/",
+      "page": 52
+    },
+    {
+      "acronym": "",
+      "full_name": "IEEETransactionsonCybernetics",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tcyb/",
+      "page": 52
+    },
+    {
+      "acronym": "TEC",
+      "full_name": "IEEETransactionsonEvolutionaryComputation",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tec/",
+      "page": 52
+    },
+    {
+      "acronym": "TFS",
+      "full_name": "IEEETransactionsonFuzzySystems",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tfs/",
+      "page": 52
+    },
+    {
+      "acronym": "TNNLS",
+      "full_name": "IEEETransactionsonNeuralNetworksandlearning systems",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tnn/",
+      "page": 52
+    },
+    {
+      "acronym": "IJAR",
+      "full_name": "InternationalJournalofApproximateReasoning",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ijar/",
+      "page": 52
+    },
+    {
+      "acronym": "JAIR",
+      "full_name": "JournalofArtificialIntelligenceResearch",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/jair/index.html",
+      "page": 53
+    },
+    {
+      "acronym": "",
+      "full_name": "JournalofAutomatedReasoning",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/jar/",
+      "page": 53
+    },
+    {
+      "acronym": "JSLHR",
+      "full_name": "JournalofSpeech,Language,andHearing Research",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://jslhr.pubs.asha.org/",
+      "page": 53
+    },
+    {
+      "acronym": "",
+      "full_name": "MachineLearning",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ml/",
+      "page": 53
+    },
+    {
+      "acronym": "",
+      "full_name": "NeuralComputation",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/neco/",
+      "page": 53
+    },
+    {
+      "acronym": "",
+      "full_name": "NeuralNetworks",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/nn/",
+      "page": 53
+    },
+    {
+      "acronym": "PR",
+      "full_name": "PatternRecognition",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/conf/par/",
+      "page": 53
+    },
+    {
+      "acronym": "TACL",
+      "full_name": "TransactionsoftheAssociationforComputational Linguistics",
+      "rank": "B",
+      "kind": "journal",
+      "url": "https://dblp.org/db/journals/tacl/index.html",
+      "page": 53
+    },
+    {
+      "acronym": "TALLIP",
+      "full_name": "ACMTransactionsonAsianandLow-ResourceLanguage InformationProcessing",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/talip/",
+      "page": 54
+    },
+    {
+      "acronym": "",
+      "full_name": "AppliedIntelligence",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/apin/",
+      "page": 54
+    },
+    {
+      "acronym": "AIM",
+      "full_name": "ArtificialIntelligenceinMedicine",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/artmed/",
+      "page": 54
+    },
+    {
+      "acronym": "",
+      "full_name": "ArtificialLife",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/alife/",
+      "page": 54
+    },
+    {
+      "acronym": "",
+      "full_name": "ComputationalIntelligence",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ci/",
+      "page": 54
+    },
+    {
+      "acronym": "",
+      "full_name": "ComputerSpeech&Language",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/csl/",
+      "page": 54
+    },
+    {
+      "acronym": "",
+      "full_name": "ConnectionScience",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/connection/",
+      "page": 54
+    },
+    {
+      "acronym": "DSS",
+      "full_name": "DecisionSupportSystems",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/dss/",
+      "page": 54
+    },
+    {
+      "acronym": "EAAI",
+      "full_name": "EngineeringApplicationsofArtificialIntelligence",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/eaai/",
+      "page": 54
+    },
+    {
+      "acronym": "",
+      "full_name": "ExpertSystems",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/es/",
+      "page": 54
+    },
+    {
+      "acronym": "ESWA",
+      "full_name": "ExpertSystemswithApplications",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/eswa/",
+      "page": 54
+    },
+    {
+      "acronym": "",
+      "full_name": "FuzzySetsandSystems",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/fss/",
+      "page": 54
+    },
+    {
+      "acronym": "TG",
+      "full_name": "IEEETransactionsonGames",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tciaig/",
+      "page": 54
+    },
+    {
+      "acronym": "IET-CVI",
+      "full_name": "IETComputerVision",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://dblp.org/db/journals/iet-cvi/index.html",
+      "page": 54
+    },
+    {
+      "acronym": "",
+      "full_name": "IETSignalProcessing",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://dblp.org/db/journals/iet-spr/index.html",
+      "page": 54
+    },
+    {
+      "acronym": "IVC",
+      "full_name": "ImageandVisionComputing",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ivc/",
+      "page": 55
+    },
+    {
+      "acronym": "IDA",
+      "full_name": "IntelligentDataAnalysis",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ida/",
+      "page": 55
+    },
+    {
+      "acronym": "IJCIA",
+      "full_name": "InternationalJournalofComputationalIntelligenceand Applications",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ijcia/",
+      "page": 55
+    },
+    {
+      "acronym": "IJIS",
+      "full_name": "InternationalJournalofIntelligentSystems",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ijis/",
+      "page": 55
+    },
+    {
+      "acronym": "IJNS",
+      "full_name": "InternationalJournalofNeuralSystems",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ijns/",
+      "page": 55
+    },
+    {
+      "acronym": "IJPRAI",
+      "full_name": "InternationalJournalofPatternRecognitionandArtificial Intelligence",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ijprai/",
+      "page": 55
+    },
+    {
+      "acronym": "IJUFKS",
+      "full_name": "InternationalJournalofUncertainty,Fuzzinessand Knowledge-BasedSystems",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://dblp.uni-trier.de/db/journals/ijufks/",
+      "page": 55
+    },
+    {
+      "acronym": "IJDAR",
+      "full_name": "InternationalJournalonDocumentAnalysisand Recognition",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ijdar/",
+      "page": 55
+    },
+    {
+      "acronym": "JETAI",
+      "full_name": "JournalofExperimentalandTheoreticalArtificial Intelligence",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/jetai/",
+      "page": 55
+    },
+    {
+      "acronym": "KBS",
+      "full_name": "Knowledge-BasedSystems",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/kbs/",
+      "page": 55
+    },
+    {
+      "acronym": "",
+      "full_name": "MachineTranslation",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/mt/",
+      "page": 55
+    },
+    {
+      "acronym": "",
+      "full_name": "MachineVisionandApplications",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/mva/",
+      "page": 55
+    },
+    {
+      "acronym": "",
+      "full_name": "NaturalComputing",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/nc/",
+      "page": 55
+    },
+    {
+      "acronym": "NLE",
+      "full_name": "NaturalLanguageEngineering",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/nle/",
+      "page": 55
+    },
+    {
+      "acronym": "NCA",
+      "full_name": "NeuralComputingandApplications",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/nca/",
+      "page": 55
+    },
+    {
+      "acronym": "NPL",
+      "full_name": "NeuralProcessingLetters",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/npl/",
+      "page": 56
+    },
+    {
+      "acronym": "",
+      "full_name": "Neurocomputing",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ijon/",
+      "page": 56
+    },
+    {
+      "acronym": "PAA",
+      "full_name": "PatternAnalysisandApplications",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/paa/",
+      "page": 56
+    },
+    {
+      "acronym": "PRL",
+      "full_name": "PatternRecognitionLetters",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/prl/",
+      "page": 56
+    },
+    {
+      "acronym": "",
+      "full_name": "SoftComputing",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/soco/",
+      "page": 56
+    },
+    {
+      "acronym": "WI",
+      "full_name": "WebIntelligence",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/wias/",
+      "page": 56
+    },
+    {
+      "acronym": "TIIS",
+      "full_name": "ACMTransactionsonInteractiveIntelligentSystems",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://dblp.org/db/journals/tiis/index.html",
+      "page": 56
+    },
+    {
+      "acronym": "TELO",
+      "full_name": "ACMTransactionsonEvolutionaryLearningand Optimization",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://dblp.uni-trier.de/db/journals/telo/index.html",
+      "page": 56
+    },
+    {
+      "acronym": "JATS",
+      "full_name": "ACMJournalonAutonomousTransportationSystems",
+      "rank": "C",
+      "kind": "journal",
+      "url": "",
+      "page": 56
+    },
+    {
+      "acronym": "AAAI",
+      "full_name": "AAAIConferenceonArtificialIntelligence",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/aaai/",
+      "page": 57
+    },
+    {
+      "acronym": "NeurIPS",
+      "full_name": "ConferenceonNeuralInformationProcessingSystems",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/nips/",
+      "page": 57
+    },
+    {
+      "acronym": "ACL",
+      "full_name": "AnnualMeetingoftheAssociationforComputational Linguistics",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/acl/",
+      "page": 57
+    },
+    {
+      "acronym": "CVPR",
+      "full_name": "IEEE/CVFComputerVisionandPatternRecognition Conference",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/cvpr/",
+      "page": 57
+    },
+    {
+      "acronym": "ICCV",
+      "full_name": "InternationalConferenceonComputerVision",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/iccv/",
+      "page": 57
+    },
+    {
+      "acronym": "ICML",
+      "full_name": "InternationalConferenceonMachineLearning",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/icml/",
+      "page": 57
+    },
+    {
+      "acronym": "ICLR",
+      "full_name": "InternationalConferenceonLearningRepresentations",
+      "rank": "A",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/iclr/index.html",
+      "page": 57
+    },
+    {
+      "acronym": "COLT",
+      "full_name": "AnnualConferenceonComputationalLearningTheory",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/colt/",
+      "page": 58
+    },
+    {
+      "acronym": "EMNLP",
+      "full_name": "ConferenceonEmpirical MethodsinNaturalLanguage Processing",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/emnlp/",
+      "page": 58
+    },
+    {
+      "acronym": "ECAI",
+      "full_name": "EuropeanConferenceonArtificialIntelligence",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ecai/",
+      "page": 58
+    },
+    {
+      "acronym": "ECCV",
+      "full_name": "EuropeanConferenceonComputerVision",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/eccv/",
+      "page": 58
+    },
+    {
+      "acronym": "ICRA",
+      "full_name": "IEEEInternationalConferenceonRoboticsand Automation",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/icra/",
+      "page": 58
+    },
+    {
+      "acronym": "ICAPS",
+      "full_name": "InternationalConferenceonAutomatedPlanningand Scheduling",
+      "rank": "B",
+      "kind": "conference",
+      "url": "https://dblp.uni- trier.de/db/conf/icaps/index.html",
+      "page": 58
+    },
+    {
+      "acronym": "ICCBR",
+      "full_name": "InternationalConferenceonCase-BasedReasoning",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/iccbr/",
+      "page": 58
+    },
+    {
+      "acronym": "COLING",
+      "full_name": "InternationalConferenceonComputationalLinguistics",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/coling/",
+      "page": 58
+    },
+    {
+      "acronym": "KR",
+      "full_name": "InternationalConferenceonPrinciplesofKnowledge RepresentationandReasoning",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/kr/",
+      "page": 58
+    },
+    {
+      "acronym": "UAI",
+      "full_name": "ConferenceonUncertaintyinArtificialIntelligence",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/uai/",
+      "page": 58
+    },
+    {
+      "acronym": "AAMAS",
+      "full_name": "InternationalJointConferenceonAutonomousAgentsand Multi-agentSystems",
+      "rank": "B",
+      "kind": "conference",
+      "url": "https://dblp.uni- trier.de/db/conf/ifaamas/index.html",
+      "page": 58
+    },
+    {
+      "acronym": "PPSN",
+      "full_name": "ParallelProblemSolvingfrom Nature",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ppsn/",
+      "page": 58
+    },
+    {
+      "acronym": "NAACL",
+      "full_name": "NorthAmericanChapteroftheAssociationfor ComputationalLinguistics",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/naacl/",
+      "page": 58
+    },
+    {
+      "acronym": "IJCAI",
+      "full_name": "InternationalJointConferenceonArtificialIntelligence",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ijcai/",
+      "page": 58
+    },
+    {
+      "acronym": "AISTATS",
+      "full_name": "InternationalConferenceonArtificialIntelligenceand Statistics",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/aistats/",
+      "page": 59
+    },
+    {
+      "acronym": "ACCV",
+      "full_name": "AsianConferenceonComputerVision",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/accv/",
+      "page": 59
+    },
+    {
+      "acronym": "ACML",
+      "full_name": "AsianConferenceonMachineLearning",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/acml/",
+      "page": 59
+    },
+    {
+      "acronym": "BMVC",
+      "full_name": "BritishMachineVisionConference",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/bmvc/",
+      "page": 59
+    },
+    {
+      "acronym": "NLPCC",
+      "full_name": "CCFInternationalConferenceonNaturalLanguage ProcessingandChineseComputing",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/nlpcc/",
+      "page": 59
+    },
+    {
+      "acronym": "CoNLL",
+      "full_name": "ConferenceonComputationalNaturalLanguage Learning",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/conll",
+      "page": 59
+    },
+    {
+      "acronym": "GECCO",
+      "full_name": "GeneticandEvolutionaryComputationConference",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/gecco/",
+      "page": 59
+    },
+    {
+      "acronym": "ICTAI",
+      "full_name": "IEEEInternationalConferenceonToolswithArtificial Intelligence",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ictai/",
+      "page": 59
+    },
+    {
+      "acronym": "IROS",
+      "full_name": "IEEE\\RSJInternationalConferenceonIntelligentRobots andSystems",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/iros/",
+      "page": 59
+    },
+    {
+      "acronym": "ALT",
+      "full_name": "InternationalConferenceonAlgorithmicLearning Theory",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/alt/",
+      "page": 59
+    },
+    {
+      "acronym": "ICANN",
+      "full_name": "InternationalConferenceonArtificialNeuralNetworks",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/icann/",
+      "page": 59
+    },
+    {
+      "acronym": "FG",
+      "full_name": "IEEEInternationalConferenceonAutomaticFaceand GestureRecognition",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/fgr/",
+      "page": 59
+    },
+    {
+      "acronym": "ICDAR",
+      "full_name": "InternationalConferenceonDocumentAnalysisand Recognition",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/icdar/",
+      "page": 60
+    },
+    {
+      "acronym": "ILP",
+      "full_name": "InternationalConferenceonInductiveLogicProgramming",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ilp/",
+      "page": 60
+    },
+    {
+      "acronym": "KSEM",
+      "full_name": "InternationalconferenceonKnowledgeScience, EngineeringandManagement",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ksem/",
+      "page": 60
+    },
+    {
+      "acronym": "ICONIP",
+      "full_name": "InternationalConferenceonNeuralInformation Processing",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/iconip/",
+      "page": 60
+    },
+    {
+      "acronym": "ICPR",
+      "full_name": "InternationalConferenceonPatternRecognition",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/icpr/",
+      "page": 60
+    },
+    {
+      "acronym": "IJCB",
+      "full_name": "InternationalJointConferenceonBiometrics",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/icb/",
+      "page": 60
+    },
+    {
+      "acronym": "IJCNN",
+      "full_name": "InternationalJointConferenceonNeuralNetworks",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ijcnn/",
+      "page": 60
+    },
+    {
+      "acronym": "PRICAI",
+      "full_name": "PacificRimInternationalConferenceonArtificial Intelligence",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/pricai/",
+      "page": 60
+    },
+    {
+      "acronym": "IEEECEC",
+      "full_name": "CongressonEvolutionaryComputation",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/cec/index.html",
+      "page": 60
+    },
+    {
+      "acronym": "DAI",
+      "full_name": "InternationalConferenceonDistributedArtificial Intelligence",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/dai2/index.html",
+      "page": 60
+    },
+    {
+      "acronym": "TOCHI",
+      "full_name": "ACMTransactionsonComputer-HumanInteraction",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tochi/",
+      "page": 61
+    },
+    {
+      "acronym": "IJHCS",
+      "full_name": "InternationalJournalofHuman-ComputerStudies",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ijmms/",
+      "page": 61
+    },
+    {
+      "acronym": "CSCW",
+      "full_name": "ComputerSupportedCooperativeWork",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/cscw/",
+      "page": 62
+    },
+    {
+      "acronym": "HCI",
+      "full_name": "Human-ComputerInteraction",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/hhci/",
+      "page": 62
+    },
+    {
+      "acronym": "",
+      "full_name": "IEEETransactionsonHuman-MachineSystems",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/thms/",
+      "page": 62
+    },
+    {
+      "acronym": "IWC",
+      "full_name": "InteractingwithComputers",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/iwc/",
+      "page": 62
+    },
+    {
+      "acronym": "IJHCI",
+      "full_name": "InternationalJournalofHuman-ComputerInteraction",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ijhci/",
+      "page": 62
+    },
+    {
+      "acronym": "UMUAI",
+      "full_name": "UserModelingandUser-AdaptedInteraction",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/umuai/",
+      "page": 62
+    },
+    {
+      "acronym": "TSMC",
+      "full_name": "IEEETransactionsonSystems,Man,andCybernetics: Systems",
+      "rank": "B",
+      "kind": "journal",
+      "url": "https://dblp.org/db/journals/tsmc/tsmc12.html",
+      "page": 62
+    },
+    {
+      "acronym": "CCFTPCI",
+      "full_name": "CCFTransactionsonPervasiveComputingandInteraction",
+      "rank": "B",
+      "kind": "journal",
+      "url": "https://dblp.uni-trier.de/db/journals/ccftpci/index.html",
+      "page": 62
+    },
+    {
+      "acronym": "BIT",
+      "full_name": "Behaviour&InformationTechnology",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/behaviourIT/",
+      "page": 63
+    },
+    {
+      "acronym": "PUC",
+      "full_name": "PersonalandUbiquitousComputing",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/puc/",
+      "page": 63
+    },
+    {
+      "acronym": "PMC",
+      "full_name": "PervasiveandMobileComputing",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/percom/",
+      "page": 63
+    },
+    {
+      "acronym": "PACMHCI",
+      "full_name": "ProceedingsoftheACMonHuman-ComputerInteraction",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://dblp.org/db/journals/pacmhci/index.html",
+      "page": 63
+    },
+    {
+      "acronym": "THRI",
+      "full_name": "ACMTransactionsonHuman-RobotInteraction",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://dblp.uni-trier.de/db/journals/thri/index.html",
+      "page": 63
+    },
+    {
+      "acronym": "CSCW",
+      "full_name": "ACMConferenceOnComputer-SupportedCooperative WorkAndSocialComputing",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/cscw",
+      "page": 64
+    },
+    {
+      "acronym": "CHI",
+      "full_name": "ACMConferenceonHumanFactorsinComputing Systems",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/chi",
+      "page": 64
+    },
+    {
+      "acronym": "UbiComp",
+      "full_name": "ACMinternationaljointconferenceonPervasiveand UbiquitousComputing",
+      "rank": "A",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/huc/",
+      "page": 64
+    },
+    {
+      "acronym": "UIST",
+      "full_name": "ACMSymposiumonUserInterfaceSoftwareand Technology",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/uist/",
+      "page": 64
+    },
+    {
+      "acronym": "GROUP",
+      "full_name": "ACMInternationalConferenceonSupportingGroup Work",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/group/",
+      "page": 65
+    },
+    {
+      "acronym": "IUI",
+      "full_name": "ACMInternationalConferenceonIntelligentUser Interfaces",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/iui/",
+      "page": 65
+    },
+    {
+      "acronym": "ISS",
+      "full_name": "ACMInternationalConferenceonInteractiveSurfacesand Spaces",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/tabletop/",
+      "page": 65
+    },
+    {
+      "acronym": "ECSCW",
+      "full_name": "EuropeanConferenceonComputerSupportedCooperative Work",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ecscw/",
+      "page": 65
+    },
+    {
+      "acronym": "PERCOM",
+      "full_name": "IEEEInternationalConferenceonPervasiveComputing andCommunications",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/percom/",
+      "page": 65
+    },
+    {
+      "acronym": "MobileHCI",
+      "full_name": "ACMInternationalConferenceonMobileHuman- ComputerInteraction",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/mhci/",
+      "page": 65
+    },
+    {
+      "acronym": "ICWSM",
+      "full_name": "TheInternationalAAAIConferenceonWebandSocial Media",
+      "rank": "B",
+      "kind": "conference",
+      "url": "https://dblp.org/db/conf/icwsm/index.html",
+      "page": 65
+    },
+    {
+      "acronym": "DIS",
+      "full_name": "ACMSIGCHIConferenceonDesigningInteractive Systems",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/ACMdis",
+      "page": 66
+    },
+    {
+      "acronym": "ICMI",
+      "full_name": "ACMInternationalConferenceonMultimodalInteraction",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/icmi/",
+      "page": 66
+    },
+    {
+      "acronym": "ASSETS",
+      "full_name": "InternationalACMSIGACCESSConferenceon ComputersandAccessibility",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/assets",
+      "page": 66
+    },
+    {
+      "acronym": "GI",
+      "full_name": "GraphicsInterface",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/graphicsinterface/",
+      "page": 66
+    },
+    {
+      "acronym": "UIC",
+      "full_name": "IEEEInternationalConferenceonUbiquitousIntelligence and Computing",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/uic/",
+      "page": 66
+    },
+    {
+      "acronym": "",
+      "full_name": "IEEEWorldHapticsConference",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/haptics/",
+      "page": 66
+    },
+    {
+      "acronym": "INTERACT",
+      "full_name": "InternationalConferenceonHuman-ComputerInteraction ofInternationalFederationforInformationProcessing",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/interact/",
+      "page": 66
+    },
+    {
+      "acronym": "IDC",
+      "full_name": "ACMInteractionDesignandChildren",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/acmidc/",
+      "page": 66
+    },
+    {
+      "acronym": "CollaborateCom",
+      "full_name": "InternationalConferenceonCollaborativeComputing: Networking,ApplicationsandWorksharing",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/colcom/",
+      "page": 66
+    },
+    {
+      "acronym": "CSCWD",
+      "full_name": "InternationalConferenceonComputerSupported CooperativeWorkinDesign",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/cscwd/",
+      "page": 66
+    },
+    {
+      "acronym": "CoopIS",
+      "full_name": "InternationalConferenceonCooperativeInformation Systems",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/coopis/",
+      "page": 66
+    },
+    {
+      "acronym": "MobiQuitous",
+      "full_name": "InternationalConferenceonMobileandUbiquitous Systems:Computing,NetworkingandServices",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/mobiquitous/",
+      "page": 66
+    },
+    {
+      "acronym": "AVI",
+      "full_name": "InternationalWorkingConferenceonAdvancedVisual Interfaces",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/avi/",
+      "page": 66
+    },
+    {
+      "acronym": "GPC",
+      "full_name": "ConferenceonGreen,PervasiveandCloudComputing",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/gpc/index.html",
+      "page": 66
+    },
+    {
+      "acronym": "ICXR",
+      "full_name": "CCFInternationalConferenceonExtendedReality",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/icxr/index.html",
+      "page": 66
+    },
+    {
+      "acronym": "JACM",
+      "full_name": "JournaloftheACM",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/jacm/",
+      "page": 67
+    },
+    {
+      "acronym": "Proc.IEEE",
+      "full_name": "ProceedingsoftheIEEE",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/pieee/",
+      "page": 67
+    },
+    {
+      "acronym": "SCIS",
+      "full_name": "ScienceChinaInformationSciences",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/chinaf/",
+      "page": 67
+    },
+    {
+      "acronym": "Bioinformatics",
+      "full_name": "Bioinformatics",
+      "rank": "A",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/bioinformatics/",
+      "page": 67
+    },
+    {
+      "acronym": "",
+      "full_name": "BriefingsinBioinformatics",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/bib/",
+      "page": 68
+    },
+    {
+      "acronym": "Cognition",
+      "full_name": "Cognition",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://www.journals.elsevier.com/cognition/",
+      "page": 68
+    },
+    {
+      "acronym": "TASAE",
+      "full_name": "IEEETransactionsonAutomationScienceandEngineering",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tase/",
+      "page": 68
+    },
+    {
+      "acronym": "TGARS",
+      "full_name": "IEEETransactionsonGeoscienceandRemoteSensing",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tgrs/",
+      "page": 68
+    },
+    {
+      "acronym": "TITS",
+      "full_name": "IEEETransactionsonIntelligentTransportationSystems",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tits/",
+      "page": 68
+    },
+    {
+      "acronym": "TMI",
+      "full_name": "IEEETransactionsonMedicalImaging",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tmi/",
+      "page": 68
+    },
+    {
+      "acronym": "TR",
+      "full_name": "IEEETransactionsonRobotics",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/trob/",
+      "page": 68
+    },
+    {
+      "acronym": "TCBB",
+      "full_name": "IEEE/ACMTransactionsonComputationalBiologyand Bioinformatics",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/tcbb/",
+      "page": 68
+    },
+    {
+      "acronym": "JCST",
+      "full_name": "JournalofComputerScienceandTechnology",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/jcst/",
+      "page": 68
+    },
+    {
+      "acronym": "JAMIA",
+      "full_name": "JournaloftheAmericanMedicalInformaticsAssociation",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/jamia/",
+      "page": 68
+    },
+    {
+      "acronym": "",
+      "full_name": "PLOSComputationalBiology",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/ploscb/",
+      "page": 68
+    },
+    {
+      "acronym": "",
+      "full_name": "TheComputerJournal",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/cj/",
+      "page": 68
+    },
+    {
+      "acronym": "WWW",
+      "full_name": "WorldWideWeb",
+      "rank": "B",
+      "kind": "journal",
+      "url": "https://dblp.org/db/journals/www/index.html",
+      "page": 68
+    },
+    {
+      "acronym": "FCS",
+      "full_name": "FrontiersofComputerScience",
+      "rank": "B",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/fcsc/",
+      "page": 68
+    },
+    {
+      "acronym": "BCRA",
+      "full_name": "Blockchain:ResearchandApplications",
+      "rank": "B",
+      "kind": "journal",
+      "url": "https://dblp.uni-trier.de/search?q=BCRA",
+      "page": 68
+    },
+    {
+      "acronym": "",
+      "full_name": "BMCBioinformatics",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/bmcbi/",
+      "page": 69
+    },
+    {
+      "acronym": "",
+      "full_name": "CyberneticsandSystems",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/cas/",
+      "page": 69
+    },
+    {
+      "acronym": "",
+      "full_name": "IEEEGeoscienceandRemoteSensingLetters",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/lgrs/",
+      "page": 69
+    },
+    {
+      "acronym": "JBHI",
+      "full_name": "IEEEJournalofBiomedicalandHealthInformatics",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/titb/",
+      "page": 69
+    },
+    {
+      "acronym": "TBD",
+      "full_name": "IEEETransactionsonBigData",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://dblp.uni-trier.de/db/journals/tbd/",
+      "page": 69
+    },
+    {
+      "acronym": "",
+      "full_name": "IETIntelligentTransportSystems",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://digital- library.theiet.org/content/journals/iet-its",
+      "page": 69
+    },
+    {
+      "acronym": "JBI",
+      "full_name": "JournalofBiomedicalInformatics",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://dblp.uni-trier.de/db/journals/jbi/",
+      "page": 69
+    },
+    {
+      "acronym": "",
+      "full_name": "MedicalImageAnalysis",
+      "rank": "C",
+      "kind": "journal",
+      "url": "http://dblp.uni-trier.de/db/journals/mia/",
+      "page": 69
+    },
+    {
+      "acronym": "TII",
+      "full_name": "IEEETransactionsonIndustrialInformatics",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://dblp.org/db/journals/tii/index.html",
+      "page": 69
+    },
+    {
+      "acronym": "TCPS",
+      "full_name": "ACMTransactionsonCyber-PhysicalSystems",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://dblp.org/db/journals/tcps/index.html",
+      "page": 69
+    },
+    {
+      "acronym": "TOCE",
+      "full_name": "ACMTransactionsonComputingEducation",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://dblp.org/db/journals/jeric/index.html",
+      "page": 69
+    },
+    {
+      "acronym": "EITEE",
+      "full_name": "ENGINEERINGInformationTechnology&ElectronicEngineering （原FrontiersofInformationTechnology&Electronic Engineering）",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://www.academax.com/EITEE/home",
+      "page": 69
+    },
+    {
+      "acronym": "TCSS",
+      "full_name": "IEEETransactionsonComputationalSocialSystems",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://dblp.org/db/journals/tcss/index.html",
+      "page": 69
+    },
+    {
+      "acronym": "",
+      "full_name": "IEEETransactionsonReliability",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://dblp.org/db/journals/tr/index.html",
+      "page": 69
+    },
+    {
+      "acronym": "HEALTH",
+      "full_name": "ACMTransactionsonComputingforHealthcare",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://dblp.uni- trier.de/db/journals/health/index.html",
+      "page": 69
+    },
+    {
+      "acronym": "ACMDLT",
+      "full_name": "ACMDistributedLedgerTechnologies:ResearchandPractice",
+      "rank": "C",
+      "kind": "journal",
+      "url": "https://dblp.uni- trier.de/db/journals/distribledger/index.html",
+      "page": 69
+    },
+    {
+      "acronym": "WWW",
+      "full_name": "TheWebConference （原InternationalWorldWideWebConference）",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/www/",
+      "page": 70
+    },
+    {
+      "acronym": "RTSS",
+      "full_name": "IEEEReal-TimeSystemsSymposium",
+      "rank": "A",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/rtss/",
+      "page": 70
+    },
+    {
+      "acronym": "CogSci",
+      "full_name": "AnnualMeetingoftheCognitiveScienceSociety",
+      "rank": "B",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/cogsci/",
+      "page": 71
+    },
+    {
+      "acronym": "BIBM",
+      "full_name": "IEEEInternationalConferenceonBioinformaticsand Biomedicine",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/bibm/",
+      "page": 71
+    },
+    {
+      "acronym": "EMSOFT",
+      "full_name": "InternationalConferenceonEmbeddedSoftware",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/emsoft/",
+      "page": 71
+    },
+    {
+      "acronym": "ISMB",
+      "full_name": "InternationalconferenceonIntelligentSystemsfor MolecularBiology",
+      "rank": "B",
+      "kind": "conference",
+      "url": "https://dblp.org/db/conf/ismb/index.html",
+      "page": 71
+    },
+    {
+      "acronym": "RECOMB",
+      "full_name": "AnnualInternationalConferenceonResearchin ComputationalMolecularBiology",
+      "rank": "B",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/recomb/",
+      "page": 71
+    },
+    {
+      "acronym": "MICCAI",
+      "full_name": "InternationalConferenceonMedicalImageComputing andComputer-AssistedIntervention",
+      "rank": "B",
+      "kind": "conference",
+      "url": "https://dblp.org/db/conf/miccai/index.html",
+      "page": 71
+    },
+    {
+      "acronym": "WINE",
+      "full_name": "ConferenceonWebandInternet Economics",
+      "rank": "B",
+      "kind": "conference",
+      "url": "https://dblp.org/db/conf/wine/index.html",
+      "page": 71
+    },
+    {
+      "acronym": "AMIA",
+      "full_name": "AmericanMedicalInformaticsAssociationAnnual Symposium",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/amia/",
+      "page": 72
+    },
+    {
+      "acronym": "APBC",
+      "full_name": "AsiaPacificBioinformaticsConference",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/apbc/",
+      "page": 72
+    },
+    {
+      "acronym": "IEEEBigData",
+      "full_name": "IEEEInternationalConferenceonBigData",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/bigdataconf/",
+      "page": 72
+    },
+    {
+      "acronym": "IEEECLOUD",
+      "full_name": "IEEEInternationalConferenceonCloudComputing",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/IEEEcloud/",
+      "page": 72
+    },
+    {
+      "acronym": "SMC",
+      "full_name": "IEEEInternationalConferenceonSystems,Man,and Cybernetics",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/smc/",
+      "page": 72
+    },
+    {
+      "acronym": "COSIT",
+      "full_name": "InternationalConferenceonSpatialInformationTheory",
+      "rank": "C",
+      "kind": "conference",
+      "url": "http://dblp.uni-trier.de/db/conf/cosit/",
+      "page": 72
+    },
+    {
+      "acronym": "ISBRA",
+      "full_name": "InternationalSymposiumonBioinformaticsResearch andApplications",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/isbra/",
+      "page": 72
+    },
+    {
+      "acronym": "SAGT",
+      "full_name": "InternationalSymposiumonAlgorithmicGameTheory",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.org/db/conf/sagt/index.html",
+      "page": 72
+    },
+    {
+      "acronym": "SIGSPATIAL",
+      "full_name": "ACMSpecialInterestGrouponSpatialInformation",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.org/db/journals/sigspatial/index.html",
+      "page": 72
+    },
+    {
+      "acronym": "ICIC",
+      "full_name": "InternationalConferenceonIntelligentComputing",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.org/db/conf/icic/index.html",
+      "page": 72
+    },
+    {
+      "acronym": "ICSS",
+      "full_name": "InternationalConferenceonServiceScience",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/service/index.html",
+      "page": 72
+    },
+    {
+      "acronym": "AFT",
+      "full_name": "AdvancesinFinancialTechnologies",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/aft/index.html",
+      "page": 72
+    },
+    {
+      "acronym": "IJTCS-FAW",
+      "full_name": "InternationalJointConferenceonTheoreticalComputer Science-FrontierofAlgorithmicWisdom",
+      "rank": "C",
+      "kind": "conference",
+      "url": "https://dblp.uni-trier.de/db/conf/faw/index.html",
+      "page": 72
+    }
+  ]
+}

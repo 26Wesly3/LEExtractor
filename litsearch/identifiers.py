@@ -32,6 +32,9 @@ class PaperIdentifiers:
     openalex_id: str = ""
     arxiv_id: str = ""
     pmid: str = ""
+    openreview_id: str = ""
+    dblp_key: str = ""
+    google_scholar_id: str = ""
 
 
 def identifier_key(value: str, provider: str = "") -> str:
@@ -54,6 +57,11 @@ def identifier_key(value: str, provider: str = "") -> str:
     # S2 sometimes hands out "S2CorpusId:99" / "CorpusId:99"; it is the same
     # identity as the bare S2 paper id and must bridge with it.
     stripped = value.strip()
+    if stripped.startswith(("openreview:", "dblp:", "google_scholar:")):
+        return stripped
+    if provider in {"openreview", "dblp", "google_scholar"}:
+        prefix = provider + ":"
+        return stripped if stripped.startswith(prefix) else prefix + stripped
     corpus = re.sub(r"^(?:s2:)?(?:s2)?corpusid:\s*", "", stripped, flags=re.I)
     if corpus and corpus != stripped:
         return f"s2:{corpus.lower()}"
@@ -70,6 +78,8 @@ def paper_aliases(paper) -> set[str]:
     for value, provider in (
         (paper.doi or ids.doi, ""), (ids.semantic_scholar_id, "semantic_scholar"),
         (ids.openalex_id, "openalex"), (ids.arxiv_id, "arxiv"),
+        (ids.openreview_id, "openreview"), (ids.dblp_key, "dblp"),
+        (ids.google_scholar_id, "google_scholar"),
     ):
         if value:
             aliases.add(identifier_key(value, provider))

@@ -52,7 +52,7 @@ _PROVIDER_COOLDOWNS: dict[tuple[str, str], float] = {}
 DEFAULT_COOLDOWN_SECONDS = 60.0
 MAX_COOLDOWN_SECONDS = 300.0
 SEARCH_PROVIDERS = ("semantic_scholar", "openalex", "arxiv")
-AVAILABLE_SEARCH_PROVIDERS = (*SEARCH_PROVIDERS, "crossref")
+AVAILABLE_SEARCH_PROVIDERS = (*SEARCH_PROVIDERS, "crossref", "openreview", "google_scholar")
 
 
 def reset_provider_cooldowns() -> None:
@@ -2276,6 +2276,10 @@ class SourceManager:
         self.oa = OpenAlexSource(self._cache)
         self.cr = CrossrefSource(self._cache)
         self.arxiv = ArxivSource(self._cache)
+        from litsearch.conference_sources import DBLPSource, GoogleScholarSource, OpenReviewSource
+        self.openreview = OpenReviewSource(self._cache)
+        self.dblp = DBLPSource(self._cache)
+        self.scholar = GoogleScholarSource(self._cache)
         self.if_lookup = ImpactFactorLookup(self._cache)
         #: Per-provider RetrievalResults of the most recent
         #: :meth:`search_all_sources_result` call, in provider order.
@@ -2295,13 +2299,13 @@ class SourceManager:
 
     def set_cancel_check(self, predicate) -> None:
         """Install a ``() -> bool`` cancel hook on every provider."""
-        for source in (self.s2, self.oa, self.cr, self.arxiv):
+        for source in (self.s2, self.oa, self.cr, self.arxiv, self.openreview, self.dblp, self.scholar):
             source.set_cancel_check(predicate)
 
     def is_canceled(self) -> bool:
         """True if any provider reports cancellation."""
         return any(
-            source.is_canceled() for source in (self.s2, self.oa, self.cr, self.arxiv)
+            source.is_canceled() for source in (self.s2, self.oa, self.cr, self.arxiv, self.openreview, self.dblp, self.scholar)
         )
 
     def search_papers(
@@ -2342,7 +2346,8 @@ class SourceManager:
         """
         plan = []
         choices = {"semantic_scholar": (self.s2, limit), "openalex": (self.oa, max(1, limit // 2)),
-                   "arxiv": (self.arxiv, max(1, limit // 4)), "crossref": (self.cr, limit)}
+                   "arxiv": (self.arxiv, max(1, limit // 4)), "crossref": (self.cr, limit),
+                   "openreview": (getattr(self, "openreview", None), limit), "google_scholar": (getattr(self, "scholar", None), limit)}
         for name in self.search_providers:
             source, size = choices[name]
             source_query = query
@@ -2363,6 +2368,7 @@ class SourceManager:
             "raw_count": raw_count, "crossref_role": "keyword_search_and_metadata_resolution" if "crossref" in self.search_providers else "metadata_resolution",
             "per_source_queries": per_source_queries,
             "query_plan": query_plan,
+            "provider_coverage": {name: getattr(source, "api_coverage", []) for source, _size, _query in self._provider_plan(query, limit, query_plan) for name in [source.name] if getattr(source, "api_coverage", None)},
             "diagnostics": [{"source": e.source, "kind": e.kind.value, "message": e.message} for e in get_diagnostics().events],
         }
         if results is not None:
@@ -2479,9 +2485,16 @@ class SourceManager:
         s2 = ids.semantic_scholar_id
         if value.lower().startswith("s2:"):
             s2 = value[3:]
-        if not s2 and not (doi or oa or ax):
+        native = value.startswith(("openreview:", "dblp:", "google_scholar:"))
+        if not s2 and not (doi or oa or ax or native):
             s2 = value
         routes = []
+        if value.startswith("openreview:"):
+            routes.append((self.openreview, value.removeprefix("openreview:")))
+        if value.startswith("google_scholar:"):
+            routes.append((self.scholar, value.removeprefix("google_scholar:")))
+        if value.startswith("dblp:"):
+            routes.append((self.dblp, value.removeprefix("dblp:")))
         if s2 or doi or ax:
             routes.append((self.s2, s2 or doi or f"ARXIV:{ax}"))
         if oa or doi:

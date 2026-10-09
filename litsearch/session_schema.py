@@ -288,6 +288,10 @@ def _validate_paper(errors: list[dict], paper, field: str) -> None:
         _ok_number(errors, paper["relevance_score"], f"{field}.relevance_score")
     if "score_context_id" in paper:
         _ok_text(errors, paper["score_context_id"], f"{field}.score_context_id")
+    if "publication_status" in paper:
+        _ok_text(errors, paper["publication_status"], f"{field}.publication_status")
+    if "search_snippet" in paper:
+        _ok_text(errors, paper["search_snippet"], f"{field}.search_snippet")
     for name in ("citation_ids", "reference_ids", "topics"):
         if name in paper:
             _ok_str_list(errors, paper[name], f"{field}.{name}")
@@ -534,7 +538,14 @@ def _validate_document(data) -> list[dict]:
                        "expected a four-digit year as the key")
             _ok_int(errors, value, f"year_distribution.{key}", minimum=0)
     if "search_manifest" in data:
-        _ok_dict(errors, data["search_manifest"], "search_manifest")
+        manifest = data["search_manifest"]
+        if _ok_dict(errors, manifest, "search_manifest"):
+            if "ranking_mode" in manifest and manifest["ranking_mode"] not in ("lexical", "semantic"):
+                _error(errors, "search_manifest.ranking_mode", "invalid_enum", "expected lexical or semantic")
+            context = manifest.get("query_context")
+            if context is not None and _ok_dict(errors, context, "search_manifest.query_context"):
+                for key in ("original", "translated", "topic", "direction", "engine", "revision"):
+                    _ok_text(errors, context.get(key), f"search_manifest.query_context.{key}")
     if "calibration" in data:
         _validate_calibration(errors, data["calibration"], "calibration")
     if "prisma" in data:

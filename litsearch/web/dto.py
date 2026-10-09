@@ -23,13 +23,13 @@ def public(value):
     if isinstance(value, dict):
         return {str(key): public(item) for key, item in value.items()
                 if str(key).lower() not in {
-                    "api_key", "s2_api_key", "openalex_api_key", "password", "token",
+                    "api_key", "s2_api_key", "openalex_api_key", "serpapi_api_key", "password", "token",
                     "authorization", "headers", "path", "filepath", "download_path",
                 }}
     if isinstance(value, (tuple, list)):
         return [public(item) for item in value]
     if isinstance(value, str):
-        for name in ("S2_API_KEY", "OPENALEX_API_KEY", "LEEXTRACTOR_UNPAYWALL_EMAIL"):
+        for name in ("S2_API_KEY", "OPENALEX_API_KEY", "LEEXTRACTOR_UNPAYWALL_EMAIL", "SERPAPI_API_KEY"):
             secret = os.environ.get(name, "")
             if secret:
                 value = value.replace(secret, "[redacted]")
@@ -63,6 +63,7 @@ def screening_dto(record) -> dict:
 
 
 def paper_dto(state, paper, detail=False) -> dict:
+    from litsearch.venues import venue_classification
     providers = sorted({t.provider for t in paper.discovery_traces if t.provider} | {paper.source})
     row = {
         "paper_key": paper_key(paper), "canonical_id": paper.canonical_id,
@@ -74,6 +75,10 @@ def paper_dto(state, paper, detail=False) -> dict:
         "topics": list(paper.topics), "url": paper.url,
         "relevance_score": paper.relevance_score, "score_context_id": paper.score_context_id,
         "score_breakdown": dict(paper.score_breakdown),
+        "publication_status": paper.publication_status,
+        "search_snippet": paper.search_snippet,
+        "abstract_available": bool(paper.abstract),
+        "ccf": venue_classification(paper),
         "discovery_traces": [{"method": t.method, "provider": t.provider,
                               "query": t.query, "seed_id": t.seed_id, "round_no": t.round_no,
                               "score": t.score, "evidence_ids": list(t.evidence_ids),

@@ -306,6 +306,7 @@ class RelevanceFilter:
         )
         self._last_breakdown: list[ScoreBreakdown] = []
         self._last_score_context_id: str = ""
+        self.embedding_model = None
 
     # ------------------------------------------------------------------
     # Text preparation
@@ -389,6 +390,32 @@ class RelevanceFilter:
             return [min(1.0, max(0.0, v)) for v in values]
         return [(v - lo) / (hi - lo) for v in values]
 
+    @classmethod
+    def _concept_coverage(cls, query: str, paper: Paper) -> float:
+        """Give explicit focus concepts a signal alongside dense similarity.
+
+        Technical aliases are transparent lexical evidence, not a model's
+        inference about the paper. They do not automatically reject records.
+        """
+        remaining = query.lower()
+        groups = []
+        aliases = (
+            (r"computer vision", (r"\bvision\b", r"\bvisual\b", r"\bperception\b")),
+            (r"multi[- ]agent", (r"\bmulti[- ]?agents?\b", r"\bmultiple agents?\b")),
+            (r"collaborat\w*|cooperat\w*", (r"\bcollaborat\w*", r"\bcooperat\w*", r"\bcoordina\w*")),
+        )
+        for cue, patterns in aliases:
+            if re.search(cue, remaining):
+                groups.append(patterns)
+                remaining = re.sub(cue, " ", remaining)
+        text = (paper.title + " " + (paper.abstract or "")).lower()
+        if not groups:
+            return cls._coverage(cls._query_terms(query), paper)
+        # Preserve domain objects outside the explicit technical aliases too.
+        groups.extend((rf"\b{re.escape(term)}\b",) for term in cls._query_terms(remaining))
+        hits = sum(any(re.search(pattern, text) for pattern in group) for group in groups)
+        return hits / len(groups)
+
     @staticmethod
     def _new_score_context_id(direction_text: str, paper_count: int) -> str:
         """Unique id for one scoring batch (never reused across runs)."""
@@ -450,7 +477,9 @@ class RelevanceFilter:
         if norm < 1e-12:
             for p in papers:
                 p.relevance_score = 0.0
-            return papers
+            if self.embedding_model is None:
+                return papers
+            norm = 1.0
 
         word_n = self._minmax(word_scores)
         char_n = self._minmax(char_scores)
@@ -469,6 +498,18 @@ class RelevanceFilter:
                     final=paper.relevance_score,
                 )
             )
+
+        if self.embedding_model is not None:
+            semantic = self.embedding_model.scores(papers, query)
+            for paper, dense in zip(papers, semantic, strict=True):
+                paper.score_breakdown["semantic"] = round(dense, 6)
+                paper.score_breakdown["semantic_uses_abstract"] = float(bool(paper.abstract))
+                focus = self._concept_coverage(query, paper)
+                paper.score_breakdown["concept_coverage"] = round(focus, 6)
+                paper.relevance_score = round(0.60 * dense + 0.15 * paper.relevance_score + 0.25 * focus, 6)
+            by_paper = {p.id: p.relevance_score for p in papers}
+            for row in breakdown:
+                row.final = by_paper[row.paper_id]
 
         # Rank by score so downstream `[:n]` slices get the best papers.
         papers.sort(key=lambda p: p.relevance_score, reverse=True)
@@ -730,6 +771,8 @@ class RelevanceFilter:
         for field_name in ("doi", "year", "venue", "url", "abstract", "authors"):
             if not getattr(existing, field_name) and getattr(other, field_name):
                 setattr(existing, field_name, getattr(other, field_name))
+        if existing.publication_status == "unknown":
+            existing.publication_status = other.publication_status
         for field_name in ("citation_count", "reference_count"):
             setattr(existing, field_name, max(getattr(existing, field_name), getattr(other, field_name)))
         for field_name in ("topics", "citation_ids", "reference_ids"):

@@ -4,7 +4,7 @@
 
 From research questions to traceable literature evidence.
 
-**v0.9.8** connects the v0.9.6 interface design to the v0.9.5 algorithms with Vue 3, Vuetify and a local FastAPI service. The existing Streamlit and MCP entries remain available.
+**v0.9.9** connects the v0.9.6 interface design to the v0.9.5 algorithms with Vue 3, Vuetify and a local FastAPI service. The existing Streamlit and MCP entries remain available.
 
 ## Get started
 
@@ -18,6 +18,12 @@ python -m litsearch.web --port 8000
 ```
 
 Use **Create offline demo** to explore a separate, clearly labeled synthetic project. For research, create a regular project and configure provider credentials in Settings or a local environment file. Provider availability and rate limits affect coverage.
+
+## Local research translation and semantic ranking
+
+The Web workflow translates Chinese research directions with a local quantized Marian model and lets you edit the English query. The direction drives both retrieval and ranking. CPU FastEmbed uses `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`, encoding titles together with abstract chunks. Missing abstracts are labeled. First use downloads about 116 MB for translation and 252 MB for embeddings; cached models are reused and weights are excluded from the release.
+
+Six selectable providers include OpenReview public submissions and Google Scholar via SerpApi. CCF 2026 venue classifications support A/B/C filtering; venue rank does not verify paper acceptance or full-paper eligibility. Google Scholar requires a SerpApi key and is selected by default only when configured. Its snippets are not full abstracts. Provider rate limits and access challenges can prevent retrieval; coverage is not guaranteed.
 
 ## Current workflow
 
@@ -34,9 +40,9 @@ Search queries and publication identifiers are sent to the selected literature p
 
 ## Scope and evidence
 
-Relevance is a lexical ranking signal, not a screening decision or proof of research quality. Citation edges and derived similarity relations are counted separately. Failed, canceled, budget-limited and truncated retrievals remain distinguishable. Full-text inclusion requires a human reading confirmation.
+Relevance is a local semantic and lexical ranking signal, not a screening decision or proof of research quality. Citation edges and derived similarity relations are counted separately. Failed, canceled, budget-limited and truncated retrievals remain distinguishable. Full-text inclusion requires a human reading confirmation.
 
-Semantic embedding retrieval, automated full-text synthesis, innovation scoring and Zotero synchronization are planned. Candidate questions and clusters summarize the available corpus; they are not verified scientific conclusions. Counts describe records/reports rather than deduplicated studies.
+Local title-and-abstract embeddings rerank provider candidates; they cannot recover papers absent from upstream results. Automated full-text synthesis, innovation scoring and Zotero synchronization are planned. Candidate questions and clusters summarize the available corpus; they are not verified scientific conclusions. Counts describe records/reports rather than deduplicated studies.
 
 The following earlier concept image is illustrative, not a screenshot of current results:
 
@@ -46,7 +52,7 @@ The following earlier concept image is illustrative, not a screenshot of current
 
 - [Setup and current capabilities](README.dev.md)
 - [Web integration and API boundaries](docs/web-integration.md)
-- [Current validation](VALIDATION_v0.9.8.md)
+- [Current validation](VALIDATION_v0.9.9.md)
 - [Architecture](ARCHITECTURE.md), [changes](CHANGES.md), [roadmap](ROADMAP.md), [team handoff](ONBOARDING.md)
 
 Frontend development: `cd web`, `npm ci`, `npm run dev`; start FastAPI separately on port 8000. The Vite proxy forwards `/api`. Before releasing, run `npm run build`, then `python scripts/sync_web_assets.py` from the repository root.

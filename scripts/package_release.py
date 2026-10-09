@@ -36,7 +36,7 @@ VERSION_MODULE = Path("litsearch") / "version.py"
 
 #: Directories that are shipped, with the file suffixes allowed inside them.
 WHITELIST_DIRS: dict[str, tuple[str, ...]] = {
-    "litsearch": (".py",),
+    "litsearch": (".py", ".json"),
     "scripts": (".py",),
     "tests": (".py",),
     ".github": (".yml", ".yaml"),

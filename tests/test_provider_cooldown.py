@@ -83,6 +83,7 @@ def test_topic_alias_preserves_original_intent_and_ranking(direction):
 
 
 def test_real_web_workflow_keeps_crossref_results_when_other_sources_limit(tmp_path, monkeypatch):
+    monkeypatch.setenv("SERPAPI_API_KEY", "test-scholar-key")
     calls = []
     def transport(session, method, url, **kwargs):
         calls.append((url, kwargs.get("params", {})))
@@ -114,8 +115,8 @@ def test_real_web_workflow_keeps_crossref_results_when_other_sources_limit(tmp_p
         assert rows["total"] == 1
         assert rows["items"][0]["url"] == "https://doi.org/10.1234/real-contract"
         manifest = client.get(f"/api/projects/{pid}").json()["search_manifest"]
-        assert manifest["selected_providers"] == ["semantic_scholar", "openalex", "arxiv", "crossref"]
+        assert manifest["selected_providers"] == ["semantic_scholar", "openalex", "arxiv", "crossref", "openreview", "google_scholar"]
         assert [r["status"] for r in manifest["provider_results"]][:3] == ["rate_limited"] * 3
-        assert len(calls) == 4
+        assert len(calls) == 6
         assert manifest["crossref_role"] == "keyword_search_and_metadata_resolution"
-        assert calls[-1][1]["query"] == "deep learning"
+        assert next(params for url, params in calls if "api.crossref.org" in url)["query"] == "deep learning"

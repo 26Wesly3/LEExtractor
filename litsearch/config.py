@@ -109,6 +109,10 @@ def openalex_api_key() -> str:
     return os.environ.get("OPENALEX_API_KEY", "").strip()
 
 
+def serpapi_api_key() -> str:
+    return os.environ.get("SERPAPI_API_KEY", "").strip()
+
+
 # Download limits -----------------------------------------------------------
 
 #: Default cap for a single downloaded PDF. 100 MiB comfortably covers every

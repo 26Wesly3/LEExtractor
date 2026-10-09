@@ -53,6 +53,8 @@ class Paper:
     #: or merging scores across distinct ``score_context_id`` values is
     #: meaningless; consumers must re-score the combined set instead.
     score_context_id: str = ""
+    publication_status: str = "unknown"
+    search_snippet: str = ""
 
     @property
     def canonical_id(self) -> str:

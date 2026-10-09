@@ -8,6 +8,7 @@ import uuid
 from dataclasses import dataclass, field
 from types import MethodType
 
+from litsearch.local_models import LocalModelError
 from litsearch.persistence import state_from_dict, state_to_dict
 from litsearch.sources import RetrievalBudgetExceeded, RetrievalCanceled
 from litsearch.stop_reasons import http_budget_snapshot, reset_http_budget
@@ -42,7 +43,7 @@ class RequestGuard:
         hook = getattr(sources, "set_cancel_check", None)
         if hook:
             hook(self.event.is_set)
-        for name in ("s2", "oa", "cr", "arxiv"):
+        for name in ("s2", "oa", "cr", "arxiv", "openreview", "dblp", "scholar"):
             provider = getattr(sources, name, None)
             if provider is None:
                 continue
@@ -162,9 +163,11 @@ class JobManager:
             self.update(job, status=status, stop_reason=reason, http_budget=state.http_budget,
                         result=result, progress={"stage": "finished", "records": project.state.total_papers_tracked},
                         finished_at=now())
-        except Exception:
+        except Exception as exc:
             canceled = job.event.is_set()
             reason = "canceled" if canceled else "budget_exhausted" if guard.exhausted else "api_failure"
+            if isinstance(exc, LocalModelError):
+                reason = "local_model_failure"
             state.stop_reason = reason
             state.http_budget = {**http_budget_snapshot(), "limit": http_limit,
                                  "transport_attempts": guard.issued} if acquired else {"limit": http_limit, "requests": 0}
@@ -178,7 +181,7 @@ class JobManager:
                 project.active_job_id = None
             self.update(job, status="canceled" if canceled else "partial" if guard.exhausted else "failed",
                         stop_reason=reason, http_budget=state.http_budget, finished_at=now(),
-                        error={"code": reason, "message": "任务已取消" if canceled else "任务未完整结束；已保存当前检查点"})
+                        error={"code": reason, "message": "任务已取消" if canceled else str(exc) if isinstance(exc, LocalModelError) else "任务未完整结束；已保存当前检查点"})
         finally:
             with project.lock:
                 project.active_job_id = None

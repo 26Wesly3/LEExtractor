@@ -7,11 +7,11 @@ import { createWorkspaceRouter,createWorkspaceTheme } from './bootstrap.js'
 
 const pid='d'.repeat(32),key='a'.repeat(64),secondKey='b'.repeat(64),jid='c'.repeat(32)
 const basePaper={paper_key:key,canonical_id:'10.1000/observed-record',title:'Evidence retained from a provider',abstract:'A complete abstract supplied by the backend.',authors:[{name:'Researcher A'}],year:2024,venue:'Test Journal',doi:'10.1000/observed-record',citation_count:12,reference_count:2,source:'openalex',providers:['openalex'],topics:[],url:'https://example.org/paper',relevance_score:.75,score_context_id:'ctx-1',score_breakdown:{lexical:.75},discovery_traces:[{method:'keyword',provider:'openalex',query:'evidence',seed_id:'',round_no:0,score:.75,evidence_ids:[],timestamp:'2026-10-09T10:00:00Z'}],screening:{title_decision:'pending',full_text_decision:'pending',full_text_retrieved:false,retrieval_attempted:false,reason:'',full_text_reason:'',status:'not_started',requires_manual_review:false}}
-let app,router,project,paperRows,job,requests,unexpected,errors,domHost
+let app,router,project,paperRows,job,requests,unexpected,errors,domHost,scholarConfigured
 function response(data,status=200){return {ok:status<400,status,statusText:status<400?'OK':'Error',json:async()=>structuredClone(data)}}
 async function settle(){for(let i=0;i<80;i++){await Promise.resolve();await nextTick()}}
 function button(text){return [...document.querySelectorAll('button,a.v-btn')].find(el=>el.textContent.trim()===text)}
-function input(label){const target=[...document.querySelectorAll('label')].find(el=>el.textContent.trim()===label);expect(target,`missing label ${label}`).toBeTruthy();return document.getElementById(target.getAttribute('for'))}
+function input(label){const target=[...document.querySelectorAll('label')].find(el=>el.textContent.trim()===label && el.getAttribute('for'));expect(target,`missing label ${label}`).toBeTruthy();return document.getElementById(target.getAttribute('for'))}
 async function click(text){const target=button(text);expect(target,`missing button ${text}`).toBeTruthy();target.click();await settle()}
 async function mount(path){router=createWorkspaceRouter(createMemoryHistory());await router.push(path);await router.isReady();app=createApp(App);app.config.errorHandler=(err)=>errors.push(err.message);domHost=document.createElement('div');document.body.appendChild(domHost);app.use(router).use(createWorkspaceTheme()).mount(domHost);await settle()}
 async function navigate(path){await router.push(path);await settle()}
@@ -27,18 +27,18 @@ function mockServer(url,options={}){
   if(path===`/api/projects/${pid}/papers/${key}`)return response({...basePaper,history:[],conflicts:[],reference_ids:[],citation_ids:[],relations:[]})
   if(path===`/api/jobs/${jid}`)return response(job)
   if(path===`/api/jobs/${jid}/cancel`){job={...job,cancel_requested:true};return response(job)}
-  if(path===`/api/projects/${pid}/query-plan`)return response({topic:body.topic,direction:body.research_direction,queries:{openalex:{query:body.topic}},warnings:[],degraded:false})
+  if(path===`/api/projects/${pid}/query-plan`)return response({topic:body.topic,direction:body.research_direction,translation:{original:body.research_direction,translated:'multi-agent collaboration in computer vision',engine:'local'},queries:{openalex:{query:'multi-agent collaboration computer vision'}},warnings:[],degraded:false})
   if(path===`/api/projects/${pid}/search`){project.active_job_id=jid;return response(job,202)}
   if(path===`/api/projects/${pid}/landscape`)return response({graph:{nodes:[{paper_key:key,canonical_id:basePaper.canonical_id,title:basePaper.title,year:2024,relevance_score:.75,score_context_id:'ctx-1'}],edges:[],edge_type_counts:{citation:0,bibliographic_coupling:0,co_citation:0,text_similarity:0},summary:{communities:[[key]]}},landscape:{paper_count:1,topics:{topics:[],usable:false,note:'Too few papers'},temporal:{timeline:{2024:1}},novelty:{rows:[]},coverage:{topics:[],gaps:[],balance:0},scope:'current corpus'},score_context_id:'ctx-1'})
   if(path===`/api/projects/${pid}/questions`)return response({questions:[{kind:'coverage_gap',question:'Is this topic under-retrieved?',rationale:'Current corpus coverage is thin.',status:'hypothesis',evidence_strength:'weak',supporting_papers:[{paper_key:key,paper_id:basePaper.canonical_id,title:basePaper.title,year:2024}],risks:'The corpus can be incomplete',suggested_next_search:'evidence gap'}],usable:true,counts:{coverage_gap:1},citation_coverage:{complete:false},note:'Bounded by sample'})
   if(path===`/api/projects/${pid}/review`)return response({facts:{threshold_calibrated:false,calibration:{status:'not_calibrated',threshold:null}},prisma:{},ledger:[],queue:paperRows,records:[],revision:project.revision,score_context_id:'ctx-1'})
   if(path===`/api/projects/${pid}/exports`)return response({file_id:'e'.repeat(32),filename:'evidence_pack.zip',size:512,media_type:'application/zip',download_url:'/api/files/'+('e'.repeat(32))})
-  if(path==='/api/settings')return response({providers:{semantic_scholar:{configured:false},openalex:{configured:true},unpaywall:{configured:false}},max_pdf_size_mib:50,local_only:true})
-  if(path==='/api/health')return response({status:'ok',version:'0.9.8',ui:'vue',local_only:true,dependencies:{fastapi:true,algorithms:true}})
+  if(path==='/api/settings'){if(method==='POST'&&body.serpapi_api_key)scholarConfigured=true;return response({providers:{semantic_scholar:{configured:false},openalex:{configured:true},google_scholar:{configured:scholarConfigured},unpaywall:{configured:false}},max_pdf_size_mib:50,local_only:true})}
+  if(path==='/api/health')return response({status:'ok',version:'0.9.9',ui:'vue',local_only:true,dependencies:{fastapi:true,algorithms:true}})
   unexpected.push({path,method,body});return response({error:{message:'Unexpected mock endpoint',detail:path}},404)
 }
 beforeEach(()=>{
-  localStorage.clear();sessionStorage.clear();document.body.innerHTML='';requests=[];unexpected=[];errors=[]
+  localStorage.clear();sessionStorage.clear();document.body.innerHTML='';requests=[];unexpected=[];errors=[];scholarConfigured=true
   project={project_id:pid,name:'Verified project',revision:7,created_at:'2026-10-09T10:00:00Z',updated_at:'2026-10-09T10:00:00Z',demo:false,topic:'evidence',research_direction:'Trace sources',phase:'systematic',score_context_id:'ctx-1',stop_reason:'',http_budget:{requests:0},run_history:[],search_manifest:{},screening:{},counts:{records_in_corpus:1,records_identified:1,reports_sought:0,reports_retrieved:0,records_final_included:0},active_job_id:null}
   paperRows=[structuredClone(basePaper)];job={job_id:jid,project_id:pid,kind:'search',status:'running',stop_reason:'',http_budget:{},progress:{stage:'search'},result:null,error:null,created_at:'2026-10-09T10:00:00Z',started_at:null,finished_at:null,cancel_requested:false}
   vi.stubGlobal('fetch',vi.fn(async(...args)=>mockServer(...args)))
@@ -48,9 +48,31 @@ beforeEach(()=>{
 })
 afterEach(()=>{app?.unmount();app=null;vi.useRealTimers();vi.restoreAllMocks();vi.unstubAllGlobals();document.body.innerHTML='';expect(errors).toEqual([]);expect(unexpected).toEqual([])})
 describe('workspace DOM and API integration',()=>{
+  it('leaves unconfigured Scholar unselected and saves its key without retaining the input',async()=>{
+    scholarConfigured=false;await mount(`/projects/${pid}/search`)
+    expect(input('Google Scholar').checked).toBe(false)
+    await navigate('/settings')
+    const secret=input('Google Scholar / SerpApi API Key');secret.value='fixture-key';secret.dispatchEvent(new Event('input',{bubbles:true}));await settle()
+    await click('保存配置')
+    expect(requests.find(r=>r.path==='/api/settings'&&r.method==='POST').body).toEqual({serpapi_api_key:'fixture-key'})
+    expect(secret.value).toBe('');expect(document.body.textContent).not.toContain('fixture-key')
+  })
+  it('previews local translation, submits the edited query with semantic ranking, and clears stale translation',async()=>{
+    await mount(`/projects/${pid}/search`)
+    const focus=input('研究方向与关注点');focus.value='计算机视觉领域的多智能体合作问题';focus.dispatchEvent(new Event('input',{bubbles:true}));await settle()
+    await click('翻译并查看检索计划')
+    const translated=input('英文检索词／译文（可编辑，留空自动翻译）');expect(translated.value).toBe('multi-agent collaboration in computer vision')
+    translated.value='cooperative visual perception';translated.dispatchEvent(new Event('input',{bubbles:true}));await settle()
+    await click('开始检索')
+    const body=requests.find(r=>r.path.endsWith('/search')&&r.method==='POST').body
+    expect(body.search_keywords).toBe('cooperative visual perception');expect(body.translate).toBe(true);expect(body.ranking_mode).toBe('semantic');expect(body.providers).toContain('openreview');expect(body.providers).toContain('google_scholar')
+    project.active_job_id=null;job.status='completed';await navigate(`/projects/${pid}/search`)
+    const next=input('研究方向与关注点');next.value='自然语言处理';next.dispatchEvent(new Event('input',{bubbles:true}));await settle()
+    expect(input('英文检索词／译文（可编辑，留空自动翻译）').value).toBe('')
+  })
   it('sends only the selected provider and explains actual rate limits',async()=>{
     await mount(`/projects/${pid}/search`)
-    for(const label of ['Semantic Scholar','OpenAlex','arXiv']){input(label).click();await settle()}
+    for(const label of ['Semantic Scholar','OpenAlex','arXiv','OpenReview','Google Scholar']){input(label).click();await settle()}
     const pushes=vi.spyOn(router,'push');await click('开始检索');await pushes.mock.results.at(-1).value;await settle()
     expect(requests.find(r=>r.path.endsWith('/search')&&r.method==='POST').body.providers).toEqual(['crossref'])
     project.search_manifest={selected_providers:['crossref'],provider_results:[{provider:'crossref',status:'rate_limited',paper_count:0,request_stats:{requests:1,rate_limited:1}}]}
@@ -82,7 +104,7 @@ describe('workspace DOM and API integration',()=>{
   })
   it('starts a revision-bound search and refreshes corpus facts only after the backend completes',async()=>{
     await mount(`/projects/${pid}/search`);const pushes=vi.spyOn(router,'push');await click('开始检索');await pushes.mock.results.at(-1).value;await settle()
-    const start=requests.find(r=>r.path.endsWith('/search')&&r.method==='POST');expect(start.body.expected_revision).toBe(7);expect(start.body.mode).toBe('systematic');expect(start.body.providers).toEqual(['semantic_scholar','openalex','arxiv','crossref'])
+    const start=requests.find(r=>r.path.endsWith('/search')&&r.method==='POST');expect(start.body.expected_revision).toBe(7);expect(start.body.mode).toBe('systematic');expect(start.body.providers).toEqual(['semantic_scholar','openalex','arxiv','crossref','openreview','google_scholar'])
     expect(document.querySelector('.job-panel').textContent).toContain('进行中')
     paperRows.push({...basePaper,paper_key:secondKey,title:'Newly completed backend record'});project.counts.records_in_corpus=2;project.revision=8;project.active_job_id=null;job={...job,status:'completed',progress:{stage:'finished',records:2},result:{records:2}}
     await new Promise(resolve=>setTimeout(resolve,1500));await settle()

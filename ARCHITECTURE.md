@@ -1,6 +1,6 @@
 # LEExtractor 架构
 
-版本 v0.9.8。本文件描述**当前实现的模块边界与数据流**，不描述计划中的能力（计划见 [ROADMAP.md](ROADMAP.md)），也不重复改动历史（见 [CHANGES.md](CHANGES.md)）。
+版本 v0.9.9。本文件描述**当前实现的模块边界与数据流**，不描述计划中的能力（计划见 [ROADMAP.md](ROADMAP.md)），也不重复改动历史（见 [CHANGES.md](CHANGES.md)）。
 
 ## 1. 分层
 
@@ -27,7 +27,7 @@
 ```text
 研究问题 ──intent.parse_intent──▶ 分库检索式（写入 search_manifest）
         ──sources.SourceManager──▶ 原始记录（带 DiscoveryTrace；HTTP 预算在 stop_reasons.HttpBudget 计数）
-        ──filters.RelevanceFilter──▶ 去重 + 词法相关度（score_context_id 标记评分批次）
+        ──filters.RelevanceFilter──▶ 去重 + 词法／本地语义相关度（score_context_id 标记评分批次）
         ──prisma.PRISMATracker──▶ 计数账本 ledger + 逐条决定（title_abstract / full_text）
         ──snowball / similar──▶ 引文与关系扩展（可中断、可续跑，stop_reason 记录终止原因）
         ──evidence.EvidenceGraph──▶ 引文图 + 三种关系（bibliographic_coupling / co_citation / text_similarity）
@@ -52,7 +52,9 @@
 | `litsearch/search.py` | `LiteratureReviewWorkflow` 与 `ReviewState`；阶段推进、统一 scored corpus、content-addressed score context、检查点与停止原因 |
 | `litsearch/snowball.py` | 正向/反向引文扩展，按轮次记录 raw/unique/relevant/累计，支持断点续跑 |
 | `litsearch/similar.py` | 基于文献耦合 / 共被引的相似论文发现 |
-| `litsearch/filters.py` | 词法相关度（word/char/coverage 混合）、去重、`CalibrationRecord` 标定记录 |
+| `litsearch/filters.py` | 词法与本地语义混合排序、去重、`CalibrationRecord` 标定记录 |
+| `litsearch/local_models.py` / `query_context.py` | CPU 翻译、标题＋摘要向量、模型缓存、研究方向查询计划 |
+| `litsearch/conference_sources.py` / `venues.py` | OpenReview v2/v1、Google Scholar 元数据、CCF 2026 venue 分类 |
 | `litsearch/prisma.py` | PRISMA 状态容器、决定冲突留痕、计数账本 `RetrievalLedger`（record/report 级别）、自动筛选的唯一闸门 |
 | `litsearch/evidence.py` | `EvidenceGraph`：引文图（PageRank/社群/路径只跑引文边）+ 多关系边（每对可同时有 3 种关系，不互相加权） |
 | `litsearch/landscape.py` | 主题聚类、时间演变、新颖度、覆盖平衡（全部限定当前样本） |

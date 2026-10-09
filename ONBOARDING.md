@@ -1,6 +1,6 @@
 # 团队接手说明
 
-当前整合版本 v0.9.8：基于 GitHub master 的 v0.9.5 后端，接入群里 v0.9.6 界面方案。原始桌面附件未修改。
+当前整合版本 v0.9.9：基于 GitHub master 的 v0.9.5 后端，接入群里 v0.9.6 界面方案。原始桌面附件未修改。
 
 **先读什么**：`README.md`（当前真实能力与启动方式）、`ARCHITECTURE.md`（模块与数据流）、`CHANGES.md`（逐版本改动）、`ROADMAP.md`（未完成与后续计划）。
 
@@ -19,7 +19,7 @@
 |---|---|
 | identifiers / models | 论文身份、跨来源标识和发现记录 |
 | sources / cache / diagnostics | 数据源适配、版本化缓存和失败诊断 |
-| filters / search | 混合词法排序及共享项目状态 |
+| filters / search / local_models / query_context | 研究方向翻译、本地语义与词法排序及共享项目状态 |
 | snowball / similar | 引文扩展、BC / CC、预算与恢复 |
 | prisma / downloader | 人工筛选、获取状态和开放全文 |
 | persistence | 会话与检查点保存 |
@@ -31,4 +31,4 @@ BC / CC 预算限制的是来源调用次数，单次调用可能分页或回退
 
 新增算法应复用统一身份、发现记录和检索清单，先建立真实课题 benchmark，再说明相对基线的质量与成本。当前没有 embedding 语义检索、创新性自动评分或 Zotero 双向同步；请勿将规划项写成已经交付的功能。
 
-Web 开发、接口与任务边界见 [整合说明](docs/web-integration.md)，本版实测见 [验证记录](VALIDATION_v0.9.8.md)。前端修改后必须构建并同步 Python 包内静态文件。
+Web 开发、接口与任务边界见 [整合说明](docs/web-integration.md)，本版实测见 [验证记录](VALIDATION_v0.9.9.md)。前端修改后必须构建并同步 Python 包内静态文件。

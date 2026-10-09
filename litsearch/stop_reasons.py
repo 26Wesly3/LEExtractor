@@ -65,6 +65,7 @@ class StopReason(str, Enum):
 
     API_FAILURE = "api_failure"
     """A transport, rate-limit or parse failure ended the run early."""
+    LOCAL_MODEL_FAILURE = "local_model_failure"
 
 
 #: Reasons after which the run must be treated as incomplete and resumable.
@@ -74,6 +75,7 @@ INCOMPLETE_REASONS = frozenset({
     StopReason.BUDGET_EXHAUSTED,
     StopReason.CANCELED,
     StopReason.API_FAILURE,
+    StopReason.LOCAL_MODEL_FAILURE,
 })
 
 #: Reasons that allow a claim of real (completed) coverage.
@@ -94,6 +96,7 @@ _REASON_LABELS = {
     StopReason.BUDGET_EXHAUSTED: "API 请求预算耗尽 / API budget exhausted",
     StopReason.CANCELED: "用户取消 / canceled by user",
     StopReason.API_FAILURE: "来源请求失败导致提前结束 / ended by source failure",
+    StopReason.LOCAL_MODEL_FAILURE: "本地模型未加载完成 / local model unavailable",
 }
 
 

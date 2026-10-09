@@ -3,9 +3,19 @@
 > **面向开发与运维的技术 README**（原 `README.md` 的内容，改为本名保留）。
 > 项目介绍请见 [`README.md`](README.md)（English）/ [`README.zh-CN.md`](README.zh-CN.md)（简体中文）。
 
-科研文献发现、引文扩展与证据组织工具。当前版本 **v0.9.8**（版本号唯一来源：`litsearch/version.py`；`pyproject.toml` 由测试断言与之一致）。
+科研文献发现、引文扩展与证据组织工具。当前版本 **v0.9.9**（版本号唯一来源：`litsearch/version.py`；`pyproject.toml` 由测试断言与之一致）。
 
 本文件只描述**当前真实能力**。历史版本改动见 [CHANGES.md](CHANGES.md)，模块与数据流见 [ARCHITECTURE.md](ARCHITECTURE.md)，未完成与后续计划见 [ROADMAP.md](ROADMAP.md)。
+
+## 谷歌学术接入
+
+Google Scholar 自动检索经由 SerpApi 的 `google_scholar` 接口，并非谷歌官方 API。设置页填写「Google Scholar / SerpApi API Key」，或设置 `SERPAPI_API_KEY`；密钥只保存在本机，接口不返回原值。未配置时默认使用其余五库，仍可通过计划中的谷歌学术链接手动检索。配置后默认选中，用户也可取消。请求、分页和缓存计数进入任务预算；账户额度以 SerpApi 为准。检索片段保存在 `search_snippet`，不会冒充 `abstract` 参与摘要编码；会议名称截断时不推断 CCF 等级。
+
+## 本地模型与缓存
+
+翻译采用 `Xenova/opus-mt-zh-en` 的固定修订量化 ONNX，下载文件逐个校验 SHA-256。默认缓存 `%USERPROFILE%/.cache/leextractor`，可通过 `LEEXTRACTOR_MODEL_DIR` 更改。Embedding 采用 FastEmbed 0.8.0 的多语言 MiniLM，固定 ONNX 仓库修订与 mean pooling；默认复用 `%TEMP%/fastembed_cache`（包括已有 TraceRAG 缓存），可通过 `LEEXTRACTOR_EMBEDDING_CACHE` 更改。文本向量写入模型目录的 `embeddings.db`，缓存键包含模型、修订和完整文本。
+
+首次使用需要网络下载；完整缓存后推理可离线执行，在线文献检索仍需要数据库网络访问。Embedding 加载失败会停止并保留原语料，用户可主动选择关键词模式；中文翻译失败可填写英文检索词。工作台不会静默切回宽泛主题。标题＋摘要、长查询均按实际 tokenizer 的 120 词元预算分块，覆盖完整文本，再平均并归一化；来源缺失摘要时只用标题。该路径是候选文献重排，不是全库向量召回。旧 Streamlit 不提供新增的翻译、六库选择和 CCF 控件，请使用 Web 入口。
 
 ## 启动
 
@@ -45,11 +55,11 @@ python -m venv .venv
 6. **系统综述（PRISMA）**：仅在勾选后启用；排序信号与筛选决定分离，未标定时只排序不自动排除，全文纳入必须人工判定。
 7. **保存与导出**：CSV / JSON / RIS / BibTeX / 会话 JSON / 完整证据包。
 
-中英文界面通过侧栏切换。当前排序是词法方法：**不做自动翻译，不提供跨语言语义检索**；中文问题配英文关键词时用英文关键词排序并保留中文原问题。
+中英文界面通过侧栏切换。Web 默认用本地 Marian 翻译研究方向、FastEmbed 多语言 MiniLM 编码标题＋摘要，按语义 60%、词法 15%、方向概念覆盖 25% 混合排序；分数只用于排序。可人工改写英文检索词、选择关键词排序。API 旧调用默认保留词法行为，使用 `translate: true` 与 `ranking_mode: semantic` 启用新路径。
 
 ## 数据源与全文获取
 
-- 检索：Semantic Scholar、OpenAlex、arXiv。
+- 检索：Semantic Scholar、OpenAlex、arXiv、Crossref、OpenReview、Google Scholar；后两者不提供原生引文扩展，DOI 存在时可走已有 DOI 路由。
 - **Crossref**：仅用于 DOI / 元数据解析，不是第四个主检索源。
 - 全文：直链 PDF → arXiv → OpenAlex 开放获取 → Unpaywall，均为作者/出版社提供的合法开放版本；不访问 Sci-Hub 等侵权镜像。
 

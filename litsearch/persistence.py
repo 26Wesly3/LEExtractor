@@ -74,6 +74,8 @@ def paper_to_dict(p: Paper) -> dict:
         "identifiers": asdict(p.identifiers),
         "discovery_traces": [asdict(t) for t in p.discovery_traces],
         "score_breakdown": p.score_breakdown,
+        "publication_status": p.publication_status,
+        "search_snippet": p.search_snippet,
     }
 
 
@@ -99,6 +101,8 @@ def paper_from_dict(d: dict) -> Paper:
         identifiers=PaperIdentifiers(**{k: v for k, v in (d.get("identifiers") or {}).items() if k in PaperIdentifiers.__dataclass_fields__}),
         discovery_traces=[DiscoveryTrace(**t) for t in d.get("discovery_traces", [])],
         score_breakdown=d.get("score_breakdown", {}) or {},
+        publication_status=d.get("publication_status", "unknown"),
+        search_snippet=d.get("search_snippet", ""),
     )
 
 

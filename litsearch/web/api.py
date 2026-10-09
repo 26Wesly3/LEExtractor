@@ -15,7 +15,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from litsearch.cache import Cache
-from litsearch.config import current_year, max_pdf_size_mib
+from litsearch.config import current_year, max_pdf_size_mib, serpapi_api_key
 from litsearch.demo import DemoSource, demo_state
 from litsearch.downloader import PaperDownloader
 from litsearch.evidence import EvidenceGraph, corpus_papers
@@ -23,8 +23,10 @@ from litsearch.export import to_bibtex, to_csv, to_ris
 from litsearch.filters import RelevanceFilter, corpus_hash
 from litsearch.intent import parse_intent, plan_payload
 from litsearch.landscape import build_landscape
+from litsearch.local_models import LocalModelError
 from litsearch.persistence import state_from_dict, state_to_dict
 from litsearch.prisma import ScreeningDecision, ScreeningStage
+from litsearch.query_context import focused_plan, prepare_query
 from litsearch.questions import candidate_questions
 from litsearch.screening import calibration_summary, screening_facts
 from litsearch.search import LiteratureReviewWorkflow, ReviewState, ranking_query
@@ -66,14 +68,19 @@ class Revision(Input):
 class PlanInput(Input):
     topic: str | None = Field(default=None, max_length=4000)
     research_direction: str | None = Field(default=None, max_length=4000)
+    search_keywords: str = Field(default="", max_length=4000)
+    translate: bool = False
     year_from: int = Field(default=2006, ge=1990, le=2200)
     year_to: int = Field(default_factory=current_year, ge=1990, le=2200)
 
 
 class SearchInput(Revision):
-    providers: list[Literal["semantic_scholar", "openalex", "arxiv", "crossref"]] = Field(default_factory=lambda: ["semantic_scholar", "openalex", "arxiv", "crossref"], min_length=1, max_length=4)
+    providers: list[Literal["semantic_scholar", "openalex", "arxiv", "crossref", "openreview", "google_scholar"]] = Field(default_factory=lambda: ["semantic_scholar", "openalex", "arxiv", "crossref", "openreview"] + (["google_scholar"] if serpapi_api_key() else []), min_length=1, max_length=6)
     query: str | None = Field(default=None, min_length=1, max_length=4000)
     research_direction: str | None = Field(default=None, max_length=4000)
+    search_keywords: str = Field(default="", max_length=4000)
+    translate: bool = False
+    ranking_mode: Literal["lexical", "semantic"] = "lexical"
     mode: Literal["systematic", "scoping"] = "systematic"
     max_papers: int = Field(default=100, ge=1, le=2000)
     year_from: int = Field(default=2006, ge=1990, le=2200)
@@ -143,6 +150,7 @@ class ImportInput(Input):
 class SettingsInput(Input):
     s2_api_key: str | None = Field(default=None, max_length=2048)
     openalex_api_key: str | None = Field(default=None, max_length=2048)
+    serpapi_api_key: str | None = Field(default=None, max_length=2048)
     unpaywall_email: str | None = Field(default=None, max_length=320)
 
 
@@ -162,11 +170,12 @@ def _settings():
     return {"local_only": True, "max_pdf_size_mib": max_pdf_size_mib(), "providers": {
         "semantic_scholar": {"configured": bool(os.environ.get("S2_API_KEY", "").strip())},
         "openalex": {"configured": bool(os.environ.get("OPENALEX_API_KEY", "").strip())},
+        "google_scholar": {"configured": bool(os.environ.get("SERPAPI_API_KEY", "").strip()), "integration": "SerpApi"},
         "unpaywall": {"configured": bool(os.environ.get("LEEXTRACTOR_UNPAYWALL_EMAIL", "").strip())},
     }}
 
 
-def create_app(data_dir=None, workflow_factory=None, static_dir=None):
+def create_app(data_dir=None, workflow_factory=None, static_dir=None, translator=None):
     """Build an isolated app. No network request or background job starts here.
 
     ``workflow_factory`` receives ``demo: bool`` and returns a workflow with
@@ -178,7 +187,7 @@ def create_app(data_dir=None, workflow_factory=None, static_dir=None):
     try:
         saved_settings = json.loads(settings_path.read_text(encoding="utf-8"))
         if isinstance(saved_settings, dict):
-            for key in ("S2_API_KEY", "OPENALEX_API_KEY", "LEEXTRACTOR_UNPAYWALL_EMAIL"):
+            for key in ("S2_API_KEY", "OPENALEX_API_KEY", "LEEXTRACTOR_UNPAYWALL_EMAIL", "SERPAPI_API_KEY"):
                 if isinstance(saved_settings.get(key), str):
                     os.environ[key] = saved_settings[key]
     except (OSError, ValueError, TypeError):
@@ -256,6 +265,7 @@ def create_app(data_dir=None, workflow_factory=None, static_dir=None):
     @app.post("/api/settings")
     def set_settings(body: SettingsInput):
         names = {"s2_api_key": "S2_API_KEY", "openalex_api_key": "OPENALEX_API_KEY",
+                 "serpapi_api_key": "SERPAPI_API_KEY",
                  "unpaywall_email": "LEEXTRACTOR_UNPAYWALL_EMAIL"}
         with repository.lock:
             if any(project.active_job_id for project in repository.projects.values()):
@@ -331,13 +341,21 @@ def create_app(data_dir=None, workflow_factory=None, static_dir=None):
         _window(body.year_from, body.year_to)
         project = repository.get(pid)
         with project.lock:
+            if body.translate or body.search_keywords:
+                try:
+                    context = prepare_query(body.topic if body.topic is not None else project.state.topic,
+                                            body.research_direction if body.research_direction is not None else project.state.research_direction,
+                                            body.search_keywords, translator=translator)
+                    return public(focused_plan(context, body.year_from, body.year_to))
+                except (LocalModelError, ValueError) as exc:
+                    raise APIError(422, "translation_failed", str(exc)) from exc
             return public(plan_payload(body.topic if body.topic is not None else project.state.topic,
                                        body.research_direction if body.research_direction is not None
                                        else project.state.research_direction, body.year_from, body.year_to))
 
     @app.get("/api/projects/{pid}/papers")
     def papers(pid: str, page: int = Query(1, ge=1), page_size: int = Query(20, ge=1, le=100),
-               q: str = "", provider: str = "", method: str = "", status: str = "",
+               q: str = "", provider: str = "", method: str = "", status: str = "", ccf_rank: Literal["", "A", "B", "C"] = "",
                year_from: int | None = None, year_to: int | None = None,
                min_score: float = Query(0, ge=0, le=1),
                sort: Literal["relevance", "citations", "year", "title"] = "relevance"):
@@ -348,6 +366,7 @@ def create_app(data_dir=None, workflow_factory=None, static_dir=None):
                     and (not provider or provider in r["providers"])
                     and (not method or any(t["method"] == method for t in r["discovery_traces"]))
                     and (not status or r["screening"]["status"] == status)
+                    and (not ccf_rank or r["ccf"]["rank"] == ccf_rank)
                     and (year_from is None or r["year"] is not None and r["year"] >= year_from)
                     and (year_to is None or r["year"] is not None and r["year"] <= year_to)
                     and r["relevance_score"] >= min_score]
@@ -384,17 +403,31 @@ def create_app(data_dir=None, workflow_factory=None, static_dir=None):
             raise APIError(409, "demo_search_disabled", "演示项目只运行本地模拟扩展；请新建真实检索项目")
         if not (body.query or project.state.topic).strip():
             raise APIError(422, "query_required", "请填写检索主题")
+        context = None
+        if body.translate or body.search_keywords:
+            try:
+                context = prepare_query(body.query or project.state.topic,
+                                        body.research_direction if body.research_direction is not None else project.state.research_direction,
+                                        body.search_keywords, translator=translator)
+            except (LocalModelError, ValueError) as exc:
+                raise APIError(422, "translation_failed", str(exc)) from exc
 
         def operation(workflow, state, guard, checkpoint):
+            if body.ranking_mode == "semantic":
+                from litsearch.local_models import EMBEDDER
+                checkpoint({"stage": "local_embedding"})
+                EMBEDDER.ensure_ready()
             configure = getattr(workflow.sources, "set_search_providers", None)
             if configure:
                 configure(body.providers)
             state.topic = body.query or state.topic
             state.research_direction = body.research_direction if body.research_direction is not None else state.research_direction
             state.stop_reason = ""
+            state.search_manifest.update(query_context=context, ranking_mode=body.ranking_mode)
             if body.mode == "scoping":
                 state = workflow.scope_topic(state.topic, state.research_direction, initial_limit=body.max_papers,
-                                             use_query_plan=body.use_query_plan, year_from=body.year_from, year_to=body.year_to)
+                                             use_query_plan=body.use_query_plan, year_from=body.year_from, year_to=body.year_to,
+                                             query_context=context, ranking_mode=body.ranking_mode)
             else:
                 workflow.systematic_search(state, max_papers=body.max_papers, min_citations=body.min_citations,
                                            use_query_plan=body.use_query_plan, year_from=body.year_from, year_to=body.year_to)

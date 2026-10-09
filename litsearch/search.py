@@ -65,6 +65,8 @@ def current_scored_corpus(state: "ReviewState", filters: RelevanceFilter | None 
 def ranking_query(state: "ReviewState") -> str:
     """Keep the research goal verbatim; use English keywords if a Chinese-only
     goal is paired with an English database query. This is not translation."""
+    if state.search_manifest.get("query_context"):
+        return state.search_manifest["query_context"]["translated"]
     direction = state.research_direction
     return direction if re.search(r"[a-zA-Z]{3,}", direction) else database_topic(state.topic)
 
@@ -75,6 +77,9 @@ def research_plan(state: "ReviewState", year_from: int, year_to: int) -> dict:
     Recorded in the search manifest so the review can report, per database, the
     exact string that was actually run (PRISMA 2020 item 7).
     """
+    if state.search_manifest.get("query_context"):
+        from litsearch.query_context import focused_plan
+        return focused_plan(state.search_manifest["query_context"], year_from, year_to)
     return plan_payload(state.topic, state.research_direction, year_from, year_to)
 
 
@@ -200,6 +205,19 @@ class LiteratureReviewWorkflow:
         self.filters = RelevanceFilter()
         self.downloader = downloader if downloader is not None else PaperDownloader()
 
+    def _configure_ranker(self, state):
+        if state.search_manifest.get("ranking_mode") == "semantic":
+            from litsearch.local_models import EMBEDDER
+            self.filters.embedding_model = EMBEDDER
+            from litsearch.local_models import EMBEDDING_MODEL, EMBEDDING_REVISION
+            state.search_manifest.update(ranking_model=EMBEDDING_MODEL, ranking_revision=EMBEDDING_REVISION,
+                                         ranking_preprocessing="title_abstract_token_chunks_120_mean_v2")
+        else:
+            self.filters.embedding_model = None
+            state.search_manifest.pop("ranking_model", None)
+            state.search_manifest.pop("ranking_revision", None)
+            state.search_manifest.pop("ranking_preprocessing", None)
+
     # ------------------------------------------------------------------
     # Phase 1: Scoping
     # ------------------------------------------------------------------
@@ -213,6 +231,8 @@ class LiteratureReviewWorkflow:
         use_query_plan: bool = True,
         year_from: int | None = None,
         year_to: int | None = None,
+        query_context: dict | None = None,
+        ranking_mode: str = "lexical",
     ) -> ReviewState:
         """Phase 1: Broad scoping search to understand the field landscape.
 
@@ -225,6 +245,8 @@ class LiteratureReviewWorkflow:
             phase=ReviewPhase.SCOPING,
             start_time=time.time(),
         )
+        state.search_manifest.update(query_context=query_context, ranking_mode=ranking_mode)
+        self._configure_ranker(state)
 
         year_from = year_from if year_from is not None else year_from_years_back(years_back, floor=1990)
         year_to = year_to if year_to is not None else current_year()
@@ -269,7 +291,9 @@ class LiteratureReviewWorkflow:
         state.year_distribution = dict(sorted(year_dist.items()))
 
         state.scoping_papers = papers
+        retained = {k: state.search_manifest[k] for k in ("query_context", "ranking_mode", "ranking_model", "ranking_revision", "ranking_preprocessing") if k in state.search_manifest}
         state.search_manifest = dict(getattr(self.sources, "last_search_manifest", {}))
+        state.search_manifest.update(retained)
         if plan:
             state.search_manifest["research_intent"] = plan
         state.record_run(
@@ -350,6 +374,7 @@ class LiteratureReviewWorkflow:
 
         Returns the new ``score_context_id``.
         """
+        self._configure_ranker(state)
         papers = self._corpus_for_ranking(state)
         if not papers:
             return ""
@@ -446,7 +471,8 @@ class LiteratureReviewWorkflow:
         # "which papers?", ranking_input_hash answers "what was scored?".
         return (
             f"{query_digest}:{corpus_hash(papers)}:{ranking_input_hash(papers)}:"
-            f"{ALGORITHM_VERSION}:{SCORE_VERSION}"
+            f"{ALGORITHM_VERSION}:{SCORE_VERSION}:{state.search_manifest.get('ranking_mode', 'lexical')}:"
+            f"{state.search_manifest.get('ranking_revision', '')}:{state.search_manifest.get('ranking_preprocessing', '')}:semantic_focus_v2"
         )
 
     @staticmethod
@@ -521,13 +547,13 @@ class LiteratureReviewWorkflow:
         provider_results = getattr(self.sources, "search_all_sources_result", None)
         if not callable(provider_results):
             papers = self.sources.search_all_sources(
-                database_topic(state.topic), limit=limit, year_from=year_from, year_to=year_to,
+                ranking_query(state) if state.search_manifest.get("query_context") else database_topic(state.topic), limit=limit, year_from=year_from, year_to=year_to,
                 query_plan=(plan or {}).get("queries"),
             )
             return list(papers or []), [], None
 
         results = provider_results(
-            database_topic(state.topic), limit=limit, year_from=year_from, year_to=year_to,
+            ranking_query(state) if state.search_manifest.get("query_context") else database_topic(state.topic), limit=limit, year_from=year_from, year_to=year_to,
             query_plan=(plan or {}).get("queries"),
         ) or []
         papers = [p for result in results for p in (result.papers or [])]
@@ -558,6 +584,7 @@ class LiteratureReviewWorkflow:
         Searches S2 + OpenAlex + arXiv + Crossref, deduplicates,
         scores relevance, and registers results in the PRISMA tracker.
         """
+        self._configure_ranker(state)
         year_from = year_from if year_from is not None else year_from_years_back(years_back, floor=1990)
         year_to = year_to if year_to is not None else current_year()
         if not 1990 <= year_from <= year_to <= current_year():
@@ -614,11 +641,13 @@ class LiteratureReviewWorkflow:
         state.snowball_result = None
         state.similar_papers = []
         state.search_papers = papers
+        retained = {k: state.search_manifest[k] for k in ("query_context", "ranking_mode", "ranking_model", "ranking_revision", "ranking_preprocessing") if k in state.search_manifest}
         state.search_manifest = dict(getattr(self.sources, "last_search_manifest", {}))
+        state.search_manifest.update(retained)
         state.search_manifest.update({"unique_before_filters": unique_count, "returned_count": len(papers),
                                       "min_citations": min_citations, "research_direction": state.research_direction,
                                       "ranking_query": ranking_query(state),
-                                      "ranking": "hybrid_lexical_v1",
+                                      "ranking": "local_semantic_60_lexical_15_concepts_25" if self.filters.embedding_model else "hybrid_lexical_v1",
                                       "http_budget": http_budget_snapshot()})
         if plan:
             state.search_manifest["research_intent"] = plan

@@ -25,14 +25,14 @@
 
 ## 3. Semantic Retrieval 与融合（基线冻结后）
 
-- `planned`：可替换的 sentence-transformers adapter（query 与 title+abstract 分别编码、cosine、缓存），manifest 记录模型标识、修订版本、预处理、配置与降级原因；向量存储与 `Paper` schema 解耦。
+- `verified`：v0.9.9 接入固定修订 FastEmbed 多语言 MiniLM 的 CPU 重排，query 与 title+abstract 编码、cosine、长摘要分块与缓存；manifest 保留模型和评分上下文。可替换多模型及人工评测仍 `planned`。
 - `planned`：RRF 与 weighted sum 两种融合对照；实验覆盖 Lexical、Semantic only、Lexical+Semantic RRF、Lexical+Semantic+Citation。
-- `planned`：候选检索与重排分别定义；若只实现后者，能力名称必须写明是 **semantic reranking**（重排无法找回候选集之外的论文）。
-- `deferred`：模型体积与离线可用性未定；模型不可用时本地工作流必须完整可用。
+- `verified`：v0.9.9 明确实现 **semantic reranking**，候选仍由数据库召回；全库向量召回仍 `planned`。
+- `verified`：翻译约 116 MB、Embedding 约 252 MB，首次下载后复用缓存；模型不可用时提示，用户可改用英文查询与词法模式。
 
 ## 4. 智能分析增强
 
-- `planned`：Research Intent v2 —— UI 编辑的检索式真正进入 provider 请求并写入 manifest；中文分词/概念拆分、中英文术语映射；可选 LLM 结构化解析（仅用于概念拆解与改写，论文与统计仍绑定真实数据）。
+- `planned`：Research Intent v2 后续结构化解析（v0.9.9 已实现中文方向本地翻译、可编辑英文与实际分库请求）—— UI 编辑的检索式真正进入 provider 请求并写入 manifest；中文分词/概念拆分、中英文术语映射；可选 LLM 结构化解析（仅用于概念拆解与改写，论文与统计仍绑定真实数据）。
 - `planned`：Landscape v2 —— semantic clusters / citation communities / OpenAlex topics / 时间演变并列或融合，注明各层来源；Topic Card 含 Representative Papers、Why It Matters、Growth Trend、Current Density、Existing Reviews、Under-covered Combinations、Evidence Links；缺项显示「数据不足」。Leiden 对比、BERTopic 可行性、自动选 k 均为实验项。
 - `planned`：Novelty / Coverage v2 —— Object×Method×Task×Context×Outcome 五维覆盖矩阵、同义词归一化、5/5·4/5·3/5 组件重叠、semantic gap detection；结论一律用 Potential Gap，并评测误报与遗漏。
 - `planned`：大语料稀疏计算、分块相似度与 top-k（当前多处为稠密 N×N）。

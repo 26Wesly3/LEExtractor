@@ -83,10 +83,11 @@ def run_engine(sources, seeds, **kwargs):
 def test_taxonomy_is_closed_and_splits_complete_from_incomplete():
     assert {reason.value for reason in StopReason} == {
         "saturated", "no_new_results", "low_yield", "max_rounds",
-        "truncated", "budget_exhausted", "canceled", "api_failure",
+        "truncated", "budget_exhausted", "canceled", "api_failure", "local_model_failure",
     }
     assert {StopReason.SATURATED, StopReason.NO_NEW_RESULTS} == COMPLETE_REASONS
     assert StopReason.API_FAILURE in INCOMPLETE_REASONS
+    assert StopReason.LOCAL_MODEL_FAILURE in INCOMPLETE_REASONS
     assert StopReason.CANCELED in INCOMPLETE_REASONS
     assert StopReason.BUDGET_EXHAUSTED in INCOMPLETE_REASONS
     assert StopReason.MAX_ROUNDS in INCOMPLETE_REASONS
