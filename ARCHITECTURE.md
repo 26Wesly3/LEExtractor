@@ -40,7 +40,7 @@
 
 | 模块 | 职责 |
 | --- | --- |
-| `litsearch/version.py` | 版本唯一来源（`__version__` 0.9.7、`version_tag()`、`package_name()`）；无第三方导入，供打包用 `ast` 解析 |
+| `litsearch/version.py` | 版本唯一来源（`__version__`、`version_tag()`、`package_name()`）；无第三方导入，供打包用 `ast` 解析 |
 | `litsearch/config.py` | 路径、年份、密钥读取；`max_pdf_size()`（默认 100 MiB，`LEEXTRACTOR_MAX_PDF_SIZE` 覆盖）与 `max_pdf_size_mib()` |
 | `litsearch/models.py` | `Paper` / `Author` / `SearchResult` / `CitationNetwork` / `DiscoveryTrace`；`score_context_id`、`stop_reason`、`http_budget` 字段 |
 | `litsearch/identifiers.py` | DOI / OpenAlex / arXiv 归一化、别名集合、兜底键 |
