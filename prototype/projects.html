@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="LEExtractor 项目列表 — 已保存会话的恢复、导入、损坏文件与写入冲突处理（界面演示）">
+<title>项目列表 — LEExtractor</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231b1c20'/%3E%3Cpath d='M10 10L22 22M22 10L10 22' stroke='white' stroke-width='5'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body data-page="projects">
+
+<a class="skip-link" href="#main" id="skipLink"></a>
+<div id="shell"></div>
+
+<main id="main" class="page" data-trigger="rerender">
+  <div class="container container--wide">
+
+    <div class="page-head">
+      <div class="page-head__row">
+        <div>
+          <h1 id="pageTitle"></h1>
+          <p id="pageLead"></p>
+        </div>
+        <div class="page-head__actions">
+          <a class="btn" href="search.html" id="toSearch"></a>
+          <a class="btn btn--primary" href="results.html" id="toResults"></a>
+          <a class="btn" href="settings.html" id="toSettings"></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================ 1. 已保存会话 -->
+    <section class="card mb-6" aria-labelledby="gridTitle">
+      <div class="card__head">
+        <h3 id="gridTitle"></h3>
+        <div class="row" style="gap:var(--s-2)">
+          <span id="gridDemo"></span>
+          <span class="badge badge--outline" id="gridCount"></span>
+        </div>
+      </div>
+      <div class="card__body">
+        <p class="t-xs t-muted" id="gridNote"></p>
+        <div class="cols-3 mt-6" id="sessionGrid"></div>
+        <p class="t-xs t-muted mt-4" id="stopHiddenNote"></p>
+      </div>
+    </section>
+
+    <!-- ============================================ 2. 损坏会话（单独呈现） -->
+    <section class="card mb-6" id="corruptSection" aria-labelledby="corruptTitle" hidden>
+      <div class="card__head">
+        <h3 id="corruptTitle"></h3>
+        <div class="row" style="gap:var(--s-2)">
+          <span id="corruptDemo"></span>
+          <span class="badge badge--err" id="corruptBadge"></span>
+        </div>
+      </div>
+      <div class="card__body">
+        <p class="t-xs t-muted" id="corruptNote"></p>
+        <div class="stack stack--sm mt-6" id="corruptList"></div>
+      </div>
+    </section>
+
+    <!-- ============================================ 3. 缺口 G1 -->
+    <section class="card mb-6" aria-labelledby="gapTitle">
+      <div class="card__head">
+        <h3 id="gapTitle"></h3>
+        <span class="badge badge--warn" id="gapBadge"></span>
+      </div>
+      <div class="card__body">
+        <p class="t-sm" id="gapBody"></p>
+        <div class="panel-note mt-4" style="background:var(--info-bg);border:1px solid var(--info-line);padding:var(--s-3) var(--s-4)">
+          <p class="t-sm" style="color:var(--info)" id="gapFix"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================ 4. 导入 与 写入冲突 -->
+    <div class="cols-2 mb-6">
+      <section class="card" aria-labelledby="importTitle">
+        <div class="card__head">
+          <h3 id="importTitle"></h3>
+          <span class="badge badge--outline" id="importBadge"></span>
+        </div>
+        <div class="card__body">
+          <p class="t-sm" id="importNote"></p>
+          <div class="row mt-4" style="gap:var(--s-3)">
+            <input type="file" id="importFile" class="visually-hidden" tabindex="-1" accept=".json,.session,.leext">
+            <button type="button" class="btn" id="importPick"></button>
+            <span class="t-xs t-muted" id="importFileInfo"></span>
+          </div>
+          <p class="t-xs t-muted mt-3" id="importHint"></p>
+          <p class="t-xs t-muted mt-2" id="importStatic"></p>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="conflictTitle">
+        <div class="card__head">
+          <h3 id="conflictTitle"></h3>
+          <span class="badge badge--ok" id="conflictBadge"></span>
+        </div>
+        <div class="card__body">
+          <p class="t-sm" id="conflictBody"></p>
+          <p class="t-xs t-muted mt-3" id="conflictNote"></p>
+        </div>
+      </section>
+    </div>
+
+    <!-- ============================================ 5. 离线演示入口 -->
+    <section class="card" aria-labelledby="demoTitle">
+      <div class="card__head">
+        <h3 id="demoTitle"></h3>
+        <span id="demoBadge"></span>
+      </div>
+      <div class="card__body">
+        <p class="t-sm" id="demoBody"></p>
+        <div class="row mt-4">
+          <button type="button" class="btn btn--primary" id="demoBtn"></button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<div id="foot"></div>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script src="assets/i18n-pages.js"></script>
+<script src="assets/i18n-projects.js"></script>
+<script>
+(function () {
+  'use strict';
+  const D = window.LED;
+  const $ = (sel) => document.querySelector(sel);
+  const s = (k, v) => LE.pt('projects', k, v);
+
+  /* screening_status 的四个合法取值。这里用页面字典渲染，而不是
+     LE.badgeScreening()：app.js 的共享字典只定义了 include / exclude /
+     maybe / undecided，传 screening_status 会把 key 原样显示成
+     "sch.preliminary_included"。 */
+  const SCR_CLASS = {
+    not_started: 'badge--undec',
+    preliminary_included: 'badge--warn',
+    final_included: 'badge--ok',
+    excluded: 'badge--exc',
+  };
+  const SCR_KEY = {
+    not_started: 'screenNotStarted',
+    preliminary_included: 'screenPreliminary',
+    final_included: 'screenFinal',
+    excluded: 'screenExcluded',
+  };
+  const PHASE_KEY = {
+    screening: 'phaseScreening',
+    search: 'phaseSearch',
+    expand: 'phaseExpand',
+    unknown: 'phaseUnknown',
+  };
+
+  function screeningBadge(v) {
+    const key = SCR_CLASS[v] ? v : 'not_started';
+    return `<span class="badge ${SCR_CLASS[key]}">${LE.esc(s(SCR_KEY[key]))}</span>`;
+  }
+  function phaseLabel(v) {
+    return PHASE_KEY[v] ? s(PHASE_KEY[v]) : String(v || '');
+  }
+  function dateOf(v) { return LE.esc(String(v || '').slice(0, 10)); }
+
+  /* ================================================================ 会话卡片
+     G1：卡片上**不显示** stop_reason —— 会话文件不保存它，恢复后回落为空。 */
+  function sessionCard(x) {
+    return `<article class="card">
+      <div class="card__body">
+        <div class="row" style="gap:var(--s-2)">
+          ${x.is_current ? `<span class="badge badge--info">${LE.esc(s('current'))}</span>` : ''}
+          ${screeningBadge(x.screening_status)}
+          ${x.demo ? LE.badgeDemo() : ''}
+        </div>
+        <h3 class="mt-3" style="font-size:var(--fs-h4)">${LE.esc(x.topic)}</h3>
+        <p class="t-sm t-muted mt-2">${x.direction
+          ? LE.esc(x.direction)
+          : `<span class="t-muted">${LE.esc(s('noDirection'))}</span>`}</p>
+        <dl class="dl dl--tight mt-4">
+          <dt>${LE.esc(s('papersLabel'))}</dt>
+          <dd class="t-num">${LE.num(x.papers)}</dd>
+          <dt>${LE.esc(s('phaseLabel'))}</dt>
+          <dd>${LE.esc(phaseLabel(x.phase))} <code class="t-xs t-muted">${LE.esc(String(x.phase || ''))}</code></dd>
+          <dt>${LE.esc(s('updatedLabel'))}</dt>
+          <dd class="t-num">${dateOf(x.updated_at)}</dd>
+          <dt>${LE.esc(s('schemaLabel'))}</dt>
+          <dd class="t-num">v${LE.esc(String(x.schema_version))}</dd>
+          <dt>${LE.esc(s('projectIdLabel'))}</dt>
+          <dd class="t-mono t-xs">${LE.esc(x.id)}</dd>
+        </dl>
+        <div class="row mt-4" style="gap:var(--s-2)">
+          ${x.is_current ? `<a class="btn btn--sm btn--primary" href="results.html">${LE.esc(s('continueAction'))}</a>` : ''}
+          <button type="button" class="btn btn--sm" data-restore="${LE.esc(x.id)}">${LE.esc(s('restore'))}</button>
+          <button type="button" class="btn btn--sm" data-saveas="${LE.esc(x.id)}">${LE.esc(s('saveAs'))}</button>
+        </div>
+      </div>
+    </article>`;
+  }
+
+  /* 损坏会话：单独呈现，显示原因与备份文件名，没有「继续」按钮。 */
+  function corruptCard(x) {
+    return `<article class="card" style="border-color:var(--err-line)">
+      <div class="card__body">
+        <div class="row" style="gap:var(--s-2)">
+          <span class="badge badge--err">${LE.esc(s('corruptBadge'))}</span>
+          ${x.demo ? LE.badgeDemo() : ''}
+        </div>
+        <h3 class="mt-3" style="font-size:var(--fs-h4)">${LE.esc(x.topic)}</h3>
+        <div class="cols-2 mt-4">
+          <dl class="dl dl--tight">
+            <dt>${LE.esc(s('corruptReasonLabel'))}</dt>
+            <dd class="t-sm" style="color:var(--err)">${LE.esc(String(x.corrupt_reason || ''))}</dd>
+            <dt>${LE.esc(s('corruptBackupLabel'))}</dt>
+            <dd class="t-mono t-xs">${LE.esc(String(x.backup || ''))}</dd>
+            <dt>${LE.esc(s('updatedLabel'))}</dt>
+            <dd class="t-num">${dateOf(x.updated_at)}</dd>
+            <dt>${LE.esc(s('schemaLabel'))}</dt>
+            <dd class="t-num">v${LE.esc(String(x.schema_version))}</dd>
+            <dt>${LE.esc(s('projectIdLabel'))}</dt>
+            <dd class="t-mono t-xs">${LE.esc(x.id)}</dd>
+          </dl>
+          <div class="panel-note" style="background:var(--err-bg);border:1px solid var(--err-line);padding:var(--s-4)">
+            <p class="t-sm" style="color:var(--err)">${LE.esc(s('corruptPolicy'))}</p>
+            <p class="t-sm mt-2" style="color:var(--err)">${LE.esc(s('corruptNoContinue'))}</p>
+          </div>
+        </div>
+      </div>
+    </article>`;
+  }
+
+  /* ================================================================ 静态文案 */
+  function renderStatic() {
+    document.title = s('title') + ' — LEExtractor';
+    $('#skipLink').textContent = s('skip');
+    $('#pageTitle').textContent = s('title');
+    $('#pageLead').innerHTML = LE.rich(s('lead'));
+    $('#toSearch').textContent = s('toSearch');
+    $('#toResults').textContent = s('toResults');
+    $('#toSettings').textContent = s('toSettings');
+
+    $('#gridTitle').textContent = s('gridTitle');
+    $('#gridNote').textContent = s('gridNote');
+    $('#stopHiddenNote').textContent = s('stopHiddenNote');
+    $('#gridDemo').innerHTML = LE.badgeDemo();
+
+    $('#corruptTitle').textContent = s('corruptTitle');
+    $('#corruptBadge').textContent = s('corruptBadge');
+    $('#corruptNote').textContent = s('corruptNote');
+    $('#corruptDemo').innerHTML = LE.badgeDemo();
+
+    $('#gapTitle').textContent = s('gapTitle');
+    $('#gapBadge').textContent = 'G1';
+    $('#gapBody').innerHTML = LE.rich(s('gapBody'));
+    $('#gapFix').textContent = s('gapFix');
+
+    $('#importTitle').textContent = s('importTitle');
+    $('#importNote').innerHTML = LE.rich(s('importNote'));
+    $('#importPick').textContent = s('importPick');
+    $('#importHint').textContent = s('importHint');
+    $('#importStatic').textContent = s('importStatic');
+
+    $('#conflictTitle').textContent = s('conflictTitle');
+    $('#conflictBadge').textContent = s('conflictBadge');
+    $('#conflictBody').textContent = s('conflictBody');
+    $('#conflictNote').textContent = s('conflictNote');
+
+    $('#demoTitle').textContent = s('demoTitle');
+    $('#demoBody').textContent = s('demoBody');
+    $('#demoBtn').textContent = s('demoBtn');
+    $('#demoBadge').innerHTML = LE.badgeDemo();
+
+    const file = $('#importFile');
+    if (!(file && file.files && file.files.length)) $('#importFileInfo').textContent = s('importNone');
+  }
+
+  /* ================================================================ 会话列表 */
+  function wireCards() {
+    LE.$$('[data-restore]').forEach((b) => {
+      const id = b.getAttribute('data-restore');
+      const x = D.sessions.filter((y) => y.id === id)[0];
+      b.onclick = () => LE.toast(s('restoreToast', { topic: x ? x.topic : id }));
+    });
+    LE.$$('[data-saveas]').forEach((b) => {
+      const id = b.getAttribute('data-saveas');
+      const x = D.sessions.filter((y) => y.id === id)[0];
+      b.onclick = () => LE.toast(s('saveAsToast', { topic: x ? x.topic : id }));
+    });
+  }
+
+  function renderSessions() {
+    const normal = D.sessions.filter((x) => !x.corrupt);
+    const corrupt = D.sessions.filter((x) => x.corrupt === true);
+    $('#gridCount').textContent = LE.num(normal.length) + ' / ' + LE.num(D.sessions.length);
+    $('#sessionGrid').innerHTML = normal.length
+      ? normal.map(sessionCard).join('')
+      : `<p class="t-sm t-muted">${LE.esc(s('empty'))}</p>`;
+
+    $('#corruptSection').hidden = !corrupt.length;
+    $('#corruptList').innerHTML = corrupt.map(corruptCard).join('');
+    wireCards();
+  }
+
+  /* ================================================================ 导入与演示 */
+  $('#importPick').onclick = () => {
+    const file = $('#importFile');
+    if (file) file.click();
+  };
+  $('#importFile').onchange = () => {
+    const file = $('#importFile');
+    const picked = file && file.files && file.files[0];
+    if (!picked) { $('#importFileInfo').textContent = s('importNone'); return; }
+    /* 只读文件名这一元数据；纯静态原型不读取文件内容，也不写任何文件。 */
+    $('#importFileInfo').textContent = s('importChosen', { name: picked.name });
+    LE.toast(s('importToast', { name: picked.name }));
+  };
+  $('#demoBtn').onclick = () => LE.toast(s('demoToast'));
+
+  /* ================================================================ 主渲染 */
+  function renderAll() {
+    renderStatic();
+    renderSessions();
+  }
+
+  /* 语言切换：app.js 的 setLang 把 le:lang 派发到 [data-trigger="rerender"] 上
+     （不冒泡），所以本页在 main 上声明该钩子并在此监听；document 上的监听保留，
+     以便共享外壳日后改为在 document 上派发时依然生效。 */
+  function onLangChange() { renderAll(); }
+  document.addEventListener('le:lang', onLangChange);
+  const langTrigger = document.querySelector('[data-trigger="rerender"]');
+  if (langTrigger) langTrigger.addEventListener('le:lang', onLangChange);
+
+  renderAll();
+  LE.mount({ page: 'projects' });
+})();
+</script>
+</body>
+</html>

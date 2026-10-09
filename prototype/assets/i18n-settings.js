@@ -1,0 +1,212 @@
+/* ============================================================================
+   LEExtractor — 设置与诊断页双语文案（页面级字典）
+   ----------------------------------------------------------------------------
+   加载顺序（必须严格如此，且在本文件之后才是页面脚本）：
+     assets/data.js → assets/app.js → assets/i18n-pages.js
+       → assets/i18n-settings.js → 页面内的 <script>
+
+   用法：const s = (k, v) => LE.pt('settings', k, v);
+
+   约定：页面文案一律走 LE.pt()，**不要**给页面文案加 data-i18n 属性 ——
+   applyI18n() 只认 app.js 的共享字典，会把页面 key 原样写出来。
+   ========================================================================== */
+
+'use strict';
+
+Object.assign(window.LE_PAGES, {
+  settings: {
+    zh: {
+      skip: '跳到主内容',
+      title: '设置与诊断',
+      lead: '数据源密钥、偏好与本次运行的真实计数。**密钥只写入本机 .env，界面永不回显**；本页数字来自示例运行记录。',
+      toHome: '← 研究探索',
+      toResults: '当前项目结果 →',
+      toProjects: '项目列表 →',
+
+      /* ---------------------------------------------------------- 数据源 */
+      provTitle: '数据源',
+      provNote: '「已配置」只表示本机存在对应的环境变量；界面不读取、不显示密钥内容。',
+      provConfigured: '已配置',
+      provNotConfigured: '未配置密钥',
+      provKeyEnv: '环境变量',
+      provNoKey: '无需密钥',
+      provRate: '速率说明',
+      provDocs: '官方申请地址',
+      keyLabel: 'API 密钥',
+      keyPh: '粘贴密钥后点保存',
+      keyHint: '密钥只写入本机 .env，界面永不回显。',
+      keySave: '保存密钥',
+      keySaveToast: '演示原型：密钥保存将在阶段二写入本机 .env；本原型不读取、不保存任何输入。',
+      keyEmptyNote: '所有密钥输入框一律为空：界面只显示「是否已配置」，从不回显真实密钥。',
+
+      /* ---------------------------------------------------------- 偏好 */
+      prefTitle: '偏好设置',
+      prefNote: '这些偏好写入本机配置文件；示例原型的改动只停在界面上。',
+      prefReset: '恢复默认值',
+      prefResetToast: '已恢复为示例默认值（界面未写入任何文件）。',
+      prefToast: '演示原型：偏好改动将在阶段二写入本机配置与会话。',
+      on: '开',
+      off: '关',
+      prefLanguage: '界面语言',
+      prefLanguageHint: '切换后立即生效，并记入本机配置。',
+      prefAutoScreen: '自动筛选（auto_screen）',
+      prefAutoScreenDefault: '默认关闭',
+      prefAutoScreenHint: '默认关闭。未标定时相关度只用于排序，不能自动排除文献。',
+      prefReviewMode: '系统综述模式（PRISMA）',
+      prefReviewModeHint: '开启后侧栏出现「筛选与 PRISMA」页面。',
+      prefMaxPdf: '单个 PDF 体积上限（MiB）',
+      prefMaxPdfHint: '超过该上限的 PDF 会被拒绝下载，而不是截断后保存。',
+      prefYearsBack: '默认回溯年数',
+      prefYearsBackHint: '只决定检索起点，之后仍可在搜索页调整年份范围。',
+      prefMaxPapers: '最多保留文献数',
+      prefMaxPapersHint: '多源结果合并排序后保留前 N 篇；值越大，后续阅读与 API 请求越多。',
+      prefScale: '默认检索规模',
+      prefScaleHint: '预设只决定起点，之后仍可微调。',
+      scaleQuick: '快速',
+      scaleStandard: '标准',
+      scaleDeep: '深入',
+
+      /* ---------------------------------------------------------- 诊断 */
+      diagTitle: '运行诊断',
+      diagNote: '按 level 区分配色：info 中性、warn 警告、error 错误；只记录已经发生的事实。',
+      diagFilter: '级别过滤',
+      diagAll: '全部',
+      diagEmpty: '当前级别下没有诊断记录。',
+      diagCount: '显示 {n} / {total} 条',
+      diagSource: '来源',
+
+      /* ---------------------------------------------------------- HTTP 预算 */
+      httpTitle: 'HTTP 预算',
+      httpUnit: '计数单位：HTTP 请求',
+      httpNote: '这里是**真实 HTTP 计数，不是方法调用次数**：一次调用可能分页、重试、回退，每一次都会各自抵达传输层并计入 requests。',
+      httpRequests: 'requests 请求',
+      httpRetries: 'retries 重试',
+      httpCache: 'cache_hits 缓存命中',
+      httpRateLimited: 'rate_limited 限流',
+      httpErrors: 'errors 错误',
+      httpCanceled: 'canceled 取消',
+      httpElapsed: 'elapsed_seconds 用时',
+      httpBySource: '分库明细（by_source）',
+      httpColSource: '来源',
+      httpColRequests: '请求',
+      httpColRetries: '重试',
+      httpColRate: '限流',
+      httpColErrors: '错误',
+      httpTotal: '合计',
+      httpSumNote: 'cache_hits 只计总量：by_source 的分桶里没有 cache_hits 键。requests ≥ errors 是硬不变量（记错误时同时加 requests）。',
+      yes: '是',
+      no: '否',
+      sec: '秒',
+
+      /* ---------------------------------------------------------- 停止原因 */
+      stopTitle: '停止原因字典',
+      stopCount: '共 8 个取值',
+      stopColCode: '取值（stop_reason）',
+      stopColMeaning: '含义',
+      stopColGroup: '是否允许声称完成',
+      stopGroupComplete: '允许声称检索完成',
+      stopGroupIncomplete: '不完整、可续跑',
+      stopNoteComplete: '只有这两个原因允许声称检索已完成。',
+      stopNoteIncomplete: '这六个原因属于不完整结束，可续跑；不得报告为覆盖完成。',
+      stopGapTitle: '已知缺口 G5',
+      stopGap: '现有 GUI 从未展示停止原因：app.py 没有渲染 StopReason 的任何位置，引文扩展页只用「最后一轮新增 < 5 篇」这一条硬编码文案，八个原因在界面上完全区分不出来。本页把八个取值全部列出来，并按「是否允许声称覆盖完成」着色。',
+    },
+
+    en: {
+      skip: 'Skip to main content',
+      title: 'Settings & diagnostics',
+      lead: 'Provider keys, preferences and the real counters of this run. **Keys go only to the local .env; the interface never echoes them.** The numbers here come from a sample run.',
+      toHome: '← Explore',
+      toResults: 'Current project results →',
+      toProjects: 'Projects →',
+
+      /* ---------------------------------------------------------- providers */
+      provTitle: 'Providers',
+      provNote: '"Configured" only means the matching environment variable exists on this machine; the interface never reads or shows key material.',
+      provConfigured: 'Configured',
+      provNotConfigured: 'No key',
+      provKeyEnv: 'Environment variable',
+      provNoKey: 'No key required',
+      provRate: 'Rate note',
+      provDocs: 'Official application page',
+      keyLabel: 'API key',
+      keyPh: 'Paste the key, then save',
+      keyHint: 'The key is written only to the local .env; the interface never echoes it.',
+      keySave: 'Save key',
+      keySaveToast: 'Prototype: saving a key writes to the local .env in stage two; this prototype neither reads nor stores any input.',
+      keyEmptyNote: 'Every key field is deliberately empty: the interface only shows whether a key is configured and never echoes a real value.',
+
+      /* ---------------------------------------------------------- preferences */
+      prefTitle: 'Preferences',
+      prefNote: 'These preferences are written to the local config file; in this prototype the change stays in the interface.',
+      prefReset: 'Restore defaults',
+      prefResetToast: 'Restored the sample defaults (nothing was written to disk).',
+      prefToast: 'Prototype: preference changes are written to the local config and the session in stage two.',
+      on: 'on',
+      off: 'off',
+      prefLanguage: 'Interface language',
+      prefLanguageHint: 'Applies immediately and is recorded in the local config.',
+      prefAutoScreen: 'Automatic screening (auto_screen)',
+      prefAutoScreenDefault: 'off by default',
+      prefAutoScreenHint: 'Off by default. While uncalibrated, relevance only ranks — it must never exclude a paper automatically.',
+      prefReviewMode: 'Systematic review mode (PRISMA)',
+      prefReviewModeHint: 'Adds the screening & PRISMA page to the sidebar.',
+      prefMaxPdf: 'Maximum PDF size (MiB)',
+      prefMaxPdfHint: 'A PDF above this limit is refused, not truncated and saved anyway.',
+      prefYearsBack: 'Default years back',
+      prefYearsBackHint: 'Sets the starting point only; the year range stays adjustable on the search page.',
+      prefMaxPapers: 'Maximum retained papers',
+      prefMaxPapersHint: 'Keep the top N after merging and ranking; larger values mean more reading and more API requests.',
+      prefScale: 'Default search size',
+      prefScaleHint: 'A preset only sets the starting point and stays adjustable.',
+      scaleQuick: 'Quick',
+      scaleStandard: 'Standard',
+      scaleDeep: 'Deep',
+
+      /* ---------------------------------------------------------- diagnostics */
+      diagTitle: 'Run diagnostics',
+      diagNote: 'Coloured by level: info neutral, warn caution, error failure. Only facts that actually happened are recorded.',
+      diagFilter: 'Filter by level',
+      diagAll: 'All',
+      diagEmpty: 'No diagnostics at this level.',
+      diagCount: 'Showing {n} of {total}',
+      diagSource: 'Source',
+
+      /* ---------------------------------------------------------- HTTP budget */
+      httpTitle: 'HTTP budget',
+      httpUnit: 'Unit: HTTP requests',
+      httpNote: 'These are **real HTTP counts, not method-call counts**: a single call may page, retry and fall back, and every one of those reaches the transport layer and is counted in requests.',
+      httpRequests: 'requests',
+      httpRetries: 'retries',
+      httpCache: 'cache_hits',
+      httpRateLimited: 'rate_limited',
+      httpErrors: 'errors',
+      httpCanceled: 'canceled',
+      httpElapsed: 'elapsed_seconds',
+      httpBySource: 'Per-provider detail (by_source)',
+      httpColSource: 'Provider',
+      httpColRequests: 'Requests',
+      httpColRetries: 'Retries',
+      httpColRate: 'Rate-limited',
+      httpColErrors: 'Errors',
+      httpTotal: 'Total',
+      httpSumNote: 'cache_hits is a global counter only: the per-provider buckets have no cache_hits key. requests ≥ errors is a hard invariant (an error also adds a request).',
+      yes: 'yes',
+      no: 'no',
+      sec: 's',
+
+      /* ---------------------------------------------------------- stop reasons */
+      stopTitle: 'Stop-reason dictionary',
+      stopCount: 'All 8 values',
+      stopColCode: 'Value (stop_reason)',
+      stopColMeaning: 'Meaning',
+      stopColGroup: 'Allows claiming completion',
+      stopGroupComplete: 'Allows claiming a completed search',
+      stopGroupIncomplete: 'Incomplete, resumable',
+      stopNoteComplete: 'Only these two reasons allow claiming the search completed.',
+      stopNoteIncomplete: 'These six endings are incomplete and resumable; they must never be reported as coverage.',
+      stopGapTitle: 'Known gap G5',
+      stopGap: 'The existing GUI never shows a stop reason: app.py renders StopReason nowhere, the citation-expansion page hard-codes one sentence about "fewer than 5 new records in the last round", and the eight reasons cannot be told apart in the interface. This page lists all eight values and colours them by whether they allow claiming coverage.',
+    },
+  },
+});

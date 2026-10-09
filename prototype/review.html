@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="LEExtractor 筛选与 PRISMA — 两阶段人工筛选、账本与流程图（界面演示）">
+<title>筛选与 PRISMA — LEExtractor</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231b1c20'/%3E%3Cpath d='M10 10L22 22M22 10L10 22' stroke='white' stroke-width='5'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body data-page="review">
+
+<a class="skip-link" href="#main" id="skipLink"></a>
+<div id="shell"></div>
+
+<main id="main" class="page">
+  <div class="container container--wide">
+
+    <div class="page-head">
+      <div class="page-head__row">
+        <div>
+          <h1 id="pageTitle"></h1>
+          <p id="pageLead"></p>
+        </div>
+        <div class="page-head__actions">
+          <a class="btn" href="results.html" id="toResults"></a>
+          <a class="btn" href="export.html" id="toExport"></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="shell shell--wide shell--main-first">
+      <section class="stack">
+
+        <!-- ==================================================== 阶段切换 -->
+        <div class="card">
+          <div class="card__head">
+            <div class="segmented" id="stageTabs" role="tablist"></div>
+            <span class="t-xs t-muted" id="stageMeta"></span>
+          </div>
+          <div class="card__body">
+            <p class="t-sm t-muted" id="stageNote"></p>
+            <div id="ftLocked"></div>
+          </div>
+        </div>
+
+        <!-- ==================================================== 待处理队列 -->
+        <div class="card">
+          <div class="card__head">
+            <h3 id="queueTitle"></h3>
+            <div class="row" style="gap:var(--s-2)" id="queueFilter"></div>
+          </div>
+          <div class="card__body" id="queueBody"></div>
+        </div>
+
+        <!-- ==================================================== 冲突复核 -->
+        <div class="card" id="conflictCard">
+          <div class="card__head"><h3 id="conflictTitle"></h3></div>
+          <div class="card__body" id="conflictBody"></div>
+        </div>
+
+        <!-- ==================================================== 已决定记录 -->
+        <div class="card">
+          <div class="card__head">
+            <h3 id="decidedTitle"></h3>
+            <span class="t-xs t-muted" id="decidedMeta"></span>
+          </div>
+          <div class="card__body" style="padding:0">
+            <div class="table-wrap">
+              <div class="table-scroll">
+                <table class="table">
+                  <thead><tr id="decidedHead"></tr></thead>
+                  <tbody id="decidedBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================================================== PRISMA -->
+        <div class="card">
+          <div class="card__head"><h3 id="prismaTitle"></h3></div>
+          <div class="card__body">
+            <div class="funnel" id="prismaFunnel"></div>
+            <p class="t-xs t-muted mt-4" id="prismaUnit"></p>
+
+            <div class="cols-3 mt-6">
+              <div>
+                <span class="label" id="pIdentLabel"></span>
+                <dl class="dl dl--tight mt-2" id="pIdentBody"></dl>
+              </div>
+              <div>
+                <span class="label" id="pScreenLabel"></span>
+                <dl class="dl dl--tight mt-2" id="pScreenBody"></dl>
+              </div>
+              <div>
+                <span class="label" id="pEligLabel"></span>
+                <dl class="dl dl--tight mt-2" id="pEligBody"></dl>
+              </div>
+            </div>
+
+            <div class="card card--sunk mt-6">
+              <div class="card__body">
+                <h4 id="gapG2"></h4>
+                <p class="t-sm t-muted mt-2" id="gapG2Text"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================================================== 账本 -->
+        <div class="card">
+          <div class="card__head"><h3 id="ledgerTitle"></h3></div>
+          <div class="card__body" style="padding:0">
+            <div class="table-wrap">
+              <div class="table-scroll">
+                <table class="table">
+                  <thead><tr id="ledgerHead"></tr></thead>
+                  <tbody id="ledgerBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="card__foot"><p class="t-xs t-muted" id="ledgerNote"></p></div>
+        </div>
+
+      </section>
+
+      <!-- ==================================================== 右：事实与标定 -->
+      <aside class="stack stack--sm" aria-labelledby="factsTitle">
+
+        <div class="card">
+          <div class="card__head"><h3 id="factsTitle"></h3></div>
+          <div class="card__body">
+            <dl class="dl dl--tight" id="factsBody"></dl>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__head"><h3 id="autoTitle"></h3></div>
+          <div class="card__body">
+            <dl class="dl dl--tight" id="autoBody"></dl>
+            <p class="t-xs t-muted mt-3" id="calibNote"></p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__head"><h3 id="retrievalTitle"></h3></div>
+          <div class="card__body">
+            <div class="meter mb-4" id="retrievalMeter"></div>
+            <ul class="stack stack--sm" id="retrievalList"></ul>
+            <p class="t-xs t-muted mt-3" id="retrievalNote"></p>
+          </div>
+        </div>
+
+      </aside>
+    </div>
+  </div>
+</main>
+
+<div id="foot"></div>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script src="assets/i18n-pages.js"></script>
+<script>
+(function () {
+  'use strict';
+  const D = window.LED;
+  const $ = (sel) => document.querySelector(sel);
+  const s = (k, v) => LE.pt('review', k, v);
+
+  let stage = 'title_abstract';
+  let queueFilter = 'pending';
+
+  /* 逐条决定是唯一真源；这里只读，不改 data.js */
+  const decidedIds = () => D.papers.filter((p) => D.decisions[p.id]).map((p) => p.id);
+  const pendingIds = () => D.papers.filter((p) => !D.decisions[p.id]).map((p) => p.id);
+
+  function decisionBadge(p) {
+    const d = D.helpers.decisionOf(p);
+    return LE.badgeScreening(d ? d.decision : 'undecided');
+  }
+
+  /* ------------------------------------------------------------------ 阶段 */
+  function renderStage() {
+    $('#stageTabs').innerHTML = `
+      <button type="button" role="tab" data-stage="title_abstract" aria-selected="${stage === 'title_abstract'}">${LE.esc(s('stageTA'))}</button>
+      <button type="button" role="tab" data-stage="full_text" aria-selected="${stage === 'full_text'}">${LE.esc(s('stageFT'))}</button>`;
+    LE.$$('#stageTabs button').forEach((b) => {
+      b.onclick = () => { stage = b.getAttribute('data-stage'); render(); };
+    });
+    const tally = D.tally;
+    $('#stageMeta').textContent = stage === 'title_abstract'
+      ? `${tally.include + tally.exclude + tally.maybe} / ${D.papers.length}`
+      : `0 / ${tally.include}`;
+    $('#stageNote').textContent = s('stageNote');
+    $('#ftLocked').innerHTML = stage === 'full_text'
+      ? `<div class="state state--error" style="padding:var(--s-6)">
+           <span class="state__icon" aria-hidden="true">!</span>
+           <h3>${LE.esc(s('ftLocked'))}</h3>
+           <p>${LE.esc(D.prisma.note)}</p>
+         </div>`
+      : '';
+    // 全文章签禁用依据：全文阶段未完成
+    const ftBtn = LE.$$('#stageTabs button')[1];
+    if (ftBtn) ftBtn.setAttribute('aria-disabled', D.screening.full_text_review_completed ? 'false' : 'true');
+  }
+
+  /* ------------------------------------------------------------------ 队列 */
+  function renderQueue() {
+    $('#queueTitle').textContent = s('queueTitle');
+    $('#queueFilter').innerHTML = ['pending', 'all', 'decided'].map((f) => `
+      <button type="button" class="chip" data-q="${f}" aria-pressed="${queueFilter === f}">${LE.esc(s('filter' + f.charAt(0).toUpperCase() + f.slice(1)))}</button>`).join('');
+    LE.$$('#queueFilter .chip').forEach((c) => {
+      c.onclick = () => { queueFilter = c.getAttribute('data-q'); render(); };
+    });
+
+    let list;
+    if (queueFilter === 'pending') list = D.papers.filter((p) => !D.decisions[p.id] || D.decisions[p.id].decision === 'maybe');
+    else if (queueFilter === 'decided') list = D.papers.filter((p) => D.decisions[p.id] && D.decisions[p.id].decision !== 'maybe');
+    else list = D.papers;
+
+    const box = $('#queueBody');
+    if (!list.length) {
+      box.innerHTML = `<div class="state"><span class="state__icon" aria-hidden="true">∅</span>
+        <h3>${LE.esc(s('queueEmpty'))}</h3></div>`;
+      return;
+    }
+    box.innerHTML = `<div class="stack stack--sm">${list.map((p) => {
+      const d = D.helpers.decisionOf(p);
+      return `
+        <div class="card card--sunk" data-row="${LE.esc(p.id)}">
+          <div class="card__body">
+            <div class="row row--between">
+              <button type="button" class="result-item__title" data-open="${LE.esc(p.id)}">${LE.esc(p.title)}</button>
+              ${LE.badgeScreening(d ? d.decision : 'undecided')}
+            </div>
+            <div class="result-item__meta">
+              <span>${p.year || LE.t('common.unknown')}</span><span class="sep">·</span>
+              <span>${LE.esc(p.venue || LE.t('common.notProvided'))}</span><span class="sep">·</span>
+              ${LE.badgeSource(p.source)}
+              <span class="sep">·</span>
+              <span class="t-num">${LE.esc(p.relevance_score.toFixed(3))}</span>
+            </div>
+            ${d ? `<p class="t-xs t-muted mt-3">${LE.esc(d.reason)}</p>` : ''}
+            <div class="mt-3">
+              <label class="visually-hidden" for="reason-${LE.esc(p.id)}">${LE.esc(s('reasonPrompt'))}</label>
+              <input class="input" id="reason-${LE.esc(p.id)}" data-reason="${LE.esc(p.id)}"
+                     placeholder="${LE.esc(s('reasonPlaceholder'))}" value="${d ? LE.esc(d.reason) : ''}">
+            </div>
+            <div class="row mt-3">
+              <span class="btn-group" role="group">
+                <button type="button" data-decide="include" data-for="${LE.esc(p.id)}" aria-pressed="${d && d.decision === 'include'}">${LE.esc(LE.t('act.include'))}</button>
+                <button type="button" data-decide="maybe" data-for="${LE.esc(p.id)}" aria-pressed="${d && d.decision === 'maybe'}">${LE.esc(LE.t('act.maybe'))}</button>
+                <button type="button" data-decide="exclude" data-for="${LE.esc(p.id)}" aria-pressed="${d && d.decision === 'exclude'}">${LE.esc(LE.t('act.exclude'))}</button>
+              </span>
+              ${stage === 'title_abstract' ? '' : `<span class="badge badge--warn">${LE.esc(s('stageFT'))}</span>`}
+            </div>
+          </div>
+        </div>`;
+    }).join('')}</div>`;
+
+    LE.$$('[data-open]', box).forEach((b) => { b.onclick = () => LE.openDrawer(b.getAttribute('data-open'), { push: true }); });
+    LE.$$('[data-decide]', box).forEach((b) => {
+      b.onclick = () => {
+        const id = b.getAttribute('data-for');
+        const field = box.querySelector(`[data-reason="${CSS.escape(id)}"]`);
+        const reason = field ? field.value.trim() : '';
+        if (!reason) { LE.toast(s('noReason')); if (field) field.focus(); return; }
+        const choose = b.getAttribute('data-decide');
+        /* 原型不写回 data.js：只在界面上体现，并说明阶段二的真实行为 */
+        b.parentElement.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+        LE.toast(s('recorded', { d: LE.t('sch.' + choose) }));
+      };
+    });
+  }
+
+  /* ------------------------------------------------------------------ 冲突 */
+  function renderConflicts() {
+    $('#conflictTitle').textContent = s('conflictTitle');
+    if (!D.conflicts.length) {
+      $('#conflictCard').hidden = true;
+      return;
+    }
+    $('#conflictCard').hidden = false;
+    $('#conflictBody').innerHTML = D.conflicts.map((c) => {
+      const p = D.byId.get(c.paperId);
+      return `
+        <div class="job job--partial">
+          <div class="job__head">
+            <button type="button" class="result-item__title" data-open="${LE.esc(c.paperId)}">${LE.esc(p.title)}</button>
+            <span class="badge badge--warn">${LE.esc(c.status)}</span>
+          </div>
+          <div class="edges mt-3">
+            ${c.decisions.map((d) => `
+              <div class="edge">
+                <span class="edge__dot" style="background:${d.decision === 'include' ? 'var(--dec-include)' : d.decision === 'exclude' ? 'var(--dec-exclude)' : 'var(--dec-maybe)'}"></span>
+                <span class="edge__w t-nowrap">${LE.esc(d.by)}</span>
+                ${LE.badgeScreening(d.decision)}
+                <span class="edge__name">${LE.esc(d.reason)}</span>
+                <span class="edge__w">${LE.esc(d.at.slice(0, 10))}</span>
+              </div>`).join('')}
+          </div>
+          <p class="t-xs t-muted mt-3">${LE.esc(s('conflictNote'))}</p>
+          <div class="row mt-3">
+            <span class="label">${LE.esc(s('resolveTitle'))}</span>
+            <span class="btn-group" role="group">
+              <button type="button" data-resolve="include" data-for="${LE.esc(c.paperId)}">${LE.esc(LE.t('act.include'))}</button>
+              <button type="button" data-resolve="maybe" data-for="${LE.esc(c.paperId)}">${LE.esc(LE.t('act.maybe'))}</button>
+              <button type="button" data-resolve="exclude" data-for="${LE.esc(c.paperId)}">${LE.esc(LE.t('act.exclude'))}</button>
+            </span>
+          </div>
+        </div>`;
+    }).join('');
+    LE.$$('#conflictBody [data-open]').forEach((b) => { b.onclick = () => LE.openDrawer(b.getAttribute('data-open'), { push: true }); });
+    LE.$$('#conflictBody [data-resolve]').forEach((b) => {
+      b.onclick = () => LE.toast(s('resolved', { d: LE.t('sch.' + b.getAttribute('data-resolve')) }));
+    });
+  }
+
+  /* ------------------------------------------------------------------ 已决定 */
+  function renderDecided() {
+    $('#decidedTitle').textContent = s('decidedTitle');
+    const rows = D.papers.filter((p) => D.decisions[p.id]);
+    $('#decidedMeta').textContent = `${rows.length} / ${D.papers.length}`;
+    $('#decidedHead').innerHTML = `
+      <th>${LE.esc(s('colPaper'))}</th><th>${LE.esc(s('colDecision'))}</th>
+      <th>${LE.esc(s('colReason'))}</th><th>${LE.esc(s('colBy'))}</th><th>${LE.esc(s('colAt'))}</th>`;
+    $('#decidedBody').innerHTML = rows.length ? rows.map((p) => {
+      const d = D.decisions[p.id];
+      return `<tr>
+        <td class="title-cell"><button type="button" data-open="${LE.esc(p.id)}">${LE.esc(p.title)}</button>
+          <div class="t-xs t-muted">${LE.esc(p.venue || '')} · ${p.year || '?'}</div></td>
+        <td>${LE.badgeScreening(d.decision)}</td>
+        <td class="t-xs">${LE.esc(d.reason)}</td>
+        <td class="t-xs t-nowrap">${LE.esc(d.by)}</td>
+        <td class="t-xs t-nowrap">${LE.esc(d.at.slice(0, 10))}</td>
+      </tr>`;
+    }).join('') : `<tr><td colspan="5" class="t-muted">${LE.esc(s('noDecided'))}</td></tr>`;
+    LE.$$('#decidedBody [data-open]').forEach((b) => { b.onclick = () => LE.openDrawer(b.getAttribute('data-open'), { push: true }); });
+  }
+
+  /* ------------------------------------------------------------------ PRISMA */
+  function renderPrisma() {
+    const pr = D.prisma;
+    $('#prismaTitle').textContent = s('prismaTitle');
+    $('#prismaUnit').textContent = s('prismaUnit');
+
+    const steps = [
+      [s('recordsFromDb'), pr.identification.records_from_databases],
+      [s('recordsScreened'), pr.screening.records_screened],
+      [s('recordsDecided'), pr.screening.records_decided],
+      [s('studiesIncluded'), pr.included.studies_included],
+    ];
+    $('#prismaFunnel').innerHTML = steps.map(([label, value], i) => `
+      <div class="funnel__step metric ${i === 3 && value === 0 ? 'metric--warn' : ''}">
+        <span class="metric__label">${LE.esc(label)}</span>
+        <span class="metric__value" data-count="${value}">0</span>
+      </div>`).join('');
+    LE.$$('#prismaFunnel [data-count]').forEach((n) => LE.fx.countUp(n, Number(n.getAttribute('data-count'))));
+
+    $('#pIdentLabel').textContent = `${s('pIdent')} · record`;
+    $('#pIdentBody').innerHTML = `
+      <dt>${LE.esc(s('recordsFromDb'))}</dt><dd class="t-num">${LE.num(pr.identification.records_from_databases)}</dd>
+      <dt>${LE.esc(s('recordsDedup'))}</dt><dd class="t-num">${LE.num(pr.identification.duplicates_removed)}</dd>
+      <dt>${LE.esc(s('recordsScreened'))}</dt><dd class="t-num">${LE.num(pr.identification.records_screened)}</dd>`;
+
+    $('#pScreenLabel').textContent = `${s('pScreen')} · record`;
+    $('#pScreenBody').innerHTML = `
+      <dt>${LE.esc(s('recordsDecided'))}</dt><dd class="t-num">${LE.num(pr.screening.records_decided)}</dd>
+      <dt>${LE.esc(s('recordsIncluded'))}</dt><dd class="t-num">${LE.num(pr.screening.records_included)}</dd>
+      <dt>${LE.esc(s('recordsExcluded'))}</dt><dd class="t-num">${LE.num(pr.screening.records_excluded)}</dd>
+      <dt>${LE.esc(s('recordsMaybe'))}</dt><dd class="t-num">${LE.num(pr.screening.records_maybe)}</dd>
+      <dt>${LE.esc(s('recordsPending'))}</dt><dd class="t-num">${LE.num(pr.screening.records_pending)}</dd>`;
+
+    $('#pEligLabel').textContent = `${s('pElig')} · report`;
+    $('#pEligBody').innerHTML = `
+      <dt>${LE.esc(s('reportsAssessed'))}</dt><dd class="t-muted">${LE.esc(s('notStarted'))}</dd>
+      <dt>${LE.esc(s('reportsExcluded'))}</dt><dd class="t-muted">${LE.esc(s('notStarted'))}</dd>
+      <dt>${LE.esc(s('reportsIncluded'))}</dt><dd class="t-muted">${LE.esc(s('notStarted'))}</dd>
+      <dt>${LE.esc(s('studiesIncluded'))}</dt><dd class="t-num">${LE.num(pr.included.studies_included)} <span class="t-xs t-muted">(${LE.esc(pr.included.unit)})</span></dd>`;
+
+    $('#gapG2').textContent = s('gapG2');
+    $('#gapG2Text').textContent = s('gapG2Text');
+  }
+
+  function renderLedger() {
+    $('#ledgerTitle').textContent = s('ledgerTitle');
+    $('#ledgerHead').innerHTML = `
+      <th>${LE.esc(s('colSource'))}</th><th>${LE.esc(s('colLevel'))}</th>
+      <th class="num">${LE.esc(s('colRaw'))}</th><th class="num">${LE.esc(s('colUnique'))}</th>
+      <th class="num">${LE.esc(s('colDup'))}</th>`;
+    $('#ledgerBody').innerHTML = D.prisma.ledger.map((r) => `
+      <tr><td>${LE.esc(r.source)}</td><td class="t-xs t-muted">${LE.esc(r.level)}</td>
+        <td class="num">${LE.num(r.raw)}</td><td class="num">${LE.num(r.unique)}</td>
+        <td class="num">${LE.num(r.duplicates)}</td></tr>`).join('');
+    $('#ledgerNote').textContent = s('ledgerNote');
+  }
+
+  /* ------------------------------------------------------------------ 右侧 */
+  function renderFacts() {
+    const sc = D.screening;
+    $('#factsTitle').textContent = s('factsTitle');
+    $('#factsBody').innerHTML = `
+      <dt>${LE.esc(s('factStatus'))}</dt><dd>${LE.badgeScreening(sc.status)}
+        <div class="t-xs t-mono t-muted">${LE.esc(sc.status)}</div></dd>
+      <dt>${LE.esc(s('factCalib'))}</dt><dd>${sc.threshold_calibrated ? `<span class="badge badge--ok">${LE.esc(s('yes'))}</span>` : `<span class="badge badge--warn">${LE.esc(s('no'))}</span>`}</dd>
+      <dt>${LE.esc(s('factManual'))}</dt><dd>${sc.requires_manual_review ? `<span class="badge badge--warn">${LE.esc(s('yes'))}</span>` : `<span class="badge badge--ok">${LE.esc(s('no'))}</span>`}</dd>
+      <dt>${LE.esc(s('factFullText'))}</dt><dd>${sc.full_text_review_completed ? `<span class="badge badge--ok">${LE.esc(s('yes'))}</span>` : `<span class="badge badge--warn">${LE.esc(s('no'))}</span>`}</dd>`;
+
+    const c = sc.calibration;
+    $('#autoTitle').textContent = s('autoTitle');
+    $('#autoBody').innerHTML = `
+      <dt>${LE.esc(s('autoLabel'))}</dt><dd><span class="badge ${sc.auto_screen ? 'badge--warn' : ''}">${sc.auto_screen ? 'true' : 'false'}</span></dd>
+      <dt>${LE.esc(s('calibLabel'))}</dt><dd><span class="badge badge--warn">${LE.esc(c.status)}</span></dd>
+      <dt>${LE.esc(LE.lang() === 'zh' ? '标注情况' : 'Labels')}</dt>
+      <dd class="t-num">${LE.esc(LE.lang() === 'zh' ? `相关 ${c.labelled_relevant} · 不相关 ${c.labelled_irrelevant}` : `relevant ${c.labelled_relevant} · irrelevant ${c.labelled_irrelevant}`)}</dd>
+      <dt>${LE.esc(LE.lang() === 'zh' ? '阈值' : 'Threshold')}</dt><dd>${LE.orMissing(c.threshold, LE.t('common.none'))}</dd>`;
+    $('#calibNote').textContent = `${c.note} ${s('calibNote')}`;
+  }
+
+  function renderRetrieval() {
+    $('#retrievalTitle').textContent = s('retrievalTitle');
+    const items = D.facets.retrieval.filter((x) => x.count > 0);
+    const total = D.papers.length;
+    const colors = {
+      retrieved: 'var(--ok)', paywalled: 'var(--warn)', timeout: 'var(--err)',
+      too_large: 'var(--err)', blocked_redirect: 'var(--err)', not_attempted: 'var(--neutral-line)',
+    };
+    $('#retrievalMeter').innerHTML = `
+      <div class="meter__bar">${items.map((x) => `<i style="width:${Math.round(x.count / total * 100)}%;background:${colors[x.key]}"></i>`).join('')}</div>
+      <div class="meter__legend">${items.map((x) => `<span><span class="meter__dot" style="background:${colors[x.key]}"></span>${LE.esc(LE.facetLabel('retrieval', x.key))} <b>${x.count}</b></span>`).join('')}</div>`;
+    $('#retrievalList').innerHTML = D.papers.filter((p) => D.retrieval[p.id] && D.retrieval[p.id].status !== 'retrieved').map((p) => `
+      <li class="row row--between" style="gap:var(--s-3)">
+        <button type="button" class="edge__name" style="text-align:left" data-open="${LE.esc(p.id)}">${LE.esc(p.title)}</button>
+        ${LE.badgeRetrieval(D.retrieval[p.id].status)}
+      </li>`).join('') || `<li class="t-sm t-muted">${LE.esc(LE.lang() === 'zh' ? '没有获取失败的记录。' : 'No failed retrievals.')}</li>`;
+    LE.$$('#retrievalList [data-open]').forEach((b) => { b.onclick = () => LE.openDrawer(b.getAttribute('data-open'), { push: true }); });
+    $('#retrievalNote').textContent = s('retrievalNote');
+  }
+
+  function renderStatic() {
+    $('#skipLink').textContent = LE.pt('home', 'skip');
+    $('#pageTitle').textContent = s('title');
+    $('#pageLead').textContent = s('lead');
+    $('#toResults').textContent = LE.lang() === 'zh' ? '文献结果' : 'Results';
+    $('#toExport').textContent = LE.lang() === 'zh' ? '保存与导出 →' : 'Save & export →';
+    document.title = s('title') + ' — LEExtractor';
+  }
+
+  function render() {
+    renderStage(); renderQueue(); renderConflicts(); renderDecided();
+    renderPrisma(); renderLedger(); renderFacts(); renderRetrieval();
+  }
+
+  document.addEventListener('le:lang', () => { renderStatic(); render(); });
+  renderStatic();
+  render();
+  LE.mount({ page: 'review' });
+})();
+</script>
+</body>
+</html>

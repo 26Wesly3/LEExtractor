@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>LEExtractor 交互自测</title>
+<style>
+  body { font: 15px/1.6 ui-monospace, Consolas, monospace; margin: 0; padding: 10px; }
+  iframe { width: 1180px; height: 820px; border: 1px solid #ccc; }
+  pre { white-space: pre-wrap; margin: 0 0 10px; font-size: 15px; }
+  .pass { color: #0a0; } .fail { color: #c00; font-weight: 700; }
+</style>
+</head>
+<body>
+<!--
+  交互自测：把真实页面放进同源 iframe，用真实点击驱动它，再断言 DOM 状态。
+  这些断言覆盖静态检查查不到的东西 —— 是否重建了整列、滚动去了哪、展开状态有没有被冲掉、
+  快速开→关→再开抽屉之后页面是不是还锁着。
+  跑法：由 http 服务提供本页，Edge --headless=old --screenshot 截整页后读图（本环境 --dump-dom 无输出）。
+-->
+<pre id="out">RUNNING</pre>
+<iframe id="f" src="results.html"></iframe>
+<script>
+(function () {
+  'use strict';
+  var R = [];
+  var deferred = [];   /* 平滑滚动、rAF 之类的断言必须等动画结束再跑 */
+  function ok(name, cond, extra) {
+    R.push((cond ? 'PASS ' : 'FAIL ') + name + (extra ? ' :: ' + extra : ''));
+  }
+  var f = document.getElementById('f');
+
+  function run() {
+    var w = f.contentWindow, d = f.contentDocument;
+    if (!w || !d) { finish('无法访问 iframe 文档'); return; }
+    var $ = function (s, r) { return (r || d).querySelector(s); };
+    var $$ = function (s, r) { return Array.prototype.slice.call((r || d).querySelectorAll(s)); };
+    try {
+      var rows = $$('#resultArea [data-row]');
+      ok('结果行已渲染', rows.length > 0, rows.length + ' 行');
+      if (!rows.length) { finish(''); return; }
+      var first = rows[0];
+
+      /* 1. 勾选一行：不得重建整列 */
+      var box = $('[data-pick]', first);
+      box.click();
+      var afterPick = $$('#resultArea [data-row]')[0];
+      ok('勾选后未重建整列（节点身份不变）', afterPick === first);
+      ok('勾选后该行标记为 is-picked', afterPick.classList.contains('is-picked'));
+      ok('复选框保持选中', $('[data-pick]', afterPick).checked === true);
+      ok('批量工具栏切换为展开态', $('#selectionBanner').classList.contains('is-on'));
+
+      /* 2. 展开证据：同样只改这一行 */
+      var evBefore = $('[data-evidence]', afterPick);
+      evBefore.click();
+      var afterEv = $$('#resultArea [data-row]')[0];
+      ok('展开证据后仍是同一行节点', afterEv === first);
+      ok('证据面板已插入该行', $('[data-evwrap]', afterEv).children.length > 0);
+      ok('展开按钮 aria-expanded 已同步', $('[data-evidence]', afterEv).getAttribute('aria-expanded') === 'true');
+
+      /* 3. 拖动年份：滑块本身不得被重建 */
+      var yf = $('#yFrom');
+      var yfSame;
+      if (yf) {
+        yf.value = String(Number(yf.min) + 1);
+        yf.dispatchEvent(new Event('input'));
+        yfSame = $('#yFrom');
+        ok('拖动年份后滑块未被重建（节点身份不变）', yfSame === yf);
+        ok('年份标签实时更新', $('#yFromLabel').textContent === yf.value, $('#yFromLabel').textContent);
+      } else {
+        ok('年份滑块存在', false);
+      }
+
+      /* 5. 分页：滚动要落到真实结果区，而不是写死的 200。
+            必须在筛选之前跑 —— 一旦筛过，页数可能只剩 1 页。 */
+      var page2 = $$('#pager button[data-page]').filter(function (b) {
+        return b.getAttribute('data-page') === '2' && !b.disabled;
+      })[0];
+      if (page2) {
+        var area = $('#resultArea');
+        var topbar = d.querySelector('.topbar');
+        var off = (topbar ? topbar.getBoundingClientRect().height : 56) + 16;
+        page2.click();
+        deferred.push(function () {
+          var areaTop = area.getBoundingClientRect().top;
+          ok('分页后结果区已定位到顶栏之下', Math.abs(areaTop - off) < 24, 'delta=' + Math.round(areaTop - off));
+        });
+      } else {
+        ok('存在第 2 页可点', false, '未筛选时共 ' + $$('#resultArea [data-row]').length + ' 行');
+      }
+
+      /* 5. 收起的分面分组在刷新计数后必须保持收起（会改变结果集，所以放在分页之后） */
+      var groups = $$('details.facet[data-group]');
+      var target = groups[groups.length - 1];
+      var gname = target.getAttribute('data-group');
+      target.open = false;
+      target.dispatchEvent(new Event('toggle'));
+      var facetRow = $('[data-facet]');
+      facetRow.click();
+      var again = $$('details.facet[data-group]').filter(function (x) {
+        return x.getAttribute('data-group') === gname;
+      })[0];
+      ok('筛选刷新后已收起的分组保持收起', again && again.open === false, gname);
+
+      /* 6. 抽屉：快速「开 → 关 → 再开」，新抽屉不能被旧的隐藏计时器收走，
+            滚动锁定也必须还在（这正是修复前的症状）。
+            注意 .is-open 是在 requestAnimationFrame 里加的，所以断言必须等一帧之后。 */
+      var drawer = $('#le-drawer');
+      var id = first.getAttribute('data-row');
+      w.LE.openDrawer(id);
+      w.LE.closeDrawer();
+      w.LE.openDrawer(id);
+      setTimeout(function () {
+        ok('快速重开后抽屉可见（旧计时器已取消）', drawer.hidden === false && drawer.classList.contains('is-open'));
+        ok('快速重开后滚动锁定仍然有效', d.body.style.overflow === 'hidden', 'overflow=' + (d.body.style.overflow || '(空)'));
+        ok('快速重开后遮罩仍然可见', $('#le-overlay').hidden === false);
+        ok('聚焦已进入抽屉内', drawer.contains(d.activeElement));
+
+        /* 7. Esc 关闭 + 焦点归还 */
+        d.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        ok('Esc 关闭后抽屉进入退场态', !drawer.classList.contains('is-open'));
+        setTimeout(function () {
+          ok('退场结束后抽屉已隐藏', drawer.hidden === true);
+          ok('退场结束后滚动锁定已释放', d.body.style.overflow === '', 'overflow=' + (d.body.style.overflow || '(空)'));
+          deferred.forEach(function (fn) { try { fn(); } catch (e) { R.push('FAIL 延迟断言出错 :: ' + e.message); } });
+          finish('');
+        }, 900);
+      }, 320);
+    } catch (e) {
+      finish('运行出错 :: ' + e.message);
+    }
+  }
+
+  function finish(err) {
+    if (err) R.push('FAIL ' + err);
+    var pass = R.filter(function (l) { return l.indexOf('PASS ') === 0; }).length;
+    var fail = R.filter(function (l) { return l.indexOf('FAIL ') === 0; }).length;
+    var html = R.map(function (l) {
+      return '<span class="' + (l.indexOf('PASS ') === 0 ? 'pass' : 'fail') + '">' + l + '</span>';
+    }).join('\n');
+    document.getElementById('out').innerHTML =
+      'INTERACTION-RESULT\n' + html + '\nSUMMARY ' + pass + ' passed, ' + fail + ' failed\nINTERACTION-DONE';
+    document.title = 'INTERACTION-DONE ' + pass + 'P/' + fail + 'F';
+  }
+
+  f.onload = function () { setTimeout(run, 500); };
+})();
+</script>
+</body>
+</html>

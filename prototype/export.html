@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="LEExtractor 保存与导出 — 导出范围、六种格式、会话恢复与证据包（界面演示）">
+<title>保存与导出 — LEExtractor</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231b1c20'/%3E%3Cpath d='M10 10L22 22M22 10L10 22' stroke='white' stroke-width='5'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body data-page="export">
+
+<a class="skip-link" href="#main" id="skipLink"></a>
+<div id="shell"></div>
+
+<main id="main" class="page">
+  <div class="container container--wide">
+
+    <div class="page-head">
+      <div class="page-head__row">
+        <div>
+          <h1 id="pageTitle"></h1>
+          <p id="pageLead"></p>
+        </div>
+        <div class="page-head__actions">
+          <a class="btn" href="results.html" id="toResults"></a>
+          <a class="btn" href="review.html" id="toReview"></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="shell shell--wide shell--main-first">
+      <section class="stack">
+
+        <!-- ==================================================== 导出范围 -->
+        <div class="card">
+          <div class="card__head"><h3 id="scopeTitle"></h3></div>
+          <div class="card__body">
+            <p class="t-sm t-muted mb-4" id="scopeNote"></p>
+            <div class="stack stack--sm" id="scopeList" role="radiogroup"></div>
+          </div>
+        </div>
+
+        <!-- ==================================================== 导出格式 -->
+        <div class="card">
+          <div class="card__head"><h3 id="fmtTitle"></h3></div>
+          <div class="card__body" style="padding:0">
+            <div class="table-wrap">
+              <div class="table-scroll">
+                <table class="table">
+                  <thead><tr id="fmtHead"></tr></thead>
+                  <tbody id="fmtBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="card__foot">
+            <div class="row row--between">
+              <p class="t-xs t-muted" id="fmtNote"></p>
+              <button type="button" class="btn btn--primary" id="exportAll"></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================================================== 预估 -->
+        <div class="card">
+          <div class="card__head"><h3 id="sizeTitle"></h3></div>
+          <div class="card__body">
+            <div class="funnel" id="sizeMetrics"></div>
+            <p class="t-xs t-muted mt-3" id="sizeNote"></p>
+          </div>
+        </div>
+
+        <!-- ==================================================== 证据包 -->
+        <div class="card">
+          <div class="card__head"><h3 id="bundleTitle"></h3></div>
+          <div class="card__body">
+            <p class="t-sm t-muted mb-4" id="bundleNote"></p>
+            <ul class="stack stack--sm" id="bundleList"></ul>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ==================================================== 右：会话 -->
+      <aside class="stack stack--sm" aria-labelledby="sessionTitle">
+
+        <div class="card">
+          <div class="card__head"><h3 id="sessionTitle"></h3></div>
+          <div class="card__body">
+            <div class="stack stack--sm">
+              <button type="button" class="btn btn--primary btn--block" id="saveBtn"></button>
+              <button type="button" class="btn btn--block" id="saveAsBtn"></button>
+              <button type="button" class="btn btn--block" id="resumeBtn"></button>
+            </div>
+            <button type="button" class="btn btn--block mt-4" id="importBtn"></button>
+            <p class="t-xs t-muted mt-3" id="sessionNote"></p>
+          </div>
+        </div>
+
+        <div class="panel-note" id="conflictNote"></div>
+        <div class="panel-note" id="demoWarn" style="background:var(--warn-bg);border:1px solid var(--warn-line)"></div>
+
+      </aside>
+    </div>
+  </div>
+</main>
+
+<div id="foot"></div>
+
+<!-- 导入会话的完整流程放进对话框：不再把浏览器原生的 file 控件裸露在卡片里 -->
+<dialog id="importDialog" aria-labelledby="importTitle">
+  <div class="dialog__top">
+    <h2 id="importTitle" style="font-size:var(--fs-h4);margin:0"></h2>
+    <button type="button" class="close" data-close aria-label="关闭">×</button>
+  </div>
+  <div class="dialog__body">
+    <p class="t-sm t-muted" id="importLead"></p>
+    <ul class="stack stack--sm mt-4" id="importRules"></ul>
+    <div class="panel-note mt-4" id="importPicked"></div>
+    <input class="visually-hidden" id="importFile" type="file" accept=".json,.json.gz">
+  </div>
+  <div class="dialog__foot">
+    <button type="button" class="btn" data-close id="importCancel"></button>
+    <button type="button" class="btn" id="importPick"></button>
+    <button type="button" class="btn btn--primary" id="importConfirm" disabled></button>
+  </div>
+</dialog>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script src="assets/i18n-pages.js"></script>
+<script>
+(function () {
+  'use strict';
+  const D = window.LED;
+  const $ = (sel) => document.querySelector(sel);
+  const s = (k, v) => LE.pt('export', k, v);
+
+  /* 字段数与用途：与 export.py / bundle.py 的实际列一致，不用编造的大数字 */
+  const FORMAT_META = {
+    csv: { fields: 18, scope: 'spreadsheet', purpose: { zh: 'Excel / 统计软件', en: 'Excel / stats tools' } },
+    json: { fields: 24, scope: 'machine', purpose: { zh: '程序化复用、二次分析', en: 'Programmatic reuse' } },
+    ris: { fields: 11, scope: 'reference_manager', purpose: { zh: 'Zotero / EndNote', en: 'Zotero / EndNote' } },
+    bibtex: { fields: 10, scope: 'reference_manager', purpose: { zh: 'LaTeX 写作', en: 'LaTeX writing' } },
+    mermaid: { fields: 2, scope: 'diagram', purpose: { zh: '引文图结构', en: 'Citation graph structure' } },
+    bundle: { fields: 12, scope: 'evidence_bundle', purpose: { zh: '交给后续 AI 或合作者', en: 'Hand off to an AI or collaborator' } },
+  };
+
+  const BUNDLE_FILES = [
+    { name: 'AGENT_HANDOFF.md', zh: '交接说明：研究问题、检索式、当前阶段、未完成项与注意事项', en: 'Handoff notes: question, queries, current stage, open items and caveats' },
+    { name: 'papers.csv', zh: '候选集，文本单元格已做公式注入中和', en: 'Candidate set, text cells neutralised against formula injection' },
+    { name: 'papers.json', zh: '同一批数据的原始文本版本', en: 'The same records with original text intact' },
+    { name: 'prisma_ledger.csv', zh: 'record / report 级计数账本', en: 'Counting ledger at record / report level' },
+    { name: 'screening_decisions.json', zh: '逐条决定、理由、记录者与时间', en: 'Per-record decisions with reasons, actor and time' },
+    { name: 'evidence_graph.json', zh: '引文边与三类关系边，分层存放，不合并加权', en: 'Citation edges and three relation types, stored separately, never merged into one weight' },
+    { name: 'manifest.json', zh: '版本、schema 版本、生成时间与包内文件清单', en: 'Version, schema version, generation time and file inventory' },
+    { name: 'README.md', zh: '边界声明：哪些是事实、哪些是判断、哪些尚未实现', en: 'Boundaries: what is fact, what is judgement, what is not implemented' },
+  ];
+
+  let scope = 'candidates';
+  let format = 'csv';
+
+  const scopeCount = (id) => {
+    const found = D.exportScopes.find((x) => x.id === id);
+    if (id === 'selection') return D.exportScopes.find((x) => x.id === 'selection').count;
+    if (id === 'preliminary') return D.tally.include;
+    if (id === 'final') return D.prisma.included.studies_included;
+    return D.papers.length;
+  };
+
+  function renderScope() {
+    $('#scopeTitle').textContent = s('scopeTitle');
+    $('#scopeNote').textContent = s('scopeNote');
+    $('#scopeList').innerHTML = D.exportScopes.map((x) => {
+      const n = scopeCount(x.id);
+      const empty = n === 0;
+      return `
+        <button type="button" class="card card--sunk" role="radio" aria-checked="${scope === x.id}" data-scope="${x.id}"
+                style="text-align:left;cursor:pointer;${scope === x.id ? 'border-color:var(--btn);box-shadow:var(--btn-ring)' : ''}">
+          <div class="card__body">
+            <div class="row row--between">
+              <strong class="t-sm">${LE.esc(x.label)}</strong>
+              <span class="row" style="gap:var(--s-2)">
+                ${empty ? `<span class="badge badge--warn">${LE.esc(s('scopeEmpty'))}</span>` : ''}
+                <span class="badge">${n} ${LE.esc(s('records'))}</span>
+              </span>
+            </div>
+            <p class="t-xs t-muted mt-2">${LE.esc(x.note)}</p>
+          </div>
+        </button>`;
+    }).join('');
+    LE.$$('#scopeList [data-scope]').forEach((b) => {
+      b.onclick = () => { scope = b.getAttribute('data-scope'); render(); };
+    });
+  }
+
+  function renderFormats() {
+    $('#fmtTitle').textContent = s('fmtTitle');
+    $('#fmtHead').innerHTML = `
+      <th>${LE.esc(s('colFormat'))}</th><th>${LE.esc(s('colFields'))}</th>
+      <th>${LE.esc(s('colNote'))}</th><th>${LE.esc(s('colScope'))}</th><th></th>`;
+    $('#fmtBody').innerHTML = D.exports.map((f) => {
+      const meta = FORMAT_META[f.id] || { fields: 0, purpose: { zh: '—', en: '—' } };
+      return `<tr aria-selected="${format === f.id}">
+        <td><button type="button" class="result-item__title" data-fmt="${f.id}">${LE.esc(f.name)}</button>
+          ${f.accent ? `<div>${LE.badgeDemo(LE.lang() === 'zh' ? '推荐' : 'recommended')}</div>` : ''}</td>
+        <td class="num">${meta.fields}</td>
+        <td class="t-xs">${LE.esc(f.note)}</td>
+        <td class="t-xs t-muted">${LE.esc(meta.purpose[LE.lang()] || meta.purpose.zh)}</td>
+        <td class="num"><button type="button" class="btn btn--sm" data-export="${f.id}">${LE.esc(s('exportBtn'))}</button></td>
+      </tr>`;
+    }).join('');
+    $('#fmtNote').textContent = s('fmtNote');
+    $('#exportAll').textContent = LE.lang() === 'zh' ? '导出当前范围的全部格式' : 'Export every format for this scope';
+    LE.$$('#fmtBody [data-fmt]').forEach((b) => {
+      b.onclick = () => { format = b.getAttribute('data-fmt'); render(); };
+    });
+    LE.$$('#fmtBody [data-export]').forEach((b) => {
+      b.onclick = () => {
+        const id = b.getAttribute('data-export');
+        const f = D.exports.find((x) => x.id === id);
+        LE.toast(s('exportOne', { name: f.name }) + ' ✓ ' + s('demoWarn'));
+      };
+    });
+  }
+
+  function renderSize() {
+    $('#sizeTitle').textContent = s('sizeTitle');
+    const n = scopeCount(scope);
+    const meta = FORMAT_META[format] || { fields: 0 };
+    const scopeRow = D.exportScopes.find((x) => x.id === scope);
+    $('#sizeMetrics').innerHTML = `
+      <div class="funnel__step metric">
+        <span class="metric__label">${LE.esc(s('scopeTitle'))}</span>
+        <span class="metric__value" style="font-size:var(--fs-h4)">${LE.esc(scopeRow.label)}</span>
+        <span class="metric__sub">${LE.esc(scopeRow.note)}</span>
+      </div>
+      <div class="funnel__step metric">
+        <span class="metric__label">${LE.esc(s('records'))}</span>
+        <span class="metric__value" data-count="${n}">0</span>
+      </div>
+      <div class="funnel__step metric">
+        <span class="metric__label">${LE.esc(s('fields'))}</span>
+        <span class="metric__value" data-count="${meta.fields}">0</span>
+      </div>
+      <div class="funnel__step metric">
+        <span class="metric__label">${LE.esc(s('colFormat'))}</span>
+        <span class="metric__value" style="font-size:var(--fs-h4)">${LE.esc((D.exports.find((x) => x.id === format) || {}).name || '—')}</span>
+      </div>`;
+    LE.$$('#sizeMetrics [data-count]').forEach((nd) => LE.fx.countUp(nd, Number(nd.getAttribute('data-count')), { duration: 420 }));
+    $('#sizeNote').textContent = s('sizeNote');
+  }
+
+  function renderBundle() {
+    $('#bundleTitle').textContent = s('bundleTitle');
+    $('#bundleNote').textContent = s('bundleNote');
+    $('#bundleList').innerHTML = BUNDLE_FILES.map((f) => `
+      <li class="row" style="gap:var(--s-3);align-items:flex-start">
+        <span class="badge badge--outline t-mono">${LE.esc(f.name)}</span>
+        <span class="t-sm t-muted" style="flex:1 1 auto">${LE.esc(f[LE.lang()] || f.zh)}</span>
+      </li>`).join('');
+  }
+
+  function renderSession() {
+    $('#sessionTitle').textContent = s('sessionTitle');
+    $('#saveBtn').textContent = s('saveBtn');
+    $('#saveAsBtn').textContent = s('saveAsBtn');
+    $('#resumeBtn').textContent = s('resumeBtn');
+    $('#sessionNote').textContent = s('sessionNote');
+    $('#conflictNote').textContent = s('conflictNote');
+    $('#demoWarn').textContent = s('demoWarn');
+  }
+
+  /* ---------------------------------------------------------- 导入会话
+     原生 file 控件不裸露在卡片里：入口是按钮，完整流程在对话框内完成。 */
+  let importChoice = '';
+
+  function renderImport() {
+    $('#importBtn').textContent = s('importBtn');
+    $('#importTitle').textContent = s('importTitle');
+    $('#importLead').textContent = s('importLead');
+    $('#importRules').innerHTML = ['importRule1', 'importRule2', 'importRule3']
+      .map((k) => `<li class="row" style="gap:var(--s-2);align-items:flex-start">
+        <span aria-hidden="true" class="t-muted">·</span>
+        <span class="t-sm">${LE.rich(s(k))}</span>
+      </li>`).join('');
+    $('#importCancel').textContent = s('importCancel');
+    $('#importPick').textContent = s('importPick');
+    $('#importConfirm').textContent = s('importConfirm');
+    $('#importPicked').innerHTML = importChoice
+      ? LE.esc(s('importPicked', { n: importChoice }))
+      : `<span class="t-muted">${LE.esc(s('importNone'))}</span>`;
+    $('#importConfirm').disabled = !importChoice;
+  }
+
+  function renderStatic() {
+    $('#skipLink').textContent = LE.pt('home', 'skip');
+    $('#pageTitle').textContent = s('title');
+    $('#pageLead').textContent = s('lead');
+    $('#toResults').textContent = LE.lang() === 'zh' ? '文献结果' : 'Results';
+    $('#toReview').textContent = LE.lang() === 'zh' ? '筛选与 PRISMA' : 'Screening & PRISMA';
+    document.title = s('title') + ' — LEExtractor';
+  }
+
+  function render() {
+    renderScope(); renderFormats(); renderSize(); renderBundle(); renderSession(); renderImport();
+  }
+
+  $('#saveBtn').onclick = () => LE.toast(s('saved'));
+  $('#saveAsBtn').onclick = () => LE.toast(s('saved'));
+  $('#resumeBtn').onclick = () => { window.location.href = 'projects.html'; };
+  $('#exportAll').onclick = () => LE.toast(LE.lang() === 'zh'
+    ? `演示原型：将按当前范围生成全部 6 种导出，共 ${scopeCount(scope)} 条记录。导出内容为示例数据。`
+    : `Prototype: generates all six formats for the current scope, ${scopeCount(scope)} records. The content is sample data.`);
+
+  /* 导入：按钮 → 对话框 → 选择文件 → 确认。原型不读文件内容。 */
+  $('#importBtn').onclick = () => { renderImport(); $('#importDialog').showModal(); };
+  $('#importPick').onclick = () => $('#importFile').click();
+  $('#importFile').onchange = (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (f) { importChoice = f.name; LE.toast(s('importPickedToast', { n: f.name })); }
+    e.target.value = '';          // 允许再次选择同一个文件
+    renderImport();
+  };
+  $('#importConfirm').onclick = () => {
+    LE.toast(s('importDone'));
+    $('#importDialog').close();
+  };
+
+  document.addEventListener('le:lang', () => { renderStatic(); render(); });
+  renderStatic();
+  render();
+  LE.mount({ page: 'export' });
+})();
+</script>
+</body>
+</html>

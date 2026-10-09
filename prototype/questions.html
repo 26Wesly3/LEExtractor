@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="LEExtractor 研究机会 — 候选研究问题、支撑文献与下一步动作（界面演示）">
+<title>研究机会 — LEExtractor</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231b1c20'/%3E%3Cpath d='M10 10L22 22M22 10L10 22' stroke='white' stroke-width='5'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/app.css">
+<style>
+  /* 研究机会页专用样式：只使用 tokens.css 的变量，未新增任何色值或新文件 */
+  .q-card__support .edge__name { white-space: normal; overflow: visible; text-align: left; }
+  .q-card__support .edge { align-items: flex-start; }
+  .q-card__caveat {
+    background: var(--warn-bg); color: var(--warn);
+    border: 1px solid var(--warn-line); border-radius: var(--r-sm);
+    padding: var(--s-2) var(--s-3); font-size: var(--fs-micro); line-height: var(--lh-micro);
+  }
+  .kinds { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); }
+</style>
+</head>
+<body data-page="questions">
+
+<a class="skip-link" href="#main" id="skipLink"></a>
+<div id="shell"></div>
+
+<main id="main" class="page" data-trigger="rerender">
+  <div class="container container--wide">
+
+    <div class="page-head">
+      <div class="page-head__row">
+        <div>
+          <h1 id="pageTitle"></h1>
+          <p id="pageLead"></p>
+        </div>
+        <div class="page-head__actions">
+          <a class="btn" href="results.html" id="toResults"></a>
+          <a class="btn" href="search.html" id="toSearch"></a>
+          <a class="btn btn--primary" href="expand.html" id="toExpand"></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================================================== 样本限定（就近标注） -->
+    <p class="panel-note mb-6" id="sampleNote"></p>
+
+    <!-- ==================================================== 顶部统计 -->
+    <section class="card mb-6" aria-labelledby="statTitle">
+      <div class="card__head">
+        <h2 id="statTitle" style="font-size:var(--fs-h4)"></h2>
+        <span id="statDemo"></span>
+      </div>
+      <div class="card__body">
+        <div class="cols-4" id="statGrid"></div>
+      </div>
+    </section>
+
+    <!-- ============================================ 计算口径（按需展开，默认收起） -->
+    <details class="method mb-6" id="method">
+      <summary id="methodTitle"></summary>
+      <div class="method__body">
+        <p class="t-sm t-muted" id="methodIntro"></p>
+        <h3 class="t-xs t-muted mt-4" id="methodThresholds"></h3>
+        <ul class="t-sm t-muted mt-2" style="padding-left:1.15em;display:grid;gap:var(--s-1)">
+          <li id="methodThresholdCombination"></li>
+          <li id="methodThresholdCoverage"></li>
+          <li id="methodThresholdUnfollowed"></li>
+        </ul>
+        <p class="t-sm t-muted mt-4" id="methodStrength"></p>
+        <p class="t-xs t-muted mt-2 t-mono" id="methodFields"></p>
+        <p class="t-xs t-muted mt-2" id="methodCounts"></p>
+      </div>
+    </details>
+
+    <!-- ==================================================== 候选问题卡 -->
+    <div class="stack" id="questionList"></div>
+
+    <!-- ==================================================== 下一步入口 -->
+    <section class="card mt-8" aria-labelledby="entryTitle">
+      <div class="card__head">
+        <h2 id="entryTitle" style="font-size:var(--fs-h4)"></h2>
+      </div>
+      <div class="card__body">
+        <div class="cols-2 mt-4">
+          <div class="card card--sunk">
+            <h3 style="font-size:var(--fs-h4)" id="entrySearchTitle"></h3>
+            <p class="t-sm t-muted mt-2" id="entrySearchHint"></p>
+            <p class="mt-4"><a class="btn btn--primary" href="search.html" id="entrySearchBtn"></a></p>
+          </div>
+          <div class="card card--sunk">
+            <h3 style="font-size:var(--fs-h4)" id="entryExpandTitle"></h3>
+            <p class="t-sm t-muted mt-2" id="entryExpandHint"></p>
+            <p class="mt-4"><a class="btn" href="expand.html" id="entryExpandBtn"></a></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<div id="foot"></div>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script src="assets/i18n-pages.js"></script>
+<script src="assets/i18n-questions.js"></script>
+<script>
+(function () {
+  'use strict';
+  const D = window.LED;
+  const $ = (sel) => document.querySelector(sel);
+  const s = (k, v) => LE.pt('questions', k, v);
+
+  /* 三种 kind 的规范名固定写死；未出现过的 kind 原样显示，不落默认值。
+     卡片上只出现白话说明，判定门槛与原始枚举收进页面顶部的「计算口径」折叠区。 */
+  const KINDS = [
+    { key: 'combination_gap', label: 'statCombination', note: 'kindCombinationShort' },
+    { key: 'coverage_gap', label: 'statCoverage', note: 'kindCoverageShort' },
+    { key: 'unfollowed_result', label: 'statUnfollowed', note: 'kindUnfollowedShort' },
+  ];
+  const KIND_LABEL = {
+    combination_gap: 'statCombination',
+    coverage_gap: 'statCoverage',
+    unfollowed_result: 'statUnfollowed',
+  };
+  const kindCount = (key) => D.questions.filter((q) => q.kind === key).length;
+
+  /* ==================================================================== 顶部统计 */
+  function renderStats() {
+    const cells = [{
+      label: s('statAll'), value: D.questions.length, sub: s('statCandidate'), code: '',
+    }].concat(KINDS.map((k) => ({
+      label: s(k.label), value: kindCount(k.key), sub: s(k.note), code: k.key,
+    })));
+
+    $('#statGrid').innerHTML = cells.map((c) => `
+      <div class="metric">
+        <span class="metric__label">${LE.esc(c.label)}</span>
+        <span class="metric__value">${LE.num(c.value)}</span>
+        <span class="metric__sub">${LE.esc(c.sub)}</span>
+      </div>`).join('');
+  }
+
+  /* ==================================================================== 候选问题卡 */
+  function supportMarkup(q) {
+    const ids = q.supporting_papers || [];
+    if (!ids.length) return `<p class="t-sm t-muted">${LE.esc(s('cardSupportEmpty'))}</p>`;
+    return `<div class="edges q-card__support">` + ids.map((id) => {
+      const p = D.byId.get(id);
+      const title = p ? p.title : id;
+      const meta = [];
+      if (p && p.year) meta.push(String(p.year));
+      if (p && p.source) meta.push(p.source);
+      return `<div class="edge">
+        <span class="edge__dot" style="background:var(--border-strong)"></span>
+        <button type="button" class="edge__name" data-open-paper-id="${LE.esc(id)}"
+          aria-label="${LE.esc(s('cardOpen', { title: title }))}">
+          <span>${LE.esc(title)}</span>
+          <span class="t-mono t-xs t-muted" style="display:block">${LE.esc(id)}</span>
+        </button>
+        <span class="edge__w">${LE.esc(meta.join(' · '))}</span>
+      </div>`;
+    }).join('') + `</div>`;
+  }
+
+  function cardMarkup(q, i) {
+    const labelKey = KIND_LABEL[q.kind];
+    const gloss = labelKey ? s(labelKey) : q.kind;
+    /* 证据强度只有中等 / 较弱两级（契约 evidence_strength）；条形只表达这两级，
+       不编造连续分数。原始字段名收在页面顶部的「计算口径」折叠区里。 */
+    const moderate = q.evidence_strength === 'moderate';
+    const strengthLabel = moderate ? s('strengthModerate') : s('strengthWeak');
+    const strengthPct = moderate ? 1 : 0.4;
+    const support = (q.supporting_papers || []).length;
+    return `
+      <article class="card" aria-labelledby="q${i}-title">
+        <div class="card__head">
+          <div class="kinds">
+            <span class="badge badge--info">${LE.esc(gloss)}</span>
+            <span class="badge badge--outline">${LE.esc(s('statusCandidate'))}</span>
+          </div>
+          <div class="row" style="gap:var(--s-2)">
+            <span class="t-xs t-muted">${LE.esc(s('cardStrength'))}</span>
+            <span class="rel"><span class="rel__bar"><i style="width:${LE.pct(strengthPct)}"></i></span>
+              <span class="t-num">${LE.esc(strengthLabel)}</span></span>
+            <span id="q${i}-demo">${LE.badgeDemo()}</span>
+          </div>
+        </div>
+        <div class="card__body">
+          <h3 id="q${i}-title" style="font-size:var(--fs-h3)">${LE.esc(q.title)}</h3>
+          <dl class="dl dl--tight mt-4">
+            <dt>${LE.esc(s('cardWhy'))}</dt><dd>${LE.esc(q.rationale)}</dd>
+            <dt>${LE.esc(s('cardCoverageGap'))}</dt><dd>${LE.esc(q.coverage_gap)}</dd>
+            <dt>${LE.esc(s('cardNextStep'))}</dt><dd>${LE.esc(q.next_step)}</dd>
+          </dl>
+          <h4 class="t-xs t-muted mt-6">${LE.esc(s('cardSupport', { n: support }))}</h4>
+          <div class="mt-2">${supportMarkup(q)}</div>
+        </div>
+      </article>`;
+  }
+
+  function renderQuestions() {
+    const host = $('#questionList');
+    if (!D.questions.length) {
+      host.innerHTML = `<div class="state">
+        <span class="state__icon" aria-hidden="true">∅</span>
+        <h3>${LE.esc(LE.lang() === 'zh' ? '没有候选问题' : 'No candidate questions')}</h3>
+        <p>${LE.esc(s('empty'))}</p>
+      </div>`;
+      return;
+    }
+    host.innerHTML = D.questions.map(cardMarkup).join('');
+    LE.$$('[data-open-paper-id]', host).forEach((b) => {
+      b.onclick = () => LE.openDrawer(b.getAttribute('data-open-paper-id'), { push: true });
+    });
+  }
+
+  /* ==================================================================== 静态文案 */
+  function renderStatic() {
+    document.title = s('title') + ' — LEExtractor';
+    $('#skipLink').textContent = s('skip');
+    $('#pageTitle').textContent = s('title');
+    $('#pageLead').innerHTML = LE.rich(s('lead'));
+    $('#toResults').textContent = s('toResults');
+    $('#toSearch').textContent = s('toSearch');
+    $('#toExpand').textContent = s('toExpand');
+    $('#sampleNote').innerHTML = LE.rich(s('sampleNote', { n: D.landscape.sample_size }));
+    $('#statTitle').textContent = s('statTitle');
+    $('#statDemo').innerHTML = LE.badgeDemo();
+    $('#methodTitle').textContent = s('methodTitle');
+    $('#methodIntro').textContent = s('methodIntro');
+    $('#methodThresholds').textContent = s('methodThresholds');
+    $('#methodThresholdCombination').textContent = s('methodThresholdCombination');
+    $('#methodThresholdCoverage').textContent = s('methodThresholdCoverage');
+    $('#methodThresholdUnfollowed').textContent = s('methodThresholdUnfollowed');
+    $('#methodStrength').textContent = s('methodStrength');
+    $('#methodFields').textContent = s('methodFields');
+    $('#methodCounts').textContent = s('methodCounts');
+    $('#entryTitle').textContent = s('entryTitle');
+    $('#entrySearchTitle').textContent = s('entrySearchTitle');
+    $('#entrySearchHint').textContent = s('entrySearchHint');
+    $('#entrySearchBtn').textContent = s('toSearch');
+    $('#entrySearchBtn').setAttribute('href', 'search.html');
+    $('#entryExpandTitle').textContent = s('entryExpandTitle');
+    $('#entryExpandHint').textContent = s('entryExpandHint');
+    $('#entryExpandBtn').textContent = s('toExpand');
+    $('#entryExpandBtn').setAttribute('href', 'expand.html');
+  }
+
+  /* ==================================================================== 主渲染 */
+  function render() {
+    renderStatic();
+    renderStats();
+    renderQuestions();
+  }
+
+  /* 语言切换：app.js 的 setLang 把 le:lang 派发到 [data-trigger="rerender"] 上
+     （不冒泡），所以本页在 main 上声明该钩子并在此监听；document 上的监听保留，
+     以便共享外壳日后改为在 document 上派发时依然生效。 */
+  function onLangChange() { render(); }
+  document.addEventListener('le:lang', onLangChange);
+  const langTrigger = document.querySelector('[data-trigger="rerender"]');
+  if (langTrigger) langTrigger.addEventListener('le:lang', onLangChange);
+
+  render();
+  LE.mount({ page: 'questions' });
+})();
+</script>
+</body>
+</html>

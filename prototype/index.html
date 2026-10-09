@@ -1,0 +1,770 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="LEExtractor 文献研究工作台 — 研究探索首页（界面演示）">
+<title>LEExtractor — 惟学无际</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231b1c20'/%3E%3Cpath d='M10 10L22 22M22 10L10 22' stroke='white' stroke-width='5'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/app.css">
+<link rel="stylesheet" href="assets/home.css">
+</head>
+<body class="theme-home" data-page="home" data-state="cover">
+
+<a class="skip-link" href="#main" id="skipLink"></a>
+<div id="shell"></div>
+
+<div id="mist" aria-hidden="true">
+  <div class="fog one"></div>
+  <div class="fog two"></div>
+  <div class="grain"></div>
+</div>
+
+<main id="main" class="page">
+
+  <!-- ============================================================ 封面 -->
+  <section id="cover" class="cover">
+    <button class="hero-button" id="enter" aria-label="开始探索">
+      <span class="wordmark"><span>LEE</span><span class="x-slot"><span id="rotor" class="rotor"></span></span><span>tractor</span></span>
+      <span class="invitation" id="invitation"></span>
+    </button>
+  </section>
+
+  <!-- ============================================================ 检索区 -->
+  <section id="workspace" class="workspace" hidden>
+    <h1 class="workspace__heading">LEExtractor</h1>
+
+    <form id="searchForm" novalidate>
+      <div class="searchbar searchbar--home">
+        <label class="visually-hidden" for="query" id="queryLabel"></label>
+        <input id="query" name="query" type="text" autocomplete="off" required maxlength="300" aria-describedby="queryHint">
+        <button type="submit" class="searchbar__submit" id="submitBtn" aria-label="开始检索">
+          <svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path d="M4 12h15M13 5l7 7-7 7"></path>
+          </svg>
+        </button>
+      </div>
+      <p class="t-xs t-muted mt-2" id="queryHint"></p>
+
+      <div class="options">
+        <span id="optionsLabel"></span>
+        <button type="button" id="advancedBtn" aria-expanded="false" aria-controls="advanced"></button>
+      </div>
+
+      <!-- 高级选项：研究方向、年份、上限、数据源、规模预设 -->
+      <div id="advanced" class="home-settings" hidden>
+        <div class="field">
+          <label for="direction" id="directionLabel"></label>
+          <textarea class="textarea" id="direction" maxlength="500" rows="2"></textarea>
+          <span class="field__hint" id="directionHint"></span>
+        </div>
+
+        <div class="field">
+          <label id="scaleLabel"></label>
+          <div class="scale-presets" id="scalePresets" role="group" aria-labelledby="scaleLabel"></div>
+          <span class="field__hint" id="scaleHint"></span>
+        </div>
+
+        <div class="field">
+          <label for="yearFrom" id="yearLabel"></label>
+          <select class="select" id="yearFrom"></select>
+        </div>
+
+        <div class="field">
+          <label for="maxPapers" id="maxLabel"></label>
+          <select class="select" id="maxPapers"></select>
+          <span class="field__hint" id="maxHint"></span>
+        </div>
+
+        <div class="field home-settings__full">
+          <label id="providersLabel"></label>
+          <div class="provider-pick" id="providers" role="group" aria-labelledby="providersLabel"></div>
+          <span class="field__hint" id="providersHint"></span>
+        </div>
+      </div>
+
+      <div class="home-actions">
+        <button type="submit" class="btn btn--primary btn--lg" id="startBtn"></button>
+        <button type="button" class="btn btn--lg" id="planBtn" aria-expanded="false" aria-controls="planPanel"></button>
+        <button type="button" class="btn btn--lg" id="demoBtn"></button>
+        <button type="button" class="btn btn--quiet" id="restoreBtn"></button>
+      </div>
+
+      <!-- 检索计划：分库检索式与降级说明 -->
+      <div class="plan" id="planPanel" hidden>
+        <div class="row row--between mb-3">
+          <h2 style="font-size:var(--fs-h4)" id="planTitle"></h2>
+          <span class="badge badge--outline" id="planMode"></span>
+        </div>
+        <div id="planBody"></div>
+        <p class="t-xs t-muted mt-3" id="planNote"></p>
+      </div>
+    </form>
+
+    <div class="suggestions">
+      <span class="try-label" id="tryLabel"></span>
+      <div class="example-topics">
+        <button type="button" data-topic="单细胞与空间转录组的联合分析" id="exA"></button>
+        <span aria-hidden="true">/</span>
+        <button type="button" data-topic="具身智能与机器人操作" id="exB"></button>
+      </div>
+    </div>
+
+    <!-- 检索进行中 -->
+    <div id="loading" class="loading" hidden>
+      <progress id="progress" max="4" value="0" aria-label="检索进度"></progress>
+      <div class="progress-label">
+        <span id="phase" role="status"></span>
+        <span id="count" class="t-num"></span>
+      </div>
+      <button type="button" class="btn btn--quiet" id="cancel"></button>
+    </div>
+  </section>
+
+
+  <!-- ============================================================ 参赛单位与支持平台 -->
+  <section class="home-band" id="band-logos">
+    <div class="logo-band">
+      <div class="logo-band__group">
+        <span class="logo-band__label" id="affiliationLabel"></span>
+        <span class="logo-band__item logo-band__item--wordmark">
+          <img src="assets/logos/zju-wordmark.png" alt="浙江大学">
+        </span>
+      </div>
+      <span class="logo-band__sep" aria-hidden="true"></span>
+      <div class="logo-band__group">
+        <span class="logo-band__label" id="toolsLabel"></span>
+        <span class="logo-band__item"><img src="assets/logos/dify-logo.svg" alt="Dify"></span>
+        <span class="logo-band__item"><img src="assets/logos/deepseek-logo.svg" alt="DeepSeek"></span>
+        <span class="logo-band__item"><img src="assets/logos/qoder-logo.svg" alt="Qoder"></span>
+        <span class="logo-band__item">
+          <img src="assets/logos/xuezaizju-icon.png" alt="学在浙大">
+          <span>学在浙大</span>
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ 这是什么 -->
+  <section class="home-band" id="band-whatis">
+    <p class="home-band__eyebrow" id="whatisEyebrow"></p>
+    <h2 class="home-band__h2" id="whatisTitle"></h2>
+    <div class="whatis-grid">
+      <div class="whatis-copy" id="whatisCopy"></div>
+      <div class="stackfig" id="whatisStack"></div>
+    </div>
+  </section>
+
+  <!-- ============================================================ 工作台的规模 -->
+  <section class="home-band" id="band-scale">
+    <p class="home-band__eyebrow" id="scaleEyebrow"></p>
+    <div class="bigstats" id="scaleStats"></div>
+  </section>
+
+  <!-- ============================================================ 功能介绍 -->
+  <section class="home-band" id="band-features">
+    <h2 class="home-band__title" id="featuresTitle"></h2>
+    <div class="feature-grid" id="features"></div>
+  </section>
+
+  <!-- ============================================================ 检索来源 -->
+  <section class="home-band" id="band-sources">
+    <p class="home-band__eyebrow" id="sourcesEyebrow"></p>
+    <div class="plate-row" id="sourcePlates"></div>
+  </section>
+
+  <!-- ============================================================ 界面守则 -->
+  <section class="home-band" id="band-rules">
+    <div class="rules-grid">
+      <h2 class="rules-title" id="rulesTitle"></h2>
+      <ol class="rules-list" id="rulesList"></ol>
+    </div>
+  </section>
+
+  <!-- ============================================================ 五个入口 -->
+  <section class="home-band" id="band-access">
+    <h2 class="home-band__h2" id="accessTitle"></h2>
+    <p class="t-sm t-muted mb-6" id="accessIntro" style="max-width:78ch"></p>
+    <div class="access-cards" id="accessCards"></div>
+  </section>
+
+  <!-- ============================================================ 常见问题 -->
+  <section class="home-band" id="band-faq">
+    <h2 class="home-band__h2" id="faqTitle"></h2>
+    <div class="faq-list" id="faqList"></div>
+  </section>
+
+  <!-- ============================================================ 当前项目 -->
+  <section class="home-band" id="band-project" hidden>
+    <h2 class="home-band__title" id="projectTitle"></h2>
+    <div class="stat-row" id="projectStats"></div>
+    <div class="row mt-4">
+      <a class="btn btn--primary" href="results.html" id="toResults"></a>
+      <a class="btn" href="review.html" id="toReview"></a>
+      <a class="btn" href="projects.html" id="toProjects"></a>
+    </div>
+  </section>
+  <!-- ============================================================ 团队与联系 -->
+  <section class="home-band" id="band-meta">
+    <h2 class="home-band__title" id="metaTitle"></h2>
+    <div class="meta-grid" id="metaGrid"></div>
+  </section>
+
+  <!-- ============================================================ 最近项目 -->
+  <section class="home-band" id="band-recent">
+    <h2 class="home-band__title" id="recentTitle"></h2>
+    <div class="recent-grid" id="recent"></div>
+  </section>
+
+</main>
+
+<button id="eagle" class="eagle" aria-label="查看四位创作者署名" aria-expanded="false">
+  <span class="eagle-art">
+    <pre id="eagleFallback" aria-hidden="true">                            \\/////                         
+\\ \\ \\ \\ \\  \          \\\///////      /// /  // ///  //
+\\\\\\\\\\\\\\\\\        \\\\////////    //////////////////
+  \\ \\\\\\\\\\\\\\      \\\\\////        ////////////  //  
+         \\\\\ \\\\\     \\\\\ ///      //////////          
+   \\    \\\\\\\\\\\     \\\\\/ //     ////////////     /   
+   \\\\\\\\\\\ \\\\\\    \\\\\////    //////// //////////   
+   \ \\ \\ \\ \\ \\\ \   \\\\\/////   // /// // // /  //    
+            \\ \\\\\\   \\\\\\//////  //////////            
+            \ \\\\\\\\ \\\\\ \/ // /  ////// //             
+      \\ \\ \\ \\\\\\\\\\\\\\\////////////////////////      
+      \\\\\\\\\\\\\\ \\\ \\\\\////////////// ////////       
+                \\\\\\\ \\ \\ ////// ///// //               
+               \\\\\\\\\\\\\ \ / / //////////               
+                 \  \ \\\\\\\\//// / /////                  
+          \\\\\\\\\\ \\\\\\\ \//// ///////////////          
+          \ \\\\\\\\\ \\ \\\\ // ////////////////           
+                  \\\\\\\\\\ \/ // / /////                  
+                  \\\\\\\\\\\\// /////////                  
+             \ \\\ \\\\ \\\  \/ // / // // ///              
+              \\\\\\\\\\\\\\\\/////// ////////              
+              \\ \\\\\\\\  \\ // // // /////                
+                     \\\\\\\ \/ // ////                     
+                     \\ \\\\\ // ////                       
+                 \ \\ \\ \\\ \/ // / // //                  
+                 \\\\\\\\\\\\\////////////                  
+                  \\ \\ \\ \\ // // ////                    
+                         \\\ \/ // /                        
+                        \\\\\ // / /                        
+                         \\\ \/ //                          
+                         \\\\\////                          
+                            \ //                            
+                           \ \//                            
+                           \\ ///                           
+                             \/                             
+                            \\/                             </pre>
+    <canvas id="eagleCanvas" width="640" height="400" aria-hidden="true"></canvas>
+  </span>
+  <span class="credits">
+    <span class="credit-title">THE FOUR BEHIND IT</span>
+    <span class="names"><span>成员 01</span><span>成员 02</span><span>成员 03</span><span>成员 04</span></span>
+    <span class="credit-note">四人署名 · 待填入</span>
+  </span>
+</button>
+
+<div id="foot"></div>
+
+<script src="assets/eagle-grid.js"></script>
+<script src="assets/eagle-motion.js"></script>
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script src="assets/i18n-pages.js"></script>
+<script>
+/* ==========================================================================
+   首页脚本：沿用 Demo v0.3 的状态机与入场动效；提交后进入结果页。
+   文案全部来自 assets/i18n-pages.js 的 home 段（LE.pt），切换语言整段重渲染。
+   ========================================================================== */
+(function () {
+  'use strict';
+  const D = window.LED;
+  const $ = (sel) => document.querySelector(sel);
+  const s = (k, v) => LE.pt('home', k, v);
+
+  const FEATURES = [
+    { idx: '01', href: 'search.html', zh: ['多源检索', 'Semantic Scholar、OpenAlex、Crossref、arXiv 四库合并去重，漏斗逐层收敛，命中数绝不相加。'], en: ['Multi-source search', 'Four providers merged and deduplicated with a narrowing funnel; provider hits are never summed.'] },
+    { idx: '02', href: 'expand.html', zh: ['引文扩展', '正向与反向引文追溯，逐轮记录 raw/unique/relevant，真实 stop_reason 而不是一句「饱和」。'], en: ['Citation expansion', 'Forward and backward tracing with per-round raw/unique/relevant counts and a real stop reason.'] },
+    { idx: '03', href: 'landscape.html', zh: ['证据版图', '引文网络与三类关系边分层显示；PageRank 与社群只跑引文边，不混合加权。'], en: ['Evidence landscape', 'Citation network plus three relation types, layered; PageRank and communities use citation edges only.'] },
+    { idx: '04', href: 'review.html', zh: ['人工筛选', '标题摘要与全文两阶段分别呈现，记录原因与冲突；自动筛选默认关闭。'], en: ['Human screening', 'Title/abstract and full text as separate stages, with reasons and conflicts; auto-screening is off by default.'] },
+    { idx: '05', href: 'projects.html', zh: ['可恢复会话', '每步检查点随会话保存；导入先校验再加载，损坏文件先备份再处理。'], en: ['Resumable sessions', 'Every checkpoint is saved with the session; imports are validated before loading, and a corrupt file is backed up rather than repaired silently.'] },
+    { idx: '06', href: 'export.html', zh: ['证据包导出', 'CSV / JSON / RIS / BibTeX / Mermaid / Evidence Pack，导出范围逐项标明。'], en: ['Evidence pack export', 'CSV / JSON / RIS / BibTeX / Mermaid / Evidence Pack, each with an explicit scope.'] },
+  ];
+
+  /* ==========================================================================
+     快速展示面：分区节奏参考 openalex.org 首页 hero 以下（logo 带 → 左文 + 中分层图 +
+     右编号注解 → 巨型数字行 → …），内容全部换成本项目**可核验的事实**。
+     只有「参赛单位 / 支持平台 / 团队人数 / 仓库地址」这类事实由用户提供，其余取自仓库。
+     ========================================================================== */
+  const SHOWCASE = {
+    /* 分层图与右侧编号注解共用一份数据；编号自下而上 1→2→3 */
+    layers: [
+      {
+        n: '1',
+        zh: ['四个数据库的原始记录', 'Semantic Scholar · OpenAlex · Crossref · arXiv，本轮 347 条命中'],
+        en: ['Raw records from four databases', 'Semantic Scholar · OpenAlex · Crossref · arXiv — 347 hits this run'],
+      },
+      {
+        n: '2',
+        zh: ['LEExtractor 把它折成可判断的语料', '统一身份 → 去重 → 词法排序 → 人工筛选 → 引文扩展 → 成图 → 打包'],
+        en: ['LEExtractor folds it into judgeable evidence', 'identity → dedup → lexical ranking → human screening → expansion → graphing → packaging'],
+      },
+      {
+        n: '3',
+        zh: ['研究者与 AI 协作者', '人工决定逐条留痕；12 个 MCP 工具让 AI 客户端调用同一套内核'],
+        en: ['Researchers and AI collaborators', 'every human decision is recorded; 12 MCP tools let an AI client drive the same core'],
+      },
+    ],
+    stats: [
+      { num: '4', zh: ['数据源', '四库合并去重，命中数绝不相加'], en: ['Providers', 'merged and deduplicated; provider hits are never summed'] },
+      { num: '12', zh: ['MCP 工具', 'litsearch/server.py 暴露的工具数'], en: ['MCP tools', 'exposed by litsearch/server.py'] },
+      { num: '6', zh: ['导出格式', 'CSV · JSON · RIS · BibTeX · Mermaid · Evidence Pack'], en: ['Export formats', 'CSV · JSON · RIS · BibTeX · Mermaid · Evidence Pack'] },
+      { num: '0', zh: ['自动排除', '未标定时不自动排除任何文献；每个决定都由人工记录并留痕'], en: ['Automatic exclusions', 'while uncalibrated no paper is excluded automatically; every decision is recorded by a human'] },
+    ],
+    plates: [
+      { name: 'Semantic Scholar', zh: ['需密钥', '支持字段过滤与相关度排序，速率受限'], en: ['Key required', 'field filters and relevance sorting; rate limited'] },
+      { name: 'OpenAlex', zh: ['可不配密钥', '配置后每日额度更高'], en: ['Optional key', 'a key raises the daily quota'] },
+      { name: 'Crossref', zh: ['无需密钥', '不支持相关度排序，按年份倒序返回'], en: ['No key', 'no relevance sorting; returns newest first'] },
+      { name: 'arXiv', zh: ['无需密钥', '预印本，未经同行评审，界面单独标注'], en: ['No key', 'preprints, not peer reviewed, labelled as such'] },
+    ],
+    rules: [
+      { zh: ['没下到全文，不算排除理由', '获取失败只是一个事实，不进 PRISMA 的排除格；它可能恰恰是重要文献。'],
+        en: ['A failed download is not an exclusion reason', 'It is a fact about retrieval, not a PRISMA exclusion cell — and it may be the important paper.'] },
+      { zh: ['相关度只用来排序', '它是单次检索内的相对分数，不是纳入概率，也不是论文质量；跨批次还不可比。'],
+        en: ['Relevance only ranks', 'It is a relative score inside one search run: not an inclusion probability, not quality — and not comparable across batches.'] },
+      { zh: ['自动筛选默认关闭', '未标定时只排序，不自动排除任何文献；单一类别的标注不算校准。'],
+        en: ['Automatic screening is off by default', 'While uncalibrated it only ranks and never excludes; a single-class labelling is not calibration.'] },
+      { zh: ['失败不许写成「饱和」', '八个停止原因各自可辨，只有两个允许声称检索完成。把失败说成检索完成，是对文献的错误陈述。'],
+        en: ['A failure is never written as "saturated"', 'Eight stop reasons stay distinguishable and only two allow claiming completion. Calling a failure a completed search misstates the literature.'] },
+    ],
+    access: [
+      { href: 'search.html', zh: ['文献搜索', '研究问题 → 分库检索式 → 多源合并去重，每篇都带发现路径。'], en: ['Search', 'Question → per-database strings → merged and deduplicated, every record carrying its discovery path.'] },
+      { href: 'results.html', zh: ['结果与分面', '年份、来源、主题、发现方式、筛选状态、全文获取六个分面，基于当前项目完整语料。'], en: ['Results & facets', 'Six facets — year, provider, topic, discovery method, screening status, full text — over the whole project corpus.'] },
+      { href: 'landscape.html', zh: ['证据版图', '引文网络（只跑引文边）+ 三类关系边 + 主题 / 时间 / 新颖度 / 覆盖。'], en: ['Evidence landscape', 'Citation network (citation edges only) + three relation types + topic, time, novelty, coverage.'] },
+      { href: 'export.html', zh: ['保存与导出', '六种格式 + Evidence Pack，导出范围逐项标明。'], en: ['Save & export', 'Six formats plus an Evidence Pack, with the export scope stated each time.'] },
+      { href: 'projects.html', zh: ['离线演示与会话', 'SYNTHETIC DEMO 语料 + 会话恢复、损坏文件备份、写入冲突检测。'], en: ['Offline demo & sessions', 'SYNTHETIC DEMO corpus plus session restore, corrupt-file backup and write-conflict detection.'] },
+    ],
+    faq: [
+      { zh: ['相关度高是不是就该纳入？', '不是。相关度是单次检索内的词法排序信号，用来决定先读哪几篇；**纳入与否由人工在筛选页记录，并留下理由**。'],
+        en: ['Does a high relevance score mean I should include it?', 'No. Relevance is a lexical ranking signal inside one run — it decides what to read first. **Inclusion is recorded by a human on the screening page, with a reason.**'] },
+      { zh: ['没下到全文的文献会被自动排除吗？', '不会。付费墙、超时、超出体积上限、地址校验中止都只是**获取状态**；能否下载与是否值得读是两件事。'],
+        en: ['Are papers I could not download excluded automatically?', 'No. Paywalls, timeouts, size limits and blocked redirects are all just **retrieval states**; being downloadable and being worth reading are different questions.'] },
+      { zh: ['为什么把停止原因分成八种？', '因为把「预算耗尽」和「检索饱和」混为一谈，等于把一次失败的检索说成"这个领域没有更多文献了"。八种里有六种属于**不完整、可续跑**。'],
+        en: ['Why eight stop reasons?', 'Because lumping "budget exhausted" together with "saturated" turns a failed run into the claim that the field holds nothing more. Six of the eight are **incomplete and resumable**.' ] },
+      { zh: ['需要申请 API 密钥吗？', 'Crossref 与 arXiv 不需要；OpenAlex 不配也能用（配了额度更高）；只有 Semantic Scholar 建议配。**密钥只写入本机 .env，界面永不回显。**'],
+        en: ['Do I need API keys?', 'Crossref and arXiv need none; OpenAlex works without one (a key raises the quota); only Semantic Scholar is worth configuring. **Keys go to the local .env and are never echoed back in the UI.**'] },
+      { zh: ['没有网络能用吗？', '能。离线演示用明确标注 SYNTHETIC DEMO 的合成语料，可以完整走通检索、筛选、版图与导出；**真实检索失败时界面不会偷偷切换成合成数据**。'],
+        en: ['Does it work offline?', 'Yes. The offline demo runs on a corpus explicitly labelled SYNTHETIC DEMO and covers search, screening, landscape and export; **a failing live search never silently falls back to synthetic data.**'] },
+      { zh: ['数据存在哪里？', '本机会话文件加一个本地缓存。导出有六种格式，**导出范围要逐项指定**；全文阶段还没走完时，最终纳入集为空是正确状态，不是出错。'],
+        en: ['Where does my data live?', 'A local session file plus a local cache. Exports come in six formats and **the scope is always stated**; an empty final set is a correct state while the full-text stage is unfinished, not an error.'] },
+    ],
+    meta: [
+      { zh: ['参赛赛事', '浙江大学校园AI创新应用大赛'], en: ['Competition', 'Zhejiang University Campus AI Innovation Application Competition'] },
+      { zh: ['团队', '4 人跨学科团队 · 产品 · 工程 · 算法 · 设计'], en: ['Team', '4-member interdisciplinary team · Product · Engineering · Algorithm · Design'] },
+      { zh: ['代码仓库', '<a href="https://github.com/26Wesly3/LEExtractor" target="_blank" rel="noopener noreferrer">github.com/26Wesly3/LEExtractor</a>'], en: ['Repository', '<a href="https://github.com/26Wesly3/LEExtractor" target="_blank" rel="noopener noreferrer">github.com/26Wesly3/LEExtractor</a>'] },
+      { zh: ['当前版本', 'v0.9.5 · 当前为界面原型，阶段二接 Vue 3 + Vuetify + FastAPI'], en: ['Version', 'v0.9.5 · interface prototype; stage two adds Vue 3 + Vuetify + FastAPI'] },
+    ],
+  };
+
+  function renderShowcase() {
+    const L = (item) => (LE.lang() === 'zh' ? item.zh : item.en);
+
+    /* 参赛单位与支持平台 */
+    $('#affiliationLabel').textContent = s('affiliationLabel');
+    $('#toolsLabel').textContent = s('toolsLabel');
+
+    /* 这是什么：正文 + 分层图 + 编号注解 */
+    $('#whatisEyebrow').textContent = s('whatisEyebrow');
+    $('#whatisTitle').textContent = s('whatisTitle');
+    $('#whatisCopy').innerHTML = `<p>${LE.rich(s('whatisP1'))}</p><p>${LE.rich(s('whatisP2'))}</p>`
+      + `<a href="landscape.html">${LE.esc(LE.lang() === 'zh' ? '看看证据版图长什么样 →' : 'See what the evidence landscape looks like →')}</a>`;
+    /* 分层图与右侧注解都必须自上而下是 3→2→1：
+       1 在底（最宽），3 在顶（最窄）。之前图按 1→2→3 渲染，与注解上下镜像，
+       编号对不上行 —— 只有看图才发现。宽度类跟随层号，不跟随渲染序号。 */
+    /* 三层结构与右侧编号解释原本是同一份内容说两遍，合并成一份：层本身就是注解，
+       编号落在层上。自下而上 1→2→3，所以渲染时倒序，让 1 在最宽的最底层。 */
+    $('#whatisStack').innerHTML = SHOWCASE.layers.slice().reverse().map((l, i) => `
+      ${i ? '<div class="stackfig__arrow" aria-hidden="true">↑</div>' : ''}
+      <div class="stackfig__layer stackfig__layer--${LE.esc(l.n)}">
+        <span class="stackfig__n">${LE.esc(l.n)}</span>
+        <div><b>${LE.esc(L(l)[0])}</b><small>${LE.esc(L(l)[1])}</small></div>
+      </div>`).join('');
+
+    /* 工作台的规模：巨型数字行（数字用 Anton，说明放发丝线下） */
+    $('#scaleEyebrow').textContent = s('scaleEyebrow');
+    $('#scaleStats').innerHTML = SHOWCASE.stats.map((x) => `
+      <div class="bigstat">
+        <b>${LE.esc(x.num)}</b>
+        <span>${LE.esc(L(x)[0])}</span>
+        <span class="bigstat__rule" aria-hidden="true"></span>
+        <small>${LE.esc(L(x)[1])}</small>
+      </div>`).join('');
+
+    /* 检索来源 */
+    $('#sourcesEyebrow').textContent = s('sourcesEyebrow');
+    $('#sourcePlates').innerHTML = SHOWCASE.plates.map((p) => `
+      <div class="plate">
+        <span class="plate__name">${LE.esc(p.name)}</span>
+        <span class="plate__row"><b>${LE.esc(L(p)[0])}</b></span>
+        <span class="plate__row">${LE.esc(L(p)[1])}</span>
+      </div>`).join('');
+
+    /* 界面守则 */
+    $('#rulesTitle').innerHTML = `<span>${LE.esc(s('rulesKicker'))}</span>${LE.esc(s('rulesTitle'))}`;
+    $('#rulesList').innerHTML = SHOWCASE.rules.map((r) => `
+      <li class="rule"><div><h3>${LE.esc(L(r)[0])}</h3><p>${LE.esc(L(r)[1])}</p></div></li>`).join('');
+
+    /* 五个入口 */
+    $('#accessTitle').textContent = s('accessTitle');
+    $('#accessIntro').textContent = s('accessIntro');
+    $('#accessCards').innerHTML = SHOWCASE.access.map((a) => `
+      <div class="access-card">
+        <span class="access-card__name">${LE.esc(L(a)[0])}</span>
+        <span class="access-card__body">${LE.esc(L(a)[1])}</span>
+        <span class="access-card__foot"><a href="${LE.esc(a.href)}">${LE.esc(s('accessCta'))}</a></span>
+      </div>`).join('');
+
+    /* 常见问题 */
+    $('#faqTitle').textContent = s('faqTitle');
+    $('#faqList').innerHTML = SHOWCASE.faq.map((f, i) => `
+      <details class="faq-item"${i === 0 ? ' open' : ''}>
+        <summary>${LE.esc(L(f)[0])}</summary>
+        <div class="faq-a">${LE.rich(L(f)[1])}</div>
+      </details>`).join('');
+
+    /* 团队与联系 */
+    $('#metaTitle').textContent = s('metaTitle');
+    $('#metaGrid').innerHTML = SHOWCASE.meta.map((m) => `
+      <dl class="meta-item"><dt>${LE.esc(L(m)[0])}</dt><dd>${L(m)[1]}</dd></dl>`).join('');
+  }
+
+  function renderStatic() {
+    document.title = LE.lang() === 'zh' ? 'LEExtractor — 惟学无际' : 'LEExtractor — Boundless learning';
+    const set = (sel, text) => { const n = $(sel); if (n) n.textContent = text; };
+    set('#skipLink', s('skip'));
+    set('#invitation', s('invitation'));
+    set('#queryLabel', s('queryLabel'));
+    $('#query').setAttribute('placeholder', s('queryPh'));
+    set('#queryHint', s('queryHint'));
+    set('#optionsLabel', s('optionsLabel'));
+    set('#advancedBtn', $('#advanced').hidden ? s('advanced') : s('advancedClose'));
+    set('#directionLabel', s('directionLabel'));
+    $('#direction').setAttribute('placeholder', s('directionPh'));
+    set('#directionHint', s('directionHint'));
+    set('#scaleLabel', s('scaleLabel'));
+    set('#scaleHint', s('scaleHint'));
+    set('#yearLabel', s('yearLabel'));
+    set('#maxLabel', s('maxLabel'));
+    set('#maxHint', s('maxHint'));
+    set('#providersLabel', s('providersLabel'));
+    set('#providersHint', s('providersHint'));
+    set('#startBtn', s('start'));
+    set('#planBtn', $('#planPanel').hidden ? s('plan') : s('planClose'));
+    set('#demoBtn', s('demo'));
+    set('#restoreBtn', s('restore'));
+    set('#planTitle', s('planTitle'));
+    set('#planNote', s('planNote'));
+    set('#tryLabel', s('tryLabel'));
+    set('#exA', s('exA'));
+    set('#exB', s('exB'));
+    set('#cancel', s('cancel'));
+    set('#toResults', s('toResults'));
+    set('#toReview', s('toReview'));
+    set('#toProjects', s('toProjects'));
+    set('#featuresTitle', s('featuresTitle'));
+    set('#recentTitle', s('recentTitle'));
+
+    const keptYear = $('#yearFrom').value;
+    const keptMax = $('#maxPapers').value;
+    const keptProv = LE.$$('#providers input:checked').map((x) => x.value);
+
+    const presets = [
+      { id: 'quick', years: 10, zh: [s('scaleQuick'), s('scaleQuickD')], en: [s('scaleQuick'), s('scaleQuickD')] },
+      { id: 'standard', years: 20, zh: [s('scaleStandard'), s('scaleStandardD')], en: [s('scaleStandard'), s('scaleStandardD')] },
+      { id: 'deep', years: 30, zh: [s('scaleDeep'), s('scaleDeepD')], en: [s('scaleDeep'), s('scaleDeepD')] },
+    ];
+    const current = D.settings.preferences.scale_preset || 'standard';
+    $('#scalePresets').innerHTML = presets.map((p) => `
+      <button type="button" data-preset="${p.id}" aria-pressed="${p.id === current}">
+        <b>${LE.esc(p.zh[0])}</b><small>${LE.esc(p.zh[1])}</small>
+      </button>`).join('');
+    LE.$$('#scalePresets button').forEach((b) => {
+      b.onclick = () => {
+        LE.$$('#scalePresets button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+        const p = presets.find((x) => x.id === b.getAttribute('data-preset'));
+        const y = new Date().getFullYear();
+        $('#yearFrom').value = String(y - p.years + 1);
+        $('#maxPapers').value = String(p.max);
+      };
+    });
+
+    const yNow = new Date().getFullYear();
+    $('#yearFrom').innerHTML = `<option value="any">${LE.esc(s('yearAny'))}</option>` +
+      [1, 3, 5, 10, 20].map((n) => `<option value="${yNow - n + 1}">${LE.esc(s('yearFrom', { y: yNow - n + 1 }))}</option>`).join('');
+    $('#yearFrom').value = keptYear || String(yNow - 4);
+
+    $('#maxPapers').innerHTML = [100, 200, 500].map((n) => `<option value="${n}">${n}</option>`).join('');
+    $('#maxPapers').value = keptMax || '200';
+
+    $('#providers').innerHTML = D.settings.providers.map((p) => `
+      <label class="check">
+        <input type="checkbox" value="${p.id}" ${(keptProv.length ? keptProv.includes(p.id) : p.configured) ? 'checked' : ''}>
+        <span>${LE.esc(p.name)} <small>${LE.esc(p.configured ? s('configured') : s('notConfigured'))}</small></span>
+      </label>`).join('');
+
+    $('#features').innerHTML = FEATURES.map((f) => {
+      const c = LE.lang() === 'zh' ? f.zh : f.en;
+      return `<article class="feature">
+        <span class="feature__idx">${f.idx}</span>
+        <h3>${LE.esc(c[0])}</h3>
+        <p>${LE.esc(c[1])}</p>
+        <a href="${f.href}">${LE.esc(s('enter'))}</a>
+      </article>`;
+    }).join('');
+
+    $('#recent').innerHTML = D.sessions.slice(0, 3).map((x) => `
+      <a class="recent" href="projects.html">
+        <span class="recent__topic">${LE.esc(x.topic)}</span>
+        <span class="recent__meta">
+          <span>${x.papers} ${LE.esc(s('corpus'))}</span>
+          <span>${LE.esc(x.phase)}</span>
+          <span>${LE.esc(s('updated'))} ${LE.esc(x.updated_at.slice(0, 10))}</span>
+        </span>
+        <span>${LE.badgeScreening(x.screening_status)}</span>
+      </a>`).join('');
+
+    renderPlan();
+    renderProjectBand();
+    renderShowcase();
+  }
+
+  function renderPlan() {
+    const intent = D.manifest.research_intent;
+    $('#planMode').textContent = intent.degraded ? s('planDegraded') : 'per-database';
+    $('#planBody').innerHTML = intent.per_source.map((row) => `
+      <div class="plan__row">
+        <div class="plan__src">${LE.esc(row.label)}<small>${LE.esc(row.date_range || '')}</small></div>
+        <div>
+          <div class="plan__q">${LE.esc(row.query)}</div>
+          ${row.filter ? `<div class="t-xs t-muted mt-2">filter: <code>${LE.esc(row.filter)}</code></div>` : ''}
+          <div class="t-xs t-muted mt-2">${LE.esc(row.note)}</div>
+        </div>
+      </div>`).join('') + (intent.degradation_note
+      ? `<div class="panel-note mt-3" style="background:var(--warn-bg);border:1px solid var(--warn-line)">${LE.esc(intent.degradation_note)}</div>`
+      : '');
+  }
+
+  function renderProjectBand() {
+    $('#band-project').hidden = false;
+    $('#projectTitle').textContent = `${s('projectTitle')} · ${D.manifest.query}`;
+    const tally = D.helpers.decisionTally();
+    $('#projectStats').innerHTML = `
+      <div class="stat"><b>${D.papers.length}</b><span>${LE.esc(s('statPapers'))}</span>
+        <small>${LE.esc(D.manifest.unique_before_filters + ' → ' + D.manifest.returned_count)}</small></div>
+      <div class="stat"><b>${D.facets.sources.length}</b><span>${LE.esc(s('statSources'))}</span>
+        <small>${LE.esc(Object.keys(D.manifest.provider_counts).join(' · '))}</small></div>
+      <div class="stat"><b>${tally.include}</b><span>${LE.esc(s('statIncluded'))}</span>
+        <small>${LE.esc(tally.undecided + (LE.lang() === 'zh' ? ' 未决定' : ' undecided'))}</small></div>
+      <div class="stat"><b>${D.conflicts.length}</b><span>${LE.esc(s('statConflict'))}</span>
+        <small>${LE.esc(LE.lang() === 'zh' ? '评审决定相反，需复核' : 'opposing reviewer decisions')}</small></div>`;
+  }
+
+  /* ---------------------------------------------------------- 状态机 */
+  let state = 'cover';
+  let timer = null;
+
+  function setState(next) {
+    state = next;
+    document.body.dataset.state = next;
+    $('#cover').hidden = next !== 'cover';
+    $('#workspace').hidden = next === 'cover';
+    $('#loading').hidden = next !== 'loading';
+    $('#query').disabled = next === 'loading';
+    $('#submitBtn').disabled = next === 'loading';
+    if (window.syncEagleMotion) window.syncEagleMotion();
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+
+  /* 入场：280ms 淡出封面 → 620ms 景深推入检索区（Demo v0.3 原参数） */
+  let entryEpoch = 0;
+  let entryAnimations = [];
+  function cancelEntry() {
+    entryEpoch += 1;
+    entryAnimations.forEach((a) => a.cancel());
+    entryAnimations = [];
+    document.body.classList.remove('entering');
+  }
+  async function openSearch() {
+    if (document.body.classList.contains('entering')) return;
+    if (state !== 'cover' || LE.motion.reduced() || !$('#cover').animate) {
+      setState('search');
+      $('#query').focus({ preventScroll: true });
+      return;
+    }
+    const epoch = ++entryEpoch;
+    document.body.classList.add('entering');
+    const departure = $('#cover').animate(
+      [{ opacity: 1, transform: 'translateY(0) scale(1)' }, { opacity: 0, transform: 'translateY(-12px) scale(.97)' }],
+      { duration: 280, easing: 'cubic-bezier(.4,0,.8,1)', fill: 'both' });
+    entryAnimations.push(departure);
+    try { await departure.finished; } catch (e) { return; }
+    if (epoch !== entryEpoch) return;
+    setState('search');
+    departure.cancel();
+    entryAnimations = [];
+    const arrival = $('#workspace').animate(
+      [{ opacity: 0, transform: 'perspective(1000px) translateZ(-150px) translateY(24px)', filter: 'blur(6px)' },
+       { opacity: 1, transform: 'perspective(1000px) translateZ(0) translateY(0)', filter: 'blur(0px)' }],
+      { duration: 620, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'both' });
+    entryAnimations.push(arrival);
+    try { await arrival.finished; } catch (e) { return; }
+    if (epoch !== entryEpoch) return;
+    arrival.cancel();
+    entryAnimations = [];
+    document.body.classList.remove('entering');
+    if (state === 'search') $('#query').focus({ preventScroll: true });
+  }
+
+  /* X 随鼠标方向柔和转动（Demo v0.3 原算法） */
+  let angle = 0, target = 0, raf = 0, lastFrame = 0;
+  function animate(now) {
+    if (state !== 'cover' || LE.motion.reduced() || document.hidden) { raf = 0; return; }
+    const dt = Math.min(lastFrame ? now - lastFrame : 16, 48);
+    lastFrame = now;
+    const diff = ((target - angle + 540) % 360) - 180;
+    angle += diff * (1 - Math.exp(-dt / 180));
+    $('#rotor').style.transform = `rotate(${angle}deg)`;
+    if (Math.abs(diff) > .08) raf = requestAnimationFrame(animate);
+    else { raf = 0; lastFrame = 0; }
+  }
+  function wake() {
+    if (!raf && !LE.motion.reduced() && state === 'cover') { lastFrame = 0; raf = requestAnimationFrame(animate); }
+  }
+  document.addEventListener('pointermove', (e) => {
+    if (e.pointerType === 'touch' || state !== 'cover' || LE.motion.reduced()) return;
+    const r = $('#rotor').getBoundingClientRect();
+    target = Math.atan2(e.clientY - r.top - r.height / 2, e.clientX - r.left - r.width / 2) * 180 / Math.PI;
+    wake();
+  }, { passive: true });
+  document.documentElement.addEventListener('pointerleave', () => { target = 0; wake(); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { cancelAnimationFrame(raf); raf = 0; } });
+
+  /* ---------------------------------------------------------- 交互接线 */
+  $('#enter').onclick = openSearch;
+  $('#advancedBtn').onclick = () => {
+    const show = $('#advanced').hidden;
+    $('#advanced').hidden = !show;
+    $('#advancedBtn').setAttribute('aria-expanded', String(show));
+    renderStatic();
+  };
+  $('#planBtn').onclick = () => {
+    const show = $('#planPanel').hidden;
+    $('#planPanel').hidden = !show;
+    $('#planBtn').setAttribute('aria-expanded', String(show));
+    renderStatic();
+  };
+  LE.$$('[data-topic]').forEach((b) => {
+    b.onclick = () => {
+      $('#query').value = b.getAttribute('data-topic');
+      if (state === 'cover') openSearch().then(() => $('#query').focus());
+      else $('#query').focus();
+    };
+  });
+  $('#demoBtn').onclick = () => {
+    const fill = () => {
+      $('#query').value = D.manifest.query;
+      $('#direction').value = D.manifest.research_direction;
+      $('#advanced').hidden = false;
+      $('#advancedBtn').setAttribute('aria-expanded', 'true');
+      renderStatic();
+      LE.toast(s('loaded'));
+    };
+    if (state === 'cover') openSearch().then(fill); else fill();
+  };
+  $('#restoreBtn').onclick = () => { window.location.href = 'projects.html'; };
+  $('#cancel').onclick = () => {
+    stopSearch();                 /* 连"完成后跳转"一起取消：取消后绝不进结果页 */
+    setState('search');
+    LE.toast(s('cancelled'));
+  };
+
+  const PHASES = 4;
+  let navTimer = 0;      /* 完成后跳转的延迟；取消时必须一并清掉 */
+  let runToken = 0;      /* 每次检索一个令牌，取消后旧任务的所有回调立即失效 */
+
+  /** 停止进行中的检索：进度计时器与"完成后跳转"都要取消 ——
+      否则取消之后那个延迟仍会把用户带进结果页。 */
+  function stopSearch() {
+    runToken += 1;
+    if (timer) { clearInterval(timer); timer = null; }
+    if (navTimer) { clearTimeout(navTimer); navTimer = 0; }
+  }
+
+  function startSearch(q) {
+    const text = (q || '').trim();
+    if (!text || text.length > 300) { LE.toast(s('needQuery')); $('#query').focus(); return; }
+    if (!LE.$$('#providers input:checked').length) { LE.toast(s('noProvider')); return; }
+
+    stopSearch();
+    const my = runToken;
+    setState('loading');
+    $('#progress').value = 0;
+    $('#count').textContent = '0 / ' + PHASES;
+    $('#phase').textContent = s('phasePreparing');
+
+    let step = 0;
+    timer = setInterval(() => {
+      if (my !== runToken) return;              /* 已取消，或被新的检索接管 */
+      step = Math.min(PHASES, step + 1);
+      $('#progress').value = step;
+      $('#count').textContent = step + ' / ' + PHASES;
+      $('#phase').textContent = step === 1 ? s('phasePreparing')
+        : step === 2 ? s('phaseMatching')
+        : step === 3 ? s('phaseOrganizing') : s('phaseEvidence');
+      if (step === PHASES) {
+        clearInterval(timer); timer = null;
+        $('#phase').textContent = s('done');
+        navTimer = setTimeout(() => {
+          navTimer = 0;
+          if (my !== runToken) return;          /* 取消后不再跳转 */
+          try { sessionStorage.setItem('le.query', text); } catch (e) { /* file:// 下可能受限 */ }
+          window.location.href = 'results.html';
+        }, 620);
+      }
+    }, 420);
+  }
+
+  $('#searchForm').onsubmit = (e) => { e.preventDefault(); startSearch($('#query').value); };
+  document.addEventListener('le:lang', renderStatic);
+
+  $('#eagle').onclick = () => {
+    const show = $('#eagle').classList.toggle('show');
+    $('#eagle').setAttribute('aria-expanded', String(show));
+    if (window.syncEagleMotion) window.syncEagleMotion();
+  };
+
+  LE.motion.onChange(() => {
+    if (LE.motion.reduced()) {
+      cancelAnimationFrame(raf); raf = 0;
+      $('#rotor').style.transform = 'rotate(0deg)';
+      angle = target = 0;
+    }
+    if (window.syncEagleMotion) window.syncEagleMotion();
+  });
+
+  renderStatic();
+  LE.mount({ page: 'home' });
+
+  /* 深链：?view=showcase 跳过封面直接进检索区，并把展示面滚到眼前。
+     评审可以直接打开这一条链接看展示面，不用先点封面。 */
+  if (/[?&]view=showcase\b/.test(location.search)) {
+    setState('search');
+    const firstBand = document.getElementById('band-logos');
+    if (firstBand) requestAnimationFrame(() => firstBand.scrollIntoView({ block: 'start' }));
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="LEExtractor 论文详情 — 元数据、发现路径、关系与筛选决定（界面演示）">
+<title>论文详情 — LEExtractor</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231b1c20'/%3E%3Cpath d='M10 10L22 22M22 10L10 22' stroke='white' stroke-width='5'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body data-page="paper">
+
+<a class="skip-link" href="#main" id="skipLink"></a>
+<div id="shell"></div>
+
+<main id="main" class="page">
+  <div class="container container--wide">
+
+    <nav class="row t-sm mt-6 mb-4" style="gap:var(--s-3)" aria-label="breadcrumb">
+      <a href="results.html" id="backLink"></a>
+      <span class="t-muted">/</span>
+      <span class="t-muted" id="crumb"></span>
+      <span class="spacer"></span>
+      <button type="button" class="btn btn--sm" id="prevBtn"></button>
+      <button type="button" class="btn btn--sm" id="nextBtn"></button>
+    </nav>
+
+    <div id="notFound" class="state" hidden>
+      <span class="state__icon" aria-hidden="true">∅</span>
+      <h3 id="nfTitle"></h3>
+      <p id="nfHint"></p>
+      <a class="btn" href="results.html" id="nfBack"></a>
+    </div>
+
+    <div class="shell shell--wide shell--main-first" id="paperShell">
+      <!-- ============================================== 主区：抽屉的七组内容 -->
+      <article class="card" id="paperBody"></article>
+
+      <!-- ============================================== 右：同主题与位置 -->
+      <aside class="stack stack--sm" id="paperAside" aria-labelledby="positionTitle"></aside>
+    </div>
+
+  </div>
+</main>
+
+<div id="foot"></div>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script src="assets/i18n-pages.js"></script>
+<script>
+(function () {
+  'use strict';
+  const D = window.LED;
+  const $ = (sel) => document.querySelector(sel);
+  const s = (k, v) => LE.pt('paper', k, v);
+
+  function currentId() {
+    const m = /[?&]id=([^&]+)/.exec(location.search);
+    if (m) return decodeURIComponent(m[1]);
+    if (location.hash.indexOf('#paper=') === 0) return decodeURIComponent(location.hash.slice(7));
+    return D.papers[0].id;
+  }
+
+  let paper = D.byId.get(currentId());
+  /* 按结果页的默认顺序（主批次相关度优先）建立前后导航 */
+  const order = D.papers.slice().sort((a, b) => {
+    const batch = (p) => (p.score_context_id === D.ctx.main ? 0 : 1);
+    return batch(a) - batch(b) || b.relevance_score - a.relevance_score;
+  }).map((p) => p.id);
+
+  function sameTopic(p) {
+    const topics = new Set(p.topics || []);
+    return D.papers
+      .filter((x) => x.id !== p.id && (x.topics || []).some((t) => topics.has(t)))
+      .sort((a, b) => b.relevance_score - a.relevance_score)
+      .slice(0, 6);
+  }
+
+  function renderAside(p) {
+    const idx = order.indexOf(p.id);
+    const related = sameTopic(p);
+    $('#paperAside').innerHTML = `
+      <div class="card">
+        <div class="card__head"><h3 id="positionTitle">${LE.esc(s('positionTitle'))}</h3></div>
+        <div class="card__body">
+          <dl class="dl dl--tight">
+            <dt>${LE.esc(s('rank'))}</dt><dd class="t-num">${idx + 1} / ${order.length}</dd>
+            <dt>${LE.esc(s('relScore'))}</dt><dd class="t-num">${p.relevance_score.toFixed(3)}</dd>
+            <dt>score_context_id</dt><dd class="t-mono t-xs">${LE.esc(p.score_context_id)}</dd>
+            <dt>${LE.esc(s('citeCount'))}</dt><dd class="t-num">${p.citation_count ? LE.num(p.citation_count) : LE.esc(s('citeUnknown'))}</dd>
+          </dl>
+          <p class="t-xs t-muted mt-3">${LE.esc(s('rankNote'))}</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card__head"><h3>${LE.esc(s('sameTopic'))}</h3></div>
+        <div class="card__body">
+          ${related.length ? `<div class="edges">${related.map((x) => `
+            <div class="edge">
+              <span class="edge__dot" style="background:var(--border-strong)"></span>
+              <a class="edge__name" href="paper.html?id=${encodeURIComponent(x.id)}">${LE.esc(x.title)}</a>
+              <span class="edge__w">${LE.esc(String(x.year || '?'))}</span>
+            </div>`).join('')}</div>` : `<p class="t-sm t-muted">${LE.esc(s('sameTopicNone'))}</p>`}
+          <p class="t-xs t-muted mt-3">${LE.esc(s('sameTopicNote'))}</p>
+        </div>
+      </div>
+
+      <div class="panel-note">
+        <span>${LE.esc(LE.t('demo.tag'))}</span> · ${LE.esc(LE.t('demo.flag'))}
+      </div>`;
+  }
+
+  function render() {
+    if (!paper) {
+      $('#paperShell').hidden = true;
+      $('#notFound').hidden = false;
+      $('#nfTitle').textContent = s('notFound');
+      $('#nfHint').textContent = s('notFoundHint');
+      $('#nfBack').textContent = s('backToResults');
+      $('#crumb').textContent = '—';
+      return;
+    }
+    $('#paperShell').hidden = false;
+    $('#notFound').hidden = true;
+
+    // 主区直接复用抽屉的七组内容，保证「抽屉」与「独立页」永远一致
+    $('#paperBody').innerHTML = `<div class="card__body">${LE.drawerHTML(paper)}</div>`;
+    LE.$$('#paperBody [data-open-paper]').forEach((b) => {
+      b.onclick = () => { window.location.href = 'paper.html?id=' + encodeURIComponent(b.getAttribute('data-open-paper')); };
+    });
+    $('#crumb').textContent = paper.title;
+    document.title = paper.title + ' — LEExtractor';
+
+    const idx = order.indexOf(paper.id);
+    $('#prevBtn').textContent = s('prev');
+    $('#nextBtn').textContent = s('next');
+    $('#prevBtn').disabled = idx <= 0;
+    $('#nextBtn').disabled = idx < 0 || idx >= order.length - 1;
+    $('#prevBtn').onclick = () => { if (idx > 0) location.href = 'paper.html?id=' + encodeURIComponent(order[idx - 1]); };
+    $('#nextBtn').onclick = () => { if (idx >= 0 && idx < order.length - 1) location.href = 'paper.html?id=' + encodeURIComponent(order[idx + 1]); };
+
+    renderAside(paper);
+  }
+
+  function renderStatic() {
+    $('#skipLink').textContent = LE.pt('home', 'skip');
+    $('#backLink').textContent = s('backToResults');
+    $('#nfBack').textContent = s('backToResults');
+    $('#nfTitle').textContent = s('notFound');
+    $('#nfHint').textContent = s('notFoundHint');
+    $('#prevBtn').textContent = s('prev');
+    $('#nextBtn').textContent = s('next');
+    if (paper) renderAside(paper);
+  }
+
+  document.addEventListener('le:lang', () => { renderStatic(); render(); });
+  renderStatic();
+  render();
+  LE.mount({ page: 'paper' });
+})();
+</script>
+</body>
+</html>

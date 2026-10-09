@@ -1,0 +1,663 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="LEExtractor 证据版图 — 引文网络、只跑引文边的 PageRank 与社群、三类关系边分层、主题簇、时间演变、新颖度与覆盖平衡（界面演示）">
+<title>证据版图 — LEExtractor</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231b1c20'/%3E%3Cpath d='M10 10L22 22M22 10L10 22' stroke='white' stroke-width='5'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/app.css">
+<style>
+  /* 证据版图页专用样式：只使用 tokens.css 的变量，未新增任何色值或新文件 */
+  .graph-figure { overflow-x: auto; max-width: 680px; margin: 0 auto; }
+  #citeGraph { display: block; width: 100%; min-width: 620px; height: auto; }
+  #citeGraph .cg-link { fill: none; stroke: var(--line); stroke-width: 1.1; }
+  #citeGraph .cg-link.cg-link--on { stroke: var(--btn); stroke-width: 1.7; }
+  #citeGraph .cg-rel { fill: none; stroke-width: 1.6; opacity: .5; }
+  #citeGraph .cg-node { cursor: pointer; }
+  #citeGraph .cg-node:focus { outline: none; }
+  #citeGraph .cg-node__dot { stroke: var(--surface); stroke-width: 1.5; }
+  #citeGraph .cg-node__ring { fill: none; stroke: var(--focus); stroke-width: 2; opacity: 0; }
+  #citeGraph .cg-node:hover .cg-node__ring,
+  #citeGraph .cg-node:focus-visible .cg-node__ring { opacity: 1; }
+  #citeGraph .cg-empty { fill: var(--muted); font-family: var(--font-sans); font-size: var(--fs-sm); }
+  #citeGraph .cg-nodes { transition: opacity var(--dur-slow) var(--ease-out); }
+  #citeGraph .cg-nodes.is-enter { opacity: 0; }
+  .cg-legend { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3) var(--s-5); font-size: var(--fs-micro); color: var(--muted); }
+  .cg-legend__item { display: inline-flex; align-items: center; gap: var(--s-2); }
+  .cg-legend__dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex: 0 0 auto; }
+  .years-axis { display: flex; gap: 1px; font-size: var(--fs-micro); color: var(--muted); }
+  .years-axis span { flex: 1 1 0; min-width: 0; text-align: center; font-variant-numeric: tabular-nums; }
+  .years-axis--num { color: var(--text-2); }
+  .limits { display: flex; flex-direction: column; gap: var(--s-2); font-size: var(--fs-meta); color: var(--text-2); }
+  .limits li { display: flex; gap: var(--s-2); }
+  .limits li span:first-child { color: var(--muted); }
+  @media (max-width: 650px) { #citeGraph { min-width: 560px; } }
+  @media (min-width: 651px) { #graphScroll { display: none; } }
+</style>
+</head>
+<body data-page="landscape">
+
+<a class="skip-link" href="#main" id="skipLink"></a>
+<div id="shell"></div>
+
+<main id="main" class="page" data-trigger="rerender">
+  <div class="container container--wide">
+
+    <div class="page-head">
+      <div class="page-head__row">
+        <div>
+          <h1 id="pageTitle"></h1>
+          <p id="pageLead"></p>
+        </div>
+        <div class="page-head__actions">
+          <a class="btn" href="results.html" id="toResults"></a>
+          <a class="btn" href="expand.html" id="toExpand"></a>
+          <a class="btn btn--primary" href="questions.html" id="toQuestions"></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================================================== 样本限定（就近标注） -->
+    <p class="panel-note mb-6" id="sampleNote"></p>
+
+    <!-- ==================================================== 1. 引文网络图 -->
+    <section class="card mb-6" aria-labelledby="graphTitle">
+      <div class="card__head">
+        <h2 id="graphTitle" style="font-size:var(--fs-h4)"></h2>
+        <span id="graphDemo"></span>
+      </div>
+      <div class="card__body">
+        <p class="t-sm t-muted" id="graphIntro"></p>
+        <div class="cols-4 mt-4" id="graphStats"></div>
+        <div class="graph-figure mt-4">
+          <svg id="citeGraph" viewBox="70 20 620 520" preserveAspectRatio="xMidYMid meet"
+               role="group" aria-labelledby="graphTitle" aria-describedby="graphA11y"></svg>
+        </div>
+        <div class="cg-legend mt-4" id="graphLegend"></div>
+        <p class="t-xs t-muted mt-3" id="graphNote"></p>
+        <p class="t-xs t-muted mt-2" id="graphArrowNote"></p>
+        <p class="t-xs t-muted mt-2" id="graphA11y"></p>
+        <p class="t-xs t-muted mt-2" id="graphScroll"></p>
+      </div>
+    </section>
+
+    <!-- ==================================================== 2/3. 引文边算法 + 三类关系边 -->
+    <div class="cols-2 mb-6">
+      <section class="card" aria-labelledby="citeOnlyTitle">
+        <div class="card__head">
+          <h2 id="citeOnlyTitle" style="font-size:var(--fs-h4)"></h2>
+        </div>
+        <div class="card__body">
+          <p class="t-sm" id="citeOnlyBody"></p>
+          <dl class="dl dl--tight mt-4" id="citeOnlyStats"></dl>
+          <p class="t-xs t-muted mt-4" id="citeOnlyUnknown"></p>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="relTitle">
+        <div class="card__head">
+          <h2 id="relTitle" style="font-size:var(--fs-h4)"></h2>
+        </div>
+        <div class="card__body">
+          <p class="t-sm t-muted" id="relIntro"></p>
+          <div class="edges mt-4" id="relLayers"></div>
+          <p class="t-xs t-muted mt-4" id="relNote"></p>
+          <p class="t-xs t-muted mt-2" id="relUnknown"></p>
+        </div>
+      </section>
+    </div>
+
+    <!-- ==================================================== 4/5. 中心度榜 + 主题簇 -->
+    <div class="cols-2 mb-6">
+      <section class="card" aria-labelledby="centTitle">
+        <div class="card__head">
+          <h2 id="centTitle" style="font-size:var(--fs-h4)"></h2>
+          <span id="centDemo"></span>
+        </div>
+        <div class="card__body">
+          <p class="t-xs t-muted" id="centNote"></p>
+          <div class="table-wrap mt-4">
+            <div class="table-scroll">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th class="num" style="width:40px" id="centHeadRank"></th>
+                    <th id="centHeadPaper"></th>
+                    <th class="num" id="centHeadScore"></th>
+                    <th class="num" id="centHeadCites"></th>
+                  </tr>
+                </thead>
+                <tbody id="centBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="clusterTitle">
+        <div class="card__head">
+          <h2 id="clusterTitle" style="font-size:var(--fs-h4)"></h2>
+          <span id="clusterDemo"></span>
+        </div>
+        <div class="card__body">
+          <p class="t-xs t-muted" id="clusterNote"></p>
+          <div class="stack stack--sm mt-4" id="clusterList"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ==================================================== 6. 时间演变 -->
+    <section class="card mb-6" aria-labelledby="yearsTitle">
+      <div class="card__head">
+        <h2 id="yearsTitle" style="font-size:var(--fs-h4)"></h2>
+        <span id="yearsDemo"></span>
+      </div>
+      <div class="card__body">
+        <div class="facet-years">
+          <div class="facet-years__bars" id="yearsBars"></div>
+          <div class="years-axis" id="yearsAxis"></div>
+          <div class="years-axis years-axis--num" id="yearsCounts"></div>
+        </div>
+        <p class="t-xs t-muted mt-3" id="yearsNote"></p>
+        <p class="t-xs t-muted mt-2" id="yearsUnknown"></p>
+      </div>
+    </section>
+
+    <!-- ==================================================== 7. 新颖度 + 覆盖平衡 -->
+    <div class="cols-2 mb-6">
+      <section class="card" aria-labelledby="noveltyTitle">
+        <div class="card__head">
+          <h2 id="noveltyTitle" style="font-size:var(--fs-h4)"></h2>
+          <span id="noveltyDemo"></span>
+        </div>
+        <div class="card__body">
+          <div class="table-wrap">
+            <div class="table-scroll">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th id="nvHeadTopic"></th>
+                    <th class="num" id="nvHeadLatest"></th>
+                    <th id="nvHeadPapers"></th>
+                    <th id="nvHeadScore"></th>
+                  </tr>
+                </thead>
+                <tbody id="noveltyBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <p class="t-xs t-muted mt-3" id="noveltyNote"></p>
+          <p class="t-xs t-muted mt-2" id="noveltySrc"></p>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="coverageTitle">
+        <div class="card__head">
+          <h2 id="coverageTitle" style="font-size:var(--fs-h4)"></h2>
+          <span id="coverageDemo"></span>
+        </div>
+        <div class="card__body">
+          <div class="table-wrap">
+            <div class="table-scroll">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th id="covHeadTopic"></th>
+                    <th id="covHeadShare"></th>
+                    <th class="num" id="covHeadTarget"></th>
+                    <th id="covHeadBalance"></th>
+                  </tr>
+                </thead>
+                <tbody id="coverageBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <p class="t-xs t-muted mt-3" id="coverageNote"></p>
+          <p class="t-xs t-muted mt-2" id="coverageSrc"></p>
+        </div>
+      </section>
+    </div>
+
+    <!-- ==================================================== 8. 已知边界 -->
+    <section class="card" aria-labelledby="limitsTitle">
+      <div class="card__head">
+        <h2 id="limitsTitle" style="font-size:var(--fs-h4)"></h2>
+      </div>
+      <div class="card__body">
+        <ul class="limits" id="limitsList"></ul>
+        <p class="t-xs t-muted mt-4" id="footNote"></p>
+        <p class="t-xs t-muted mt-2" id="demoNote"></p>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<div id="foot"></div>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script src="assets/i18n-pages.js"></script>
+<script src="assets/i18n-landscape.js"></script>
+<script>
+(function () {
+  'use strict';
+  const D = window.LED;
+  const $ = (sel) => document.querySelector(sel);
+  const s = (k, v) => LE.pt('landscape', k, v);
+
+  /* ==================================================================== 常量 */
+  /* 社群着色只用中性色阶（语义色只留给状态，不做装饰）；三类关系边沿用
+     app.js 详情抽屉里那三种颜色，保证同一关系在全站同色。 */
+  const COMM_COLOR = ['var(--btn)', 'var(--muted-2)', 'var(--muted)', 'var(--text-2)', 'var(--border-strong)'];
+  const REL_META = [
+    { key: 'bibliographic_coupling', color: 'var(--link)', label: 'relBC' },
+    { key: 'co_citation', color: 'var(--ok)', label: 'relCC' },
+    { key: 'text_similarity', color: 'var(--warn)', label: 'relTS' },
+  ];
+  const CX = 380, CY = 280, RADIUS = 206, VIEWBOX = '70 20 620 520';
+  const DRAW_PER_LAYER = 12;   /* 每层最多画多少条边，避免糊成一团 */
+  const S = { layers: { bibliographic_coupling: false, co_citation: false, text_similarity: false } };
+
+  /* ==================================================================== 确定性环形布局 */
+  /* 位置 = 社群顺序 + 组内顺序 + 扇区角度，纯函数，无随机数，刷新后一致。 */
+  function buildLayout() {
+    const cit = D.graph.citation;
+    const groups = (D.graph.communities && D.graph.communities.length)
+      ? D.graph.communities
+      : [cit.nodes.slice()];
+    const all = cit.nodes.length || 1;
+    const gap = 0.16;
+    const available = Math.PI * 2 - gap * groups.length;
+    const out = [];
+    let cursor = -Math.PI / 2;
+    groups.forEach((group, gi) => {
+      const span = available * (group.length / all);
+      const step = span / Math.max(1, group.length);
+      group.forEach((id, i) => {
+        const a = cursor + step * (i + 0.5);
+        out.push({
+          id,
+          comm: gi,
+          angle: a,
+          x: +(CX + RADIUS * Math.cos(a)).toFixed(2),
+          y: +(CY + RADIUS * Math.sin(a)).toFixed(2),
+        });
+      });
+      cursor += span + gap;
+    });
+    return out;
+  }
+
+  const LAYOUT = buildLayout();
+  const POS = new Map(LAYOUT.map((n) => [n.id, n]));
+  const RANK_OF = new Map(D.graph.centrality.map((c, i) => [c.id, i]));
+  const SCORE_OF = new Map(D.graph.centrality.map((c) => [c.id, c.score]));
+
+  const radiusOf = (id) => {
+    const r = RANK_OF.get(id);
+    if (r === undefined) return 6.5;
+    return r < 3 ? 12 : (r < 8 ? 9 : 6.5);
+  };
+  const commColor = (i) => COMM_COLOR[i % COMM_COLOR.length];
+
+  /** 二次贝塞尔：bow > 0 向圆心收拢（引文边），bow < 0 向外鼓（关系边）。 */
+  function edgeD(a, b, bow, cut) {
+    const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+    const qx = mx + (CX - mx) * bow, qy = my + (CY - my) * bow;
+    let ex = b.x, ey = b.y;
+    if (cut) {
+      const dx = b.x - qx, dy = b.y - qy, len = Math.sqrt(dx * dx + dy * dy) || 1;
+      ex = b.x - (dx / len) * cut;
+      ey = b.y - (dy / len) * cut;
+    }
+    return 'M' + a.x + ',' + a.y + ' Q' + qx.toFixed(1) + ',' + qy.toFixed(1) + ' ' + ex.toFixed(1) + ',' + ey.toFixed(1);
+  }
+
+  /* ==================================================================== 引文网络图 */
+  let hoverId = null;
+  function setHover(id) {
+    if (id === hoverId) return;
+    hoverId = id;
+    LE.$$('#citeGraph .cg-link').forEach((p) => {
+      const on = !!id && (p.getAttribute('data-s') === id || p.getAttribute('data-t') === id);
+      p.classList.toggle('cg-link--on', on);
+    });
+  }
+  const nodeFrom = (target) => (target && target.closest ? target.closest('[data-open-node]') : null);
+
+  function linkMarkup(l) {
+    const a = POS.get(l.source), b = POS.get(l.target);
+    if (!a || !b) return '';
+    return '<path class="cg-link" data-s="' + LE.esc(l.source) + '" data-t="' + LE.esc(l.target) +
+      '" d="' + edgeD(a, b, 0.55, radiusOf(l.target) + 5) + '" marker-end="url(#cgArrow)"></path>';
+  }
+
+  function layerMarkup(meta) {
+    const list = (D.graph.relations[meta.key] || []).slice().sort((x, y) => {
+      if (y.weight !== x.weight) return y.weight - x.weight;
+      if (x.a !== y.a) return x.a < y.a ? -1 : 1;
+      return x.b < y.b ? -1 : 1;
+    }).slice(0, DRAW_PER_LAYER);
+    const paths = list.map((e) => {
+      const a = POS.get(e.a), b = POS.get(e.b);
+      if (!a || !b) return '';
+      return '<path class="cg-rel" style="stroke:' + meta.color + '" d="' + edgeD(a, b, -0.42, 0) + '"></path>';
+    }).join('');
+    return '<g class="cg-layer" data-layer="' + meta.key + '" aria-hidden="true">' + paths + '</g>';
+  }
+
+  function nodeMarkup(n) {
+    const r = radiusOf(n.id);
+    const title = (D.byId.get(n.id) || {}).title || n.id;
+    const score = SCORE_OF.get(n.id) || 0;
+    const label = s('nodeAria', { title: title, c: n.comm + 1, score: score.toFixed(5) });
+    return '<g class="cg-node" role="button" tabindex="0" data-open-node="' + LE.esc(n.id) + '"' +
+      ' aria-label="' + LE.esc(label) + '" transform="translate(' + n.x + ',' + n.y + ')">' +
+      '<circle class="cg-node__hit" r="' + (r + 7) + '" fill="transparent"></circle>' +
+      '<circle class="cg-node__dot" r="' + r + '" style="fill:' + commColor(n.comm) + '"></circle>' +
+      '<circle class="cg-node__ring" r="' + (r + 4) + '"></circle>' +
+      '</g>';
+  }
+
+  function renderGraph() {
+    const svg = $('#citeGraph');
+    const cit = D.graph.citation;
+    hoverId = null;
+    svg.setAttribute('viewBox', VIEWBOX);
+
+    const stats = [
+      { label: s('statNodes'), value: cit.nodes.length, sub: '' },
+      { label: s('statEdges'), value: cit.links.length, sub: s('statEdgesSub', { ext: D.externalReferences.length }) },
+      { label: s('statGroups'), value: D.graph.communities.length, sub: s('statGroupsSub') },
+      { label: s('statDangling'), value: D.danglingGraphEdges.length, sub: s('statDanglingSub') },
+    ];
+    $('#graphStats').innerHTML = stats.map((m) => `
+      <div class="metric">
+        <span class="metric__label">${LE.esc(m.label)}</span>
+        <span class="metric__value">${LE.num(m.value)}</span>
+        ${m.sub ? `<span class="metric__sub">${LE.esc(m.sub)}</span>` : ''}
+      </div>`).join('');
+
+    if (!cit.links.length) {
+      svg.innerHTML = '<text class="cg-empty" x="' + CX + '" y="' + CY + '" text-anchor="middle">' +
+        LE.esc(s('graphEmpty')) + '</text>';
+      $('#graphLegend').innerHTML = '';
+      $('#graphNote').textContent = '';
+      $('#graphArrowNote').textContent = '';
+      $('#graphA11y').textContent = s('graphA11y');
+      $('#graphScroll').textContent = s('graphScroll');
+      return;
+    }
+
+    const parts = [];
+    parts.push('<defs><marker id="cgArrow" viewBox="0 0 8 8" refX="7.4" refY="4" markerWidth="5.5" markerHeight="5.5" orient="auto">' +
+      '<path d="M0,0.8 L7.4,4 L0,7.2 z" style="fill:var(--border-strong)"></path></marker></defs>');
+    parts.push('<g class="cg-links">' + cit.links.map(linkMarkup).join('') + '</g>');
+    REL_META.forEach((meta) => { if (S.layers[meta.key]) parts.push(layerMarkup(meta)); });
+    parts.push('<g class="cg-nodes">' + LAYOUT.map(nodeMarkup).join('') + '</g>');
+    svg.innerHTML = parts.join('');
+
+    /* 入场淡入：只在未请求减少动态效果时执行 */
+    if (!LE.motion.reduced()) {
+      const nodes = $('#citeGraph .cg-nodes');
+      if (nodes) {
+        nodes.classList.add('is-enter');
+        void svg.getBoundingClientRect();
+        requestAnimationFrame(() => nodes.classList.remove('is-enter'));
+      }
+    }
+
+    const legend = [];
+    D.graph.communities.forEach((g, i) => {
+      legend.push('<span class="cg-legend__item"><span class="cg-legend__dot" style="background:' +
+        commColor(i) + '"></span>' + LE.esc(s('groupLabel', { i: i + 1, n: g.length })) + '</span>');
+    });
+    legend.push('<span class="cg-legend__item">' + LE.esc(s('graphLegendRadius')) + '</span>');
+    $('#graphLegend').innerHTML = '<span class="t-xs">' + LE.esc(s('graphLegendGroups')) + '</span>' + legend.join('');
+    $('#graphNote').textContent = s('graphSelfNote', { n: cit.links.length });
+    $('#graphArrowNote').textContent = s('graphArrow');
+    $('#graphA11y').textContent = s('graphA11y');
+    $('#graphScroll').textContent = s('graphScroll');
+  }
+
+  function wireGraph() {
+    const svg = $('#citeGraph');
+    if (!svg) return;
+    const open = (g) => LE.openDrawer(g.getAttribute('data-open-node'), { push: true });
+    svg.onclick = (e) => { const g = nodeFrom(e.target); if (g) open(g); };
+    svg.onkeydown = (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Spacebar') return;
+      const g = nodeFrom(e.target);
+      if (g) { e.preventDefault(); open(g); }
+    };
+    svg.onmouseover = (e) => { const g = nodeFrom(e.target); setHover(g ? g.getAttribute('data-open-node') : null); };
+    svg.onmouseout = () => setHover(null);
+    svg.addEventListener('focusin', (e) => { const g = nodeFrom(e.target); setHover(g ? g.getAttribute('data-open-node') : null); });
+    svg.addEventListener('focusout', () => setHover(null));
+  }
+
+  /* ==================================================================== 只跑引文边 */
+  function renderCiteOnly() {
+    const rows = [
+      [s('citeOnlyEdge'), LE.num(D.graph.citation.links.length)],
+      [s('citeOnlyPR'), s('citeOnlyPRValue')],
+      [s('citeOnlyComm'), s('citeOnlyCommValue', { k: D.graph.communities.length })],
+      [s('citeOnlyPath'), s('citeOnlyPathValue')],
+    ];
+    $('#citeOnlyStats').innerHTML = rows.map((r) =>
+      `<dt>${LE.esc(r[0])}</dt><dd>${LE.esc(r[1])}</dd>`).join('');
+  }
+
+  /* ==================================================================== 三类关系边 */
+  function renderRelations() {
+    const counts = D.helpers.relationCounts();
+    const host = $('#relLayers');
+    host.innerHTML = REL_META.map((meta) => {
+      const on = !!S.layers[meta.key];
+      const n = counts[meta.key] || 0;
+      const drawn = Math.min(DRAW_PER_LAYER, n);
+      return `<div class="edge">
+        <span class="edge__dot" style="background:${meta.color}"></span>
+        <span class="edge__name" style="white-space:normal;overflow:visible">
+          <code>${LE.esc(meta.key)}</code>
+          <span class="t-xs t-muted" style="display:block">${LE.esc(s(meta.label))}</span>
+        </span>
+        <span class="edge__w t-num">${LE.num(n)}</span>
+        <button type="button" class="btn btn--sm" data-layer-toggle="${meta.key}" aria-pressed="${on}"
+          ${n ? '' : 'disabled title="' + LE.esc(s('relEmpty')) + '"'}>${LE.esc(on ? s('relHide') : s('relShow'))}</button>
+      </div>
+      ${on && n ? `<p class="t-xs t-muted">${LE.esc(s('relDrawn', { n: drawn, all: n }))}</p>` : ''}`;
+    }).join('');
+
+    LE.$$('[data-layer-toggle]', host).forEach((b) => {
+      b.onclick = () => {
+        const key = b.getAttribute('data-layer-toggle');
+        if (!(D.graph.relations[key] || []).length) return;
+        S.layers[key] = !S.layers[key];
+        renderRelations();
+        renderGraph();
+      };
+    });
+  }
+
+  /* ==================================================================== 中心度榜 */
+  function renderCentrality() {
+    const rows = D.graph.centrality.slice(0, 10);
+    $('#centBody').innerHTML = rows.map((c, i) => {
+      const p = D.byId.get(c.id);
+      const cites = (p && p.citation_count)
+        ? LE.num(p.citation_count)
+        : `<span class="t-muted">${LE.esc(LE.t('common.unknown'))}</span>`;
+      return `<tr>
+        <td class="num">${i + 1}</td>
+        <td class="title-cell">
+          <button type="button" data-open-row="${LE.esc(c.id)}" aria-label="${LE.esc(s('centOpen', { title: c.title }))}">${LE.esc(c.title)}</button>
+          <div class="t-xs t-muted t-mono">${LE.esc(c.id)}</div>
+        </td>
+        <td class="num">${LE.esc(c.score.toFixed(5))}</td>
+        <td class="num">${cites}</td>
+      </tr>`;
+    }).join('');
+    LE.$$('[data-open-row]', $('#centBody')).forEach((b) => {
+      b.onclick = () => LE.openDrawer(b.getAttribute('data-open-row'), { push: true });
+    });
+  }
+
+  /* ==================================================================== 主题簇 */
+  function renderClusters() {
+    $('#clusterList').innerHTML = D.landscape.clusters.map((c) => `
+      <div class="card card--sunk">
+        <div class="row row--between">
+          <strong>${LE.esc(c.name)}</strong>
+          <span class="badge badge--outline">${LE.esc(s('clusterSize', { n: c.size }))}</span>
+        </div>
+        <p class="t-xs t-muted mt-2">${LE.esc(s('clusterTerms'))}</p>
+        <div class="chips mt-2">${c.terms.map((x) => `<span class="chip">${LE.esc(x)}</span>`).join('')}</div>
+      </div>`).join('');
+  }
+
+  /* ==================================================================== 时间演变 */
+  function renderYears() {
+    const items = D.landscape.years || [];
+    const max = Math.max.apply(null, items.map((y) => y.count).concat([1]));
+    $('#yearsBars').innerHTML = items.map((y) =>
+      `<i class="is-in" style="height:${Math.max(8, Math.round((y.count / max) * 100))}%" title="${y.year}: ${y.count}"></i>`).join('');
+    $('#yearsAxis').innerHTML = items.map((y) => `<span>${LE.esc(String(y.year))}</span>`).join('');
+    $('#yearsCounts').innerHTML = items.map((y) => `<span>${LE.num(y.count)}</span>`).join('');
+    $('#yearsNote').textContent = s('yearsNote');
+    const unknown = (D.facets.years.find((y) => y.key === '__unknown__') || {}).count || 0;
+    $('#yearsUnknown').textContent = unknown ? s('yearsUnknown', { n: unknown }) : '';
+  }
+
+  /* ==================================================================== 新颖度 / 覆盖平衡 */
+  const srcNote = (note) => (LE.lang() === 'zh' && note) ? s('srcNote') + note : '';
+
+  function renderNovelty() {
+    /* 契约形状：{rows:[{paper_id,title,year,novelty,most_similar}], note}
+       novelty 可以为 null（样本内没有更早文献），此时不画条形、显式写空值。 */
+    const nv = D.landscape.novelty;
+    $('#noveltyBody').innerHTML = nv.rows.map((r) => {
+      const sim = r.most_similar;
+      const simCell = sim
+        ? `<button type="button" class="edge__name" style="text-align:left" data-open="${LE.esc(sim.paper_id)}">${LE.esc(sim.title)}</button>
+           <span class="t-xs t-muted t-num">· ${sim.similarity.toFixed(3)}</span>`
+        : `<span class="t-muted">${LE.esc(s('nvNoEarlier'))}</span>`;
+      const scoreCell = r.novelty === null
+        ? `<span class="badge">${LE.esc(s('nvNull'))}</span>`
+        : `<span class="rel"><span class="rel__bar"><i style="width:${LE.pct(r.novelty)}"></i></span>
+             <span class="t-num">${r.novelty.toFixed(2)}</span></span>`;
+      return `
+      <tr>
+        <td class="title-cell"><button type="button" data-open="${LE.esc(r.paper_id)}">${LE.esc(r.title)}</button></td>
+        <td class="num">${LE.esc(String(r.year))}</td>
+        <td>${simCell}</td>
+        <td>${scoreCell}</td>
+      </tr>`;
+    }).join('');
+    LE.$$('#noveltyBody [data-open]').forEach((b) => {
+      b.onclick = () => LE.openDrawer(b.getAttribute('data-open'), { push: true });
+    });
+    $('#noveltyNote').innerHTML = LE.rich(s('noveltyNote'));
+    $('#noveltySrc').textContent = srcNote(nv.note);
+  }
+
+  function renderCoverage() {
+    const cov = D.landscape.coverage;
+    $('#coverageBody').innerHTML = cov.items.map((it) => `
+      <tr>
+        <td class="title-cell">${LE.esc(it.topic)}</td>
+        <td><span class="rel"><span class="rel__bar"><i style="width:${LE.pct(it.share)}"></i></span>
+          <span class="t-num">${LE.pct(it.share)}</span></span></td>
+        <td class="num">${LE.pct(it.target_share)}</td>
+        <td><span class="rel"><span class="rel__bar"><i style="width:${LE.pct(it.balance)}"></i></span>
+          <span class="t-num">${it.balance.toFixed(2)}</span></span></td>
+      </tr>`).join('');
+    $('#coverageNote').textContent = s('covNote');
+    $('#coverageSrc').textContent = srcNote(cov.note);
+  }
+
+  /* ==================================================================== 静态文案 */
+  function renderStatic() {
+    document.title = s('title') + ' — LEExtractor';
+    $('#skipLink').textContent = s('skip');
+    $('#pageTitle').textContent = s('title');
+    $('#pageLead').innerHTML = LE.rich(s('lead'));
+    $('#toResults').textContent = s('toResults');
+    $('#toExpand').textContent = s('toExpand');
+    $('#toQuestions').textContent = s('toQuestions');
+    $('#sampleNote').innerHTML = LE.rich(s('sampleNote', {
+      n: D.landscape.sample_size, flag: String(D.landscape.sample_only),
+    }));
+    $('#graphTitle').textContent = s('graphTitle');
+    $('#graphDemo').innerHTML = LE.badgeDemo();
+    $('#graphIntro').innerHTML = LE.rich(s('graphIntro'));
+    $('#graphArrowNote').textContent = s('graphArrow');
+    $('#citeOnlyTitle').textContent = s('citeOnlyTitle');
+    $('#citeOnlyBody').innerHTML = LE.rich(s('citeOnlyBody'));
+    $('#citeOnlyUnknown').textContent = s('citeOnlyUnknown');
+    $('#relTitle').textContent = s('relTitle');
+    $('#relIntro').textContent = s('relIntro');
+    $('#relNote').innerHTML = LE.rich(s('relNote'));
+    $('#relUnknown').textContent = s('relUnknown');
+    $('#centTitle').textContent = s('centTitle');
+    $('#centNote').textContent = s('centNote');
+    $('#centHeadRank').textContent = s('colRank');
+    $('#centHeadPaper').textContent = s('colPaper');
+    $('#centHeadScore').textContent = s('colScore');
+    $('#centHeadCites').textContent = s('colCites');
+    $('#clusterTitle').textContent = s('clusterTitle');
+    $('#clusterNote').innerHTML = LE.rich(s('clusterNote'));
+    $('#yearsTitle').textContent = s('yearsTitle');
+    $('#noveltyTitle').textContent = s('noveltyTitle');
+    $('#nvHeadTopic').textContent = s('nvTopic');
+    $('#nvHeadLatest').textContent = s('nvLatest');
+    $('#nvHeadPapers').textContent = s('nvPapers');
+    $('#nvHeadScore').textContent = s('nvScore');
+    $('#coverageTitle').textContent = s('covTitle');
+    $('#covHeadTopic').textContent = s('covTopic');
+    $('#covHeadShare').textContent = s('covShare');
+    $('#covHeadTarget').textContent = s('covTarget');
+    $('#covHeadBalance').textContent = s('covBalance');
+    $('#limitsTitle').textContent = s('limitsTitle');
+    $('#limitsList').innerHTML = ['limitSample', 'limitRelation', 'limitComm', 'limitNovelty', 'limitCite']
+      .map((k) => `<li><span aria-hidden="true">·</span><span>${LE.esc(s(k, { n: D.landscape.sample_size }))}</span></li>`).join('');
+    $('#footNote').textContent = s('footNote');
+    $('#demoNote').textContent = s('demoNote');
+    ['#centDemo', '#clusterDemo', '#yearsDemo', '#noveltyDemo', '#coverageDemo'].forEach((sel) => {
+      const el = $(sel);
+      if (el) el.innerHTML = LE.badgeDemo();
+    });
+  }
+
+  /* ==================================================================== 主渲染 */
+  function render() {
+    renderStatic();
+    renderGraph();
+    renderCiteOnly();
+    renderRelations();
+    renderCentrality();
+    renderClusters();
+    renderYears();
+    renderNovelty();
+    renderCoverage();
+  }
+
+  /* 语言切换：app.js 的 setLang 把 le:lang 派发到 [data-trigger="rerender"] 上
+     （不冒泡），所以本页在 main 上声明该钩子并在此监听；document 上的监听保留，
+     以便共享外壳日后改为在 document 上派发时依然生效。 */
+  function onLangChange() { render(); }
+  document.addEventListener('le:lang', onLangChange);
+  const langTrigger = document.querySelector('[data-trigger="rerender"]');
+  if (langTrigger) langTrigger.addEventListener('le:lang', onLangChange);
+
+  wireGraph();
+  render();
+  LE.motion.onChange(() => renderGraph());
+  LE.mount({ page: 'landscape' });
+})();
+</script>
+</body>
+</html>

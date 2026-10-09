@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="LEExtractor 设置与诊断 — 数据源密钥、偏好、运行诊断、HTTP 预算与停止原因字典（界面演示）">
+<title>设置与诊断 — LEExtractor</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231b1c20'/%3E%3Cpath d='M10 10L22 22M22 10L10 22' stroke='white' stroke-width='5'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/app.css">
+<style>
+  /* 仅本页需要：布尔偏好用真实开关。全部取 tokens.css 的变量，不新增颜色。 */
+  .sw { position: relative; display: inline-flex; align-items: center; gap: var(--s-2); cursor: pointer; }
+  .sw input { position: absolute; width: 1px; height: 1px; opacity: 0; margin: 0; }
+  .sw__track {
+    position: relative; flex: 0 0 auto; width: 40px; height: 22px;
+    border-radius: var(--r-pill); background: var(--surface-3);
+    border: 1px solid var(--border-input);
+    transition: background var(--dur-fast), border-color var(--dur-fast);
+  }
+  .sw__track::after {
+    content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px;
+    border-radius: 50%; background: var(--surface); border: 1px solid var(--border-input);
+    transition: transform var(--dur-fast);
+  }
+  .sw input:checked ~ .sw__track { background: var(--btn); border-color: var(--btn); }
+  .sw input:checked ~ .sw__track::after { transform: translateX(18px); background: var(--text-invert); border-color: var(--btn); }
+  .sw input:focus-visible ~ .sw__track { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .sw__state { font-size: var(--fs-meta); color: var(--muted); }
+</style>
+</head>
+<body data-page="settings">
+
+<a class="skip-link" href="#main" id="skipLink"></a>
+<div id="shell"></div>
+
+<main id="main" class="page" data-trigger="rerender">
+  <div class="container container--wide">
+
+    <div class="page-head">
+      <div class="page-head__row">
+        <div>
+          <h1 id="pageTitle"></h1>
+          <p id="pageLead"></p>
+        </div>
+        <div class="page-head__actions">
+          <a class="btn" href="index.html" id="toHome"></a>
+          <a class="btn" href="results.html" id="toResults"></a>
+          <a class="btn" href="projects.html" id="toProjects"></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================ 1. 数据源与密钥 -->
+    <section class="card mb-6" aria-labelledby="provTitle">
+      <div class="card__head">
+        <h3 id="provTitle"></h3>
+        <div class="row" style="gap:var(--s-2)">
+          <span id="provDemo"></span>
+          <span class="badge badge--outline" id="provCount"></span>
+        </div>
+      </div>
+      <div class="card__body">
+        <p class="t-xs t-muted" id="provNote"></p>
+        <div class="cols-2 mt-6" id="providerGrid"></div>
+        <p class="t-xs t-muted mt-4" id="keyEmptyNote"></p>
+      </div>
+    </section>
+
+    <!-- ============================================ 2. 偏好设置 -->
+    <section class="card mb-6" aria-labelledby="prefTitle">
+      <div class="card__head">
+        <h3 id="prefTitle"></h3>
+        <div class="row" style="gap:var(--s-2)">
+          <span id="prefDemo"></span>
+          <button type="button" class="btn btn--sm" id="prefReset"></button>
+        </div>
+      </div>
+      <div class="card__body">
+        <p class="t-xs t-muted" id="prefNote"></p>
+        <div class="cols-2 mt-6" id="prefGrid"></div>
+      </div>
+    </section>
+
+    <!-- ============================================ 3. 运行诊断 -->
+    <details class="method mb-6" id="diagSection">
+      <summary>
+        <h3 id="diagTitle"></h3>
+        <span class="spacer"></span>
+        <span id="diagDemo"></span>
+        <span class="badge badge--outline" id="diagCount"></span>
+      </summary>
+      <div class="method__body">
+        <div class="row row--between" style="gap:var(--s-4)">
+          <p class="t-xs t-muted" id="diagNote"></p>
+          <div class="row" style="gap:var(--s-2)">
+            <span class="t-xs t-muted" id="diagFilterLabel"></span>
+            <div class="segmented" role="tablist" id="diagFilter"></div>
+          </div>
+        </div>
+        <div class="stack stack--sm mt-6" id="diagList" aria-live="polite"></div>
+      </div>
+    </details>
+
+    <!-- ============================================ 4. HTTP 预算 -->
+    <details class="method mb-6" id="httpSection">
+      <summary>
+        <h3 id="httpTitle"></h3>
+        <span class="spacer"></span>
+        <span id="httpDemo"></span>
+        <span class="badge badge--outline" id="httpUnit"></span>
+      </summary>
+      <div class="method__body">
+        <p class="t-xs t-muted" id="httpNote"></p>
+        <div class="cols-4 mt-6" id="httpMetrics"></div>
+        <h4 class="mt-8" id="httpBySource" style="font-size:var(--fs-h4)"></h4>
+        <div class="table-wrap mt-3">
+          <div class="table-scroll">
+            <table class="table">
+              <thead id="httpHead"></thead>
+              <tbody id="httpBody"></tbody>
+              <tfoot id="httpFoot"></tfoot>
+            </table>
+          </div>
+        </div>
+        <p class="t-xs t-muted mt-3" id="httpSumNote"></p>
+      </div>
+    </details>
+
+    <!-- ============================================ 5. 停止原因字典 -->
+    <details class="method mb-6" id="stopSection">
+      <summary>
+        <h3 id="stopTitle"></h3>
+        <span class="spacer"></span>
+        <span id="stopDemo"></span>
+        <span class="badge badge--outline" id="stopCount"></span>
+      </summary>
+      <div class="method__body">
+        <div id="stopGroups"></div>
+        <div class="panel-note mt-6" style="background:var(--warn-bg);border:1px solid var(--warn-line);padding:var(--s-3) var(--s-4)">
+          <strong id="stopGapTitle"></strong>
+          <p class="mt-2" id="stopGapBody"></p>
+        </div>
+      </div>
+    </details>
+
+  </div>
+</main>
+
+<div id="foot"></div>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script src="assets/i18n-pages.js"></script>
+<script src="assets/i18n-settings.js"></script>
+<script>
+(function () {
+  'use strict';
+  const D = window.LED;
+  const $ = (sel) => document.querySelector(sel);
+  const s = (k, v) => LE.pt('settings', k, v);
+
+  /* ==================================================================== 常量 */
+  const LEVELS = ['all', 'info', 'warn', 'error'];
+  const LEVEL_BADGE = { info: 'badge--info', warn: 'badge--warn', error: 'badge--err' };
+  /* 语义色只落在 level 徽标上；日志正文永远中性 —— 给正文上色就是"花花绿绿的字" */
+  /* stop_reasons.py 的八个取值；只有前两个允许声称覆盖完成（is_complete） */
+  const STOP_COMPLETE = ['saturated', 'no_new_results'];
+  const STOP_INCOMPLETE = ['low_yield', 'max_rounds', 'truncated', 'budget_exhausted', 'canceled', 'api_failure'];
+
+  const S = { level: 'all', prefs: null };
+
+  function defaults() {
+    const p = Object.assign({}, D.settings.preferences);
+    p.language = LE.lang();
+    return p;
+  }
+
+  /* ================================================================ 静态文案 */
+  function renderStatic() {
+    document.title = s('title') + ' — LEExtractor';
+    $('#skipLink').textContent = s('skip');
+    $('#pageTitle').textContent = s('title');
+    $('#pageLead').innerHTML = LE.rich(s('lead'));
+    $('#toHome').textContent = s('toHome');
+    $('#toResults').textContent = s('toResults');
+    $('#toProjects').textContent = s('toProjects');
+
+    $('#provTitle').textContent = s('provTitle');
+    $('#provNote').textContent = s('provNote');
+    $('#keyEmptyNote').textContent = s('keyEmptyNote');
+
+    $('#prefTitle').textContent = s('prefTitle');
+    $('#prefNote').textContent = s('prefNote');
+    $('#prefReset').textContent = s('prefReset');
+
+    $('#diagTitle').textContent = s('diagTitle');
+    $('#diagNote').textContent = s('diagNote');
+    $('#diagFilterLabel').textContent = s('diagFilter');
+
+    $('#httpTitle').textContent = s('httpTitle');
+    $('#httpUnit').textContent = s('httpUnit');
+    $('#httpNote').innerHTML = LE.rich(s('httpNote'));
+    $('#httpBySource').textContent = s('httpBySource');
+    $('#httpSumNote').textContent = s('httpSumNote');
+
+    $('#stopTitle').textContent = s('stopTitle');
+    $('#stopCount').textContent = s('stopCount');
+    $('#stopGapTitle').textContent = s('stopGapTitle');
+    $('#stopGapBody').textContent = s('stopGap');
+
+    /* 「示例数据」就近标注：本页各区块的数字都来自合成示例运行 */
+    ['#provDemo', '#prefDemo', '#diagDemo', '#httpDemo', '#stopDemo'].forEach((sel) => {
+      $(sel).innerHTML = LE.badgeDemo();
+    });
+  }
+
+  /* ================================================================ 1. 数据源
+     密钥只显示「是否已配置」：输入框一律为空，界面从不回显任何真实密钥值。 */
+  function renderProviders() {
+    const list = D.settings.providers;
+    $('#provCount').textContent = s('provConfigured') + ' ' +
+      list.filter((p) => p.configured).length + ' / ' + list.length;
+    $('#providerGrid').innerHTML = list.map((p) => `
+      <article class="card card--sunk">
+        <div class="card__body">
+          <div class="row row--between">
+            <strong>${LE.esc(p.name)}</strong>
+            <span class="row" style="gap:var(--s-2)">
+              <span class="badge ${p.configured ? 'badge--ok' : 'badge--undec'}">${LE.esc(p.configured ? s('provConfigured') : s('provNotConfigured'))}</span>
+              ${LE.badgeDemo()}
+            </span>
+          </div>
+          <dl class="dl dl--tight mt-4">
+            <dt>${LE.esc(s('provKeyEnv'))}</dt>
+            <dd>${p.key_env ? `<code>${LE.esc(p.key_env)}</code>` : LE.esc(s('provNoKey'))}</dd>
+            <dt>${LE.esc(s('provRate'))}</dt>
+            <dd>${LE.esc(p.rate_note)}</dd>
+            <dt>${LE.esc(s('provDocs'))}</dt>
+            <dd><a href="${LE.esc(p.docs)}" target="_blank" rel="noopener noreferrer">${LE.esc(String(p.docs).replace(/^https?:\/\//, ''))}</a></dd>
+          </dl>
+          ${p.key_env ? `
+          <div class="field mt-4">
+            <label for="key-${LE.esc(p.id)}">${LE.esc(s('keyLabel'))}</label>
+            <div class="row" style="gap:var(--s-2)">
+              <div style="flex:1 1 180px;min-width:0">
+                <input class="input" id="key-${LE.esc(p.id)}" type="password" value="" autocomplete="off"
+                  spellcheck="false" placeholder="${LE.esc(s('keyPh'))}">
+              </div>
+              <button type="button" class="btn btn--sm" data-savekey="${LE.esc(p.id)}">${LE.esc(s('keySave'))}</button>
+            </div>
+            <span class="field__hint">${LE.esc(s('keyHint'))}</span>
+          </div>` : ''}
+        </div>
+      </article>`).join('');
+
+    LE.$$('[data-savekey]').forEach((b) => {
+      b.onclick = () => {
+        const input = $('#key-' + b.getAttribute('data-savekey'));
+        if (input) input.value = '';          /* 界面永不保留任何输入 */
+        LE.toast(s('keySaveToast'));
+      };
+    });
+  }
+
+  /* ================================================================ 2. 偏好 */
+  function switchField(id, checked, stateId, labelKey, hintKey, extraBadge) {
+    return `<div class="field">
+      <span class="label">${LE.esc(s(labelKey))}</span>
+      <div class="row" style="gap:var(--s-3)">
+        <label class="sw">
+          <input type="checkbox" id="${id}" aria-describedby="${id}Hint" ${checked ? 'checked' : ''}>
+          <span class="sw__track" aria-hidden="true"></span>
+          <span class="sw__state" id="${stateId}">${LE.esc(checked ? s('on') : s('off'))}</span>
+        </label>
+        ${extraBadge ? `<span class="badge badge--warn">${LE.esc(extraBadge)}</span>` : ''}
+      </div>
+      <span class="field__hint" id="${id}Hint">${LE.esc(s(hintKey))}</span>
+    </div>`;
+  }
+
+  function renderPrefs() {
+    const p = S.prefs;
+    const langOpts = [['zh', '中文'], ['en', 'English']]
+      .map(([v, label]) => `<option value="${v}" ${p.language === v ? 'selected' : ''}>${label}</option>`).join('');
+    const maxPaperOpts = [100, 200, 500, 1000]
+      .map((n) => `<option value="${n}" ${Number(p.max_papers) === n ? 'selected' : ''}>${n}</option>`).join('');
+    const scaleOpts = [['quick', 'scaleQuick'], ['standard', 'scaleStandard'], ['deep', 'scaleDeep']]
+      .map(([v, k]) => `<option value="${v}" ${p.scale_preset === v ? 'selected' : ''}>${LE.esc(s(k))}</option>`).join('');
+
+    $('#prefGrid').innerHTML = [
+      `<div class="field">
+        <span class="label">${LE.esc(s('prefLanguage'))}</span>
+        <select class="select" id="prefLanguage">${langOpts}</select>
+        <span class="field__hint">${LE.esc(s('prefLanguageHint'))}</span>
+      </div>`,
+      `<div class="field">
+        <span class="label">${LE.esc(s('prefMaxPdf'))}</span>
+        <input class="input" type="number" id="prefMaxPdf" min="1" max="4096" step="1" inputmode="numeric"
+          value="${LE.esc(String(p.max_pdf_size_mib))}">
+        <span class="field__hint">${LE.esc(s('prefMaxPdfHint'))}</span>
+      </div>`,
+      switchField('prefAutoScreen', !!p.auto_screen, 'autoScreenState', 'prefAutoScreen', 'prefAutoScreenHint', s('prefAutoScreenDefault')),
+      switchField('prefReviewMode', !!p.review_mode, 'reviewModeState', 'prefReviewMode', 'prefReviewModeHint', ''),
+      `<div class="field">
+        <span class="label">${LE.esc(s('prefYearsBack'))}</span>
+        <input class="input" type="number" id="prefYears" min="0" max="50" step="1" inputmode="numeric"
+          value="${LE.esc(String(p.years_back))}">
+        <span class="field__hint">${LE.esc(s('prefYearsBackHint'))}</span>
+      </div>`,
+      `<div class="field">
+        <span class="label">${LE.esc(s('prefMaxPapers'))}</span>
+        <select class="select" id="prefMaxPapers">${maxPaperOpts}</select>
+        <span class="field__hint">${LE.esc(s('prefMaxPapersHint'))}</span>
+      </div>`,
+      `<div class="field">
+        <span class="label">${LE.esc(s('prefScale'))}</span>
+        <select class="select" id="prefScale">${scaleOpts}</select>
+        <span class="field__hint">${LE.esc(s('prefScaleHint'))}</span>
+      </div>`,
+    ].join('');
+
+    wirePrefs();
+  }
+
+  function numberField(sel, min, max, set) {
+    const el = $(sel);
+    if (!el) return;
+    el.onchange = () => {
+      let v = Number(el.value);
+      if (!isFinite(v)) v = min;
+      v = Math.min(max, Math.max(min, Math.round(v)));
+      el.value = String(v);
+      set(v);
+      LE.toast(s('prefToast'));
+    };
+  }
+
+  function wirePrefs() {
+    const sw = (id, stateId, key) => {
+      const el = $(id);
+      if (!el) return null;
+      el.setAttribute('aria-label', s(key));
+      el.onchange = () => {
+        S.prefs[key === 'prefAutoScreen' ? 'auto_screen' : 'review_mode'] = el.checked;
+        $(stateId).textContent = el.checked ? s('on') : s('off');
+        LE.toast(s('prefToast'));
+      };
+      return el;
+    };
+    sw('#prefAutoScreen', '#autoScreenState', 'prefAutoScreen');
+    sw('#prefReviewMode', '#reviewModeState', 'prefReviewMode');
+
+    const langSel = $('#prefLanguage');
+    if (langSel) {
+      /* 界面语言是真实生效的控件：切换后立刻重渲染本页（app.js 的 setLang 只
+         派发 le:lang 到 [data-trigger="rerender"]，页面自己的文案要自己重画）。 */
+      langSel.onchange = () => {
+        S.prefs.language = langSel.value;
+        LE.setLang(langSel.value);
+        renderAll();
+      };
+    }
+
+    numberField('#prefMaxPdf', 1, 4096, (v) => { S.prefs.max_pdf_size_mib = v; });
+    numberField('#prefYears', 0, 50, (v) => { S.prefs.years_back = v; });
+
+    const mp = $('#prefMaxPapers');
+    if (mp) mp.onchange = () => { S.prefs.max_papers = Number(mp.value); LE.toast(s('prefToast')); };
+    const sc = $('#prefScale');
+    if (sc) sc.onchange = () => { S.prefs.scale_preset = sc.value; LE.toast(s('prefToast')); };
+  }
+
+  /* ================================================================ 3. 诊断 */
+  function renderDiagFilter() {
+    $('#diagFilter').innerHTML = LEVELS.map((lv) => `
+      <button type="button" role="tab" data-level="${lv}" aria-selected="${S.level === lv}">
+        ${LE.esc(lv === 'all' ? s('diagAll') : lv)}
+      </button>`).join('');
+    LE.$$('#diagFilter button').forEach((b) => {
+      b.onclick = () => {
+        S.level = b.getAttribute('data-level');
+        renderDiagFilter();
+        renderDiag();
+      };
+    });
+  }
+
+  function renderDiag() {
+    const all = D.settings.diagnostics;
+    const rows = S.level === 'all' ? all : all.filter((d) => d.level === S.level);
+    $('#diagCount').textContent = s('diagCount', { n: rows.length, total: all.length });
+    const box = $('#diagList');
+    if (!rows.length) {
+      box.innerHTML = `<p class="t-sm t-muted">${LE.esc(s('diagEmpty'))}</p>`;
+      return;
+    }
+    /* 只给 level 徽标上色，不给整行铺底色 —— 五行彩色大块是噪声，
+       而 level 的语义一枚 20px 徽标就能承载。 */
+    box.innerHTML = rows.map((d) => `
+      <div class="diag">
+        <span class="badge ${LEVEL_BADGE[d.level] || ''}">${LE.esc(d.level)}</span>
+        <span class="t-xs t-mono t-muted t-nowrap">${LE.esc(d.source)}</span>
+        <span class="t-sm diag__msg">${LE.esc(d.message)}</span>
+        <span class="t-xs t-muted t-num t-nowrap diag__at">${LE.esc(String(d.at || '').slice(0, 10))}</span>
+      </div>`).join('');
+  }
+
+  /* ================================================================ 4. HTTP 预算 */
+  function renderHttp() {
+    const b = D.http_budget;
+    const metrics = [
+      [s('httpRequests'), LE.num(b.requests), ''],
+      [s('httpRetries'), LE.num(b.retries), ''],
+      [s('httpCache'), LE.num(b.cache_hits), ''],
+      [s('httpRateLimited'), LE.num(b.rate_limited), b.rate_limited ? 'metric--warn' : ''],
+      [s('httpErrors'), LE.num(b.errors), b.errors ? 'metric--err' : ''],
+      [s('httpCanceled'), b.canceled ? s('yes') : s('no'), b.canceled ? 'metric--err' : ''],
+      [s('httpElapsed'), LE.num(b.elapsed_seconds) + ' ' + s('sec'), ''],
+    ];
+    $('#httpMetrics').innerHTML = metrics.map(([label, value, cls]) => `
+      <div class="metric ${cls}">
+        <span class="metric__label">${LE.esc(label)}</span>
+        <span class="metric__value">${LE.esc(value)}</span>
+      </div>`).join('');
+
+    const cols = [s('httpColSource'), s('httpColRequests'), s('httpColRetries'), s('httpColRate'), s('httpColErrors')];
+    $('#httpHead').innerHTML = `<tr>${cols.map((c, i) => `<th ${i ? 'class="num"' : ''}>${LE.esc(c)}</th>`).join('')}</tr>`;
+    const sources = Object.keys(b.by_source || {}).sort();
+    $('#httpBody').innerHTML = sources.map((k) => {
+      const r = b.by_source[k] || {};
+      return `<tr>
+        <td>${LE.badgeSource(k)}</td>
+        <td class="num">${LE.num(r.requests)}</td>
+        <td class="num">${LE.num(r.retries)}</td>
+        <td class="num">${LE.num(r.rate_limited)}</td>
+        <td class="num">${LE.num(r.errors)}</td>
+      </tr>`;
+    }).join('');
+    $('#httpFoot').innerHTML = `<tr>
+      <td><strong>${LE.esc(s('httpTotal'))}</strong></td>
+      <td class="num"><strong>${LE.num(b.requests)}</strong></td>
+      <td class="num"><strong>${LE.num(b.retries)}</strong></td>
+      <td class="num"><strong>${LE.num(b.rate_limited)}</strong></td>
+      <td class="num"><strong>${LE.num(b.errors)}</strong></td>
+    </tr>`;
+  }
+
+  /* ================================================================ 5. 停止原因 */
+  function renderStops() {
+    /* 用一张表，而不是两个并排的框：2 项 vs 6 项并排必然在左边留一大片空白，
+       而且「是否允许声称完成」本来就该是同一张表里的一列。 */
+    $('#stopGroups').innerHTML = `
+      <div class="table-wrap">
+        <div class="table-scroll">
+          <table class="table">
+            <thead><tr>
+              <th style="width:190px">${LE.esc(s('stopColCode'))}</th>
+              <th>${LE.esc(s('stopColMeaning'))}</th>
+              <th style="width:200px">${LE.esc(s('stopColGroup'))}</th>
+            </tr></thead>
+            <tbody>
+              ${STOP_COMPLETE.concat(STOP_INCOMPLETE).map((r) => {
+                const complete = STOP_COMPLETE.includes(r);
+                return `<tr>
+                  <td class="t-mono t-xs">${LE.esc(r)}</td>
+                  <td>${LE.esc(LE.t('stop.' + r))}</td>
+                  <td>${complete
+                    ? `<span class="badge badge--ok">${LE.esc(s('stopGroupComplete'))}</span>`
+                    : `<span class="badge">${LE.esc(s('stopGroupIncomplete'))}</span>`}</td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p class="t-xs t-muted mt-3">${LE.esc(s('stopNoteComplete'))}</p>
+      <p class="t-xs t-muted mt-1">${LE.esc(s('stopNoteIncomplete'))}</p>`;
+  }
+
+  /* ================================================================ 主渲染 */
+  function renderAll() {
+    renderStatic();
+    renderProviders();
+    renderPrefs();
+    renderDiagFilter();
+    renderDiag();
+    renderHttp();
+    renderStops();
+  }
+
+  $('#prefReset').onclick = () => {
+    S.prefs = defaults();
+    renderPrefs();
+    LE.toast(s('prefResetToast'));
+  };
+
+  /* 语言切换：app.js 的 setLang 把 le:lang 派发到 [data-trigger="rerender"] 上
+     （不冒泡），所以本页在 main 上声明该钩子并在此监听；document 上的监听保留，
+     以便共享外壳日后改为在 document 上派发时依然生效。 */
+  function onLangChange() { renderAll(); }
+  document.addEventListener('le:lang', onLangChange);
+  const langTrigger = document.querySelector('[data-trigger="rerender"]');
+  if (langTrigger) langTrigger.addEventListener('le:lang', onLangChange);
+
+  S.prefs = defaults();
+  renderAll();
+  LE.mount({ page: 'settings' });
+})();
+</script>
+</body>
+</html>

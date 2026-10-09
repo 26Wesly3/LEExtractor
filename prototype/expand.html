@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="LEExtractor 引文扩展 — 种子、轮次、预算与真实停止原因（界面演示）">
+<title>引文扩展 — LEExtractor</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231b1c20'/%3E%3Cpath d='M10 10L22 22M22 10L10 22' stroke='white' stroke-width='5'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body data-page="expand">
+
+<a class="skip-link" href="#main" id="skipLink"></a>
+<div id="shell"></div>
+
+<main id="main" class="page">
+  <div class="container container--wide">
+
+    <div class="page-head">
+      <div class="page-head__row">
+        <div>
+          <h1 id="pageTitle"></h1>
+          <p id="pageLead"></p>
+        </div>
+        <div class="page-head__actions">
+          <a class="btn" href="results.html" id="toResults"></a>
+          <a class="btn" href="landscape.html" id="toLandscape"></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="shell shell--wide shell--main-first">
+      <section class="stack">
+
+        <!-- ============================================ 种子文献 -->
+        <div class="card">
+          <div class="card__head">
+            <h3 id="seedsTitle"></h3>
+            <a class="btn btn--sm" href="results.html" id="goResults"></a>
+          </div>
+          <div class="card__body">
+            <div id="seedList"></div>
+            <p class="t-xs t-muted mt-3" id="seedsNote"></p>
+          </div>
+        </div>
+
+        <!-- ============================================ 扩展设置 -->
+        <div class="card">
+          <div class="card__head"><h3 id="configTitle"></h3></div>
+          <div class="card__body">
+            <!-- 方向整行铺开：两个选项需要"标题 + 副说明"两行，半宽字段放不下 -->
+            <div class="field">
+              <label id="directionLabel"></label>
+              <div class="scale-presets" id="directionPick" role="radiogroup" aria-labelledby="directionLabel"></div>
+              <span class="field__hint" id="directionHint"></span>
+            </div>
+
+            <div class="cols-3 mt-6">
+              <div class="field">
+                <label for="rounds" id="roundsLabel"></label>
+                <select class="select" id="rounds"></select>
+                <span class="field__hint" id="roundsHint"></span>
+              </div>
+              <div class="field">
+                <label for="budget" id="budgetLabel"></label>
+                <select class="select" id="budget"></select>
+                <span class="field__hint" id="budgetHint"></span>
+              </div>
+              <div class="field">
+                <label id="budgetUsedLabel"></label>
+                <div class="meter">
+                  <div class="meter__bar"><i id="budgetBar" style="background:var(--btn)"></i></div>
+                  <div class="meter__legend"><span id="budgetLegend"></span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row mt-6">
+              <button type="button" class="btn btn--primary" id="startBtn"></button>
+              <button type="button" class="btn" id="resumeBtn"></button>
+              <button type="button" class="btn" id="cancelBtn"></button>
+              <span class="spacer"></span>
+              <span class="t-xs t-muted" id="cancelNote"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================ 每轮产出 -->
+        <div class="card">
+          <div class="card__head">
+            <h3 id="roundsTitle"></h3>
+            <span class="t-xs t-muted" id="roundsMeta"></span>
+          </div>
+          <div class="card__body" style="padding:0">
+            <div class="table-wrap">
+              <div class="table-scroll">
+                <table class="table">
+                  <thead><tr id="roundHead"></tr></thead>
+                  <tbody id="roundBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="card__foot">
+            <p class="t-xs t-muted" id="notRunReason"></p>
+          </div>
+        </div>
+
+        <!-- ============================================ 边际收益 -->
+        <div class="card">
+          <div class="card__head"><h3 id="yieldTitle"></h3></div>
+          <div class="card__body">
+            <div id="yieldChart"></div>
+            <p class="t-xs t-muted mt-3" id="yieldNote"></p>
+          </div>
+        </div>
+
+        <!-- ============================================ 关联文献方法 -->
+        <div class="card">
+          <div class="card__head"><h3 id="similarTitle"></h3></div>
+          <div class="card__body">
+            <p class="t-sm t-muted mb-4" id="similarNote"></p>
+            <div class="stack stack--sm" id="similarList"></div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ============================================ 右：停止原因 / 任务 / 预算 -->
+      <aside class="stack stack--sm" aria-labelledby="stopTitle">
+
+        <div class="card" id="stopCard">
+          <div class="card__head"><h3 id="stopTitle"></h3></div>
+          <div class="card__body">
+            <div id="stopCurrent"></div>
+            <div class="mt-4">
+              <span class="label" id="completeLabel"></span>
+              <div class="chips mt-2" id="completeChips"></div>
+              <p class="t-xs t-muted mt-2" id="completeNote"></p>
+            </div>
+            <div class="mt-4">
+              <span class="label" id="incompleteLabel"></span>
+              <div class="chips mt-2" id="incompleteChips"></div>
+              <p class="t-xs t-muted mt-2" id="incompleteNote"></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__head"><h3 id="jobsTitle"></h3></div>
+          <div class="card__body">
+            <div class="stack stack--sm" id="jobList"></div>
+            <p class="t-xs t-muted mt-3" id="jobsNote"></p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__head"><h3 id="httpTitle"></h3></div>
+          <div class="card__body">
+            <div class="funnel" id="httpMetrics"></div>
+            <p class="t-xs t-muted mt-3" id="httpNote"></p>
+            <div class="table-wrap mt-4">
+              <div class="table-scroll">
+                <table class="table">
+                  <thead><tr id="httpHead"></tr></thead>
+                  <tbody id="httpBody"></tbody>
+                </table>
+              </div>
+            </div>
+            <p class="label mt-3" id="bySourceLabel"></p>
+          </div>
+        </div>
+
+      </aside>
+    </div>
+  </div>
+</main>
+
+<div id="foot"></div>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script src="assets/i18n-pages.js"></script>
+<script>
+(function () {
+  'use strict';
+  const D = window.LED;
+  const $ = (sel) => document.querySelector(sel);
+  const s = (k, v) => LE.pt('expand', k, v);
+
+  const COMPLETE = ['saturated', 'no_new_results'];
+  const INCOMPLETE = ['low_yield', 'max_rounds', 'truncated', 'budget_exhausted', 'canceled', 'api_failure'];
+
+  let direction = D.snowball.direction;
+
+  /* 种子：默认取项目里的两个种子；用户可在结果页继续勾选 */
+  function seedIds() {
+    const extra = (LE.state.seeds || []).filter((id) => D.byId.has(id));
+    return Array.from(new Set(D.snowball.seeds.concat(extra)));
+  }
+
+  function renderSeeds() {
+    const ids = seedIds();
+    $('#seedsTitle').textContent = `${s('seedsTitle')} · ${ids.length}`;
+    const box = $('#seedList');
+    if (!ids.length) {
+      box.innerHTML = `<div class="state"><span class="state__icon" aria-hidden="true">∅</span>
+        <h3>${LE.esc(s('seedsTitle'))}</h3><p>${LE.esc(s('seedsEmpty'))}</p></div>`;
+    } else {
+      box.innerHTML = `<div class="edges">${ids.map((id) => {
+        const p = D.byId.get(id);
+        return `<div class="edge">
+          <span class="edge__dot" style="background:var(--btn)"></span>
+          <button type="button" class="edge__name" style="text-align:left" data-open="${LE.esc(id)}">${LE.esc(p.title)}</button>
+          <span class="edge__w">${LE.esc(String(p.year || '?'))}</span>
+          <button type="button" class="btn btn--sm btn--quiet" data-unseed="${LE.esc(id)}">${LE.esc(s('remove'))}</button>
+        </div>`;
+      }).join('')}</div>`;
+    }
+    LE.$$('[data-open]', box).forEach((b) => { b.onclick = () => LE.openDrawer(b.getAttribute('data-open'), { push: true }); });
+    LE.$$('[data-unseed]', box).forEach((b) => {
+      b.onclick = () => {
+        const id = b.getAttribute('data-unseed');
+        const i = LE.state.seeds.indexOf(id);
+        if (i >= 0) LE.state.seeds.splice(i, 1);
+        LE.toast(LE.lang() === 'zh' ? '已移出种子列表。' : 'Removed from seeds.');
+        renderSeeds();
+      };
+    });
+    $('#seedsNote').textContent = s('seedsNote');
+    $('#goResults').textContent = s('goResults');
+  }
+
+  function renderConfig() {
+    $('#configTitle').textContent = s('configTitle');
+    $('#directionLabel').textContent = s('direction');
+    $('#directionHint').textContent = s('directionHint');
+    $('#roundsLabel').textContent = s('rounds');
+    $('#roundsHint').textContent = s('roundsHint');
+    $('#budgetLabel').textContent = s('budgetLabel');
+    $('#budgetHint').textContent = s('budgetHint');
+    $('#startBtn').textContent = s('start');
+    $('#resumeBtn').textContent = s('resume');
+    $('#cancelBtn').textContent = s('cancelJob');
+    $('#cancelNote').textContent = s('cancelNote');
+
+    $('#directionPick').innerHTML = [
+      { id: 'forward', label: s('forward'), sub: s('forwardSub') },
+      { id: 'backward', label: s('backward'), sub: s('backwardSub') },
+    ].map((o) => `
+      <button type="button" role="radio" data-dir="${o.id}" aria-checked="${direction === o.id}">
+        <b>${LE.esc(o.label)}</b><small>${LE.esc(o.sub)}</small>
+      </button>`).join('');
+    LE.$$('#directionPick button').forEach((b) => {
+      b.onclick = () => { direction = b.getAttribute('data-dir'); renderConfig(); };
+    });
+
+    const keepR = $('#rounds').value, keepB = $('#budget').value;
+    $('#rounds').innerHTML = [1, 2, 3, 5].map((n) => `<option value="${n}">${n}</option>`).join('');
+    $('#rounds').value = keepR || String(D.snowball.rounds_requested);
+    $('#budget').innerHTML = [120, 240, 480].map((n) => `<option value="${n}">${n}</option>`).join('');
+    $('#budget').value = keepB || String(D.snowball.budget_calls);
+
+    $('#budgetUsedLabel').textContent = `${s('budgetLabel')} · ${D.snowball.budget_used} / ${D.snowball.budget_calls}`;
+    const ratio = Math.min(1, D.snowball.budget_used / D.snowball.budget_calls);
+    $('#budgetBar').style.width = LE.pct(ratio);
+    $('#budgetLegend').innerHTML = `<span>${LE.esc(D.snowball.budget_unit)}</span> · <b>${D.snowball.budget_used}</b> / ${D.snowball.budget_calls}`;
+  }
+
+  function renderRounds() {
+    $('#roundsTitle').textContent = s('roundsTitle');
+    $('#roundsMeta').textContent = `${s('doneLabel', { n: D.snowball.rounds_completed })} · ${s('ofLabel', { n: D.snowball.rounds_requested })}`;
+    $('#roundHead').innerHTML = `
+      <th class="num">${LE.esc(s('colRound'))}</th>
+      <th class="num">${LE.esc(s('colRaw'))}</th>
+      <th class="num">${LE.esc(s('colUnique'))}</th>
+      <th class="num">${LE.esc(s('colRelevant'))}</th>
+      <th class="num">${LE.esc(s('colCumUnique'))}</th>
+      <th class="num">${LE.esc(s('colCumRelevant'))}</th>
+      <th class="num">${LE.esc(s('colNewRatio'))}</th>
+      <th class="num">${LE.esc(s('colDupRatio'))}</th>
+      <th>${LE.esc(s('colTopicDelta'))}</th>
+      <th class="num">${LE.esc(s('colElapsed'))}</th>
+      <th>${LE.esc(s('colRoundStop'))}</th>`;
+    $('#roundBody').innerHTML = D.snowball.rounds.map((r) => r.not_run ? `
+      <tr>
+        <td class="num">${r.round_no}</td>
+        <td colspan="9" class="t-muted">${LE.esc(s('notRun'))}</td>
+        <td>${LE.badgeStop(r.stopped_reason)}</td>
+      </tr>` : `
+      <tr>
+        <td class="num">${r.round_no}</td>
+        <td class="num">${LE.num(r.raw)}</td>
+        <td class="num">${LE.num(r.unique)}</td>
+        <td class="num">${LE.num(r.relevant)}</td>
+        <td class="num">${LE.num(r.cumulative_unique)}</td>
+        <td class="num">${LE.num(r.cumulative_relevant)}</td>
+        <td class="num">${LE.pct(r.new_ratio)}</td>
+        <td class="num">${LE.pct(r.dup_ratio)}</td>
+        <td class="t-xs">${r.topic_delta.length ? LE.esc(r.topic_delta.join('、')) : LE.esc(s('noTopics'))}</td>
+        <td class="num">${r.elapsed_seconds.toFixed(1)}s</td>
+        <td>${r.stopped_reason ? LE.badgeStop(r.stopped_reason) : '—'}</td>
+      </tr>`).join('');
+    $('#notRunReason').textContent = s('notRunReason');
+  }
+
+  function renderYield() {
+    $('#yieldTitle').textContent = s('yieldTitle');
+    $('#yieldNote').textContent = s('yieldNote');
+    const done = D.snowball.rounds.filter((r) => !r.not_run);
+    const maxRel = Math.max.apply(null, done.map((r) => r.relevant).concat([1]));
+    $('#yieldChart').innerHTML = done.map((r) => `
+      <div class="row mb-3" style="gap:var(--s-3)">
+        <span class="t-xs t-muted t-num" style="width:56px">R${r.round_no}</span>
+        <span class="t-xs t-muted" style="width:74px">${LE.esc(s('yieldNew'))}</span>
+        <span class="facet-row__bar" style="flex:1 1 auto;height:6px"><i style="width:${LE.pct(r.new_ratio)};background:var(--btn)"></i></span>
+        <span class="t-xs t-num" style="width:44px">${LE.pct(r.new_ratio)}</span>
+        <span class="t-xs t-muted" style="width:74px">${LE.esc(s('yieldRelevant'))}</span>
+        <span class="facet-row__bar" style="flex:0 0 120px;height:6px"><i style="width:${Math.round(r.relevant / maxRel * 100)}%"></i></span>
+        <span class="t-xs t-num" style="width:28px">${r.relevant}</span>
+      </div>`).join('');
+  }
+
+  function renderSimilar() {
+    $('#similarTitle').textContent = s('similarTitle');
+    $('#similarNote').textContent = s('similarNote');
+    const rc = D.helpers.relationCounts();
+    const items = [
+      { k: 'mBC', n: rc.bibliographic_coupling, dot: '#1f6feb' },
+      { k: 'mCC', n: rc.co_citation, dot: '#1f7a45' },
+      { k: 'mTS', n: rc.text_similarity, dot: '#9a6100' },
+    ];
+    $('#similarList').innerHTML = items.map((it) => `
+      <div class="card card--sunk">
+        <div class="card__body">
+          <div class="row row--between">
+            <h4><span class="edge__dot" style="background:${it.dot};display:inline-block;margin-right:8px"></span>${LE.esc(s(it.k))}</h4>
+            <span class="badge">${it.n}</span>
+          </div>
+          <p class="t-sm t-muted mt-2">${LE.esc(s(it.k + 'Desc'))}</p>
+        </div>
+      </div>`).join('') + `<p class="t-xs t-muted">${LE.esc(s('mAlias'))}</p>`;
+  }
+
+  function renderStop() {
+    $('#stopTitle').textContent = s('stopTitle');
+    const cur = D.snowball.stopped_reason;
+    $('#stopCurrent').innerHTML = `
+      <div class="job ${COMPLETE.includes(cur) ? 'job--done' : 'job--partial'}">
+        <div class="job__head">
+          <strong class="t-sm">${LE.esc(LE.lang() === 'zh' ? '本次结束原因' : 'This run ended because')}</strong>
+          ${LE.badgeStop(cur)}
+        </div>
+        <div class="t-xs t-muted">${LE.esc(LE.lang() === 'zh' ? '引文扩展 · 第 ' : 'Citation expansion · round ')}${D.snowball.rounds_completed} / ${D.snowball.rounds_requested}</div>
+      </div>`;
+    $('#completeLabel').textContent = s('completeGroup');
+    $('#incompleteLabel').textContent = s('incompleteGroup');
+    /* 停止原因是一本**字典**，不是八个状态：默认中性，只有"本次实际发生的那个"
+       才拿语义色，并且另加 ▸ 标记 —— 不让颜色成为唯一区分手段。 */
+    const chip = (r, tone) => {
+      const isCurrent = r === cur;
+      const style = isCurrent
+        ? (tone === 'ok' ? 'border-color:var(--ok-line)' : 'border-color:var(--warn-line)')
+        : '';
+      return `<span class="chip"${isCurrent ? ` style="${style}"` : ''}>${
+        isCurrent ? '<span aria-hidden="true">▸ </span>' : ''}${LE.esc(LE.t('stop.' + r))}</span>`;
+    };
+    $('#completeChips').innerHTML = COMPLETE.map((r) => chip(r, 'ok')).join('');
+    $('#incompleteChips').innerHTML = INCOMPLETE.map((r) => chip(r, 'warn')).join('');
+    $('#completeNote').textContent = s('completeNote');
+    $('#incompleteNote').textContent = s('incompleteNote');
+  }
+
+  function renderJobs() {
+    $('#jobsTitle').textContent = s('jobsTitle');
+    $('#jobsNote').textContent = s('jobsNote');
+    $('#jobList').innerHTML = D.jobs.map((j) => `
+      <div class="job job--${j.status === 'completed' ? 'done' : j.status === 'failed' ? 'failed' : j.status === 'partial' ? 'partial' : j.status === 'running' ? 'running' : ''}">
+        <div class="job__head">
+          <strong class="t-sm">${LE.esc(j.kind)}</strong>
+          ${LE.badgeJob(j.status)}
+        </div>
+        <div class="t-xs t-muted">
+          ${LE.esc(s('jobProgress'))}: <b class="t-num">${j.progress.done} / ${j.progress.total}</b> ${LE.esc(j.progress.unit)}
+        </div>
+        ${j.stop_reason ? `<div class="t-xs">${LE.esc(s('jobStop'))}: ${LE.badgeStop(j.stop_reason)}</div>` : ''}
+        <div class="t-xs t-muted">${LE.esc(j.message)}</div>
+        <div class="job__id">${LE.esc(j.id)}</div>
+        ${j.cancellable ? `<div><button type="button" class="btn btn--sm" data-cancel="${LE.esc(j.id)}">${LE.esc(s('cancelJob'))}</button></div>` : ''}
+      </div>`).join('');
+    LE.$$('[data-cancel]', $('#jobList')).forEach((b) => {
+      b.onclick = () => { LE.toast(s('cancelled')); };
+    });
+  }
+
+  function renderHttp() {
+    $('#httpTitle').textContent = s('httpTitle');
+    $('#httpNote').textContent = s('httpNote');
+    $('#bySourceLabel').textContent = s('bySource');
+    const h = D.http_budget;
+    const cells = [
+      [s('requests'), h.requests], [s('retries'), h.retries],
+      [s('cacheHits'), h.cache_hits], [s('rateLimited'), h.rate_limited],
+      [s('errors'), h.errors], [s('elapsed'), h.elapsed_seconds.toFixed(1) + 's'],
+    ];
+    $('#httpMetrics').innerHTML = cells.map(([label, value]) => `
+      <div class="funnel__step metric">
+        <span class="metric__label">${LE.esc(label)}</span>
+        <span class="metric__value">${LE.esc(String(value))}</span>
+      </div>`).join('');
+    $('#httpHead').innerHTML = `<th>${LE.esc(s('source'))}</th><th class="num">${LE.esc(s('requests'))}</th>
+      <th class="num">${LE.esc(s('retries'))}</th><th class="num">${LE.esc(s('rateLimited'))}</th><th class="num">${LE.esc(s('errors'))}</th>`;
+    $('#httpBody').innerHTML = Object.keys(h.by_source).map((k) => {
+      const b = h.by_source[k];
+      return `<tr><td>${LE.esc(k)}</td><td class="num">${b.requests}</td><td class="num">${b.retries}</td>
+        <td class="num">${b.rate_limited}</td><td class="num">${b.errors}</td></tr>`;
+    }).join('');
+  }
+
+  function renderStatic() {
+    $('#skipLink').textContent = LE.pt('home', 'skip');
+    $('#pageTitle').textContent = s('title');
+    $('#pageLead').textContent = s('lead');
+    $('#toResults').textContent = LE.lang() === 'zh' ? '文献结果' : 'Results';
+    $('#toLandscape').textContent = LE.lang() === 'zh' ? '证据版图 →' : 'Evidence landscape →';
+    document.title = s('title') + ' — LEExtractor';
+  }
+
+  function render() {
+    renderSeeds(); renderConfig(); renderRounds(); renderYield(); renderSimilar(); renderStop(); renderJobs(); renderHttp();
+  }
+
+  $('#startBtn').onclick = () => LE.toast(s('started'));
+  $('#resumeBtn').onclick = () => LE.toast(LE.lang() === 'zh'
+    ? `演示原型：将从第 ${D.snowball.rounds_completed + 1} 轮继续，已有 ${D.snowball.rounds_completed} 轮成果保留。`
+    : `Prototype: resumes at round ${D.snowball.rounds_completed + 1}; the ${D.snowball.rounds_completed} completed rounds are kept.`);
+  $('#cancelBtn').onclick = () => LE.toast(s('cancelled'));
+
+  document.addEventListener('le:lang', () => { renderStatic(); render(); });
+  renderStatic();
+  render();
+  LE.mount({ page: 'expand' });
+})();
+</script>
+</body>
+</html>

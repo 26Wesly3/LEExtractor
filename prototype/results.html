@@ -1,0 +1,696 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="LEExtractor 文献结果 — 分面统计、列表与表格、批量选择（界面演示）">
+<title>文献结果 — LEExtractor</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231b1c20'/%3E%3Cpath d='M10 10L22 22M22 10L10 22' stroke='white' stroke-width='5'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body data-page="results">
+
+<a class="skip-link" href="#main" id="skipLink"></a>
+<div id="shell"></div>
+
+<main id="main" class="page">
+  <div class="container container--wide">
+
+    <div class="page-head">
+      <div class="page-head__row">
+        <div>
+          <h1 id="pageTitle"></h1>
+          <p id="pageLead"></p>
+        </div>
+        <div class="page-head__actions">
+          <a class="btn" href="search.html" id="backToSearch"></a>
+          <a class="btn" href="review.html" id="toScreening"></a>
+          <a class="btn btn--primary" href="expand.html" id="toExpand"></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="shell">
+      <!-- ==================================================== 左：分面统计 -->
+      <aside class="facet-rail" id="facetRail" aria-label="分面统计"></aside>
+
+      <!-- ==================================================== 右：主区 -->
+      <section class="main-col">
+
+        <!-- 检索漏斗：逐层收敛，绝不相加 -->
+        <div class="card mb-6">
+          <div class="card__body">
+            <div class="funnel" id="funnel"></div>
+            <p class="t-xs t-muted mt-4" id="funnelNote"></p>
+          </div>
+        </div>
+
+        <!-- 查询条 -->
+        <div class="row mb-4" style="gap:var(--s-3)">
+          <div style="flex:1 1 320px;min-width:0">
+            <label class="visually-hidden" for="query">查询</label>
+            <input class="input" id="query" type="search">
+          </div>
+          <span class="badge badge--outline" id="ctxBadge"></span>
+        </div>
+
+        <!-- 工具条 -->
+        <div class="result-toolbar">
+          <div class="row" style="gap:var(--s-4)">
+            <span class="result-toolbar__count"><b id="countNum" class="t-num">0</b> <small id="countLabel"></small></span>
+            <span class="t-sm t-muted" id="countSub"></span>
+          </div>
+          <div class="row" style="gap:var(--s-3)">
+            <label class="t-xs t-muted" for="sort" id="sortLabel"></label>
+            <select class="select" id="sort" style="width:auto"></select>
+            <label class="t-xs t-muted" for="perPage" id="perPageLabel"></label>
+            <select class="select" id="perPage" style="width:auto"></select>
+            <span class="viewmode" role="group" id="viewMode">
+              <button type="button" data-view="list" aria-pressed="true" id="viewListBtn"></button>
+              <button type="button" data-view="table" aria-pressed="false" id="viewTableBtn"></button>
+            </span>
+            <button type="button" class="btn btn--sm" id="densityBtn" aria-pressed="false"></button>
+          </div>
+        </div>
+
+        <!-- 全选横幅 -->
+        <div id="selectionBanner"></div>
+
+        <!-- 结果区 -->
+        <div id="resultArea" aria-live="polite"></div>
+
+        <!-- 分页 -->
+        <div id="pager"></div>
+
+        <!-- 下一步 -->
+        <div class="card mt-8">
+          <div class="card__body">
+            <h3 style="font-size:var(--fs-h4)" id="nextTitle"></h3>
+            <div class="row mt-4" style="gap:var(--s-3)">
+              <a class="btn" href="expand.html" id="n1"></a>
+              <a class="btn" href="landscape.html" id="n2"></a>
+              <a class="btn" href="review.html" id="n3"></a>
+              <a class="btn" href="export.html" id="n4"></a>
+            </div>
+            <p class="t-xs t-muted mt-3" id="seedHint"></p>
+          </div>
+        </div>
+
+      </section>
+    </div>
+  </div>
+</main>
+
+<div id="foot"></div>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script src="assets/i18n-pages.js"></script>
+<script>
+(function () {
+  'use strict';
+  const D = window.LED;
+  const $ = (sel) => document.querySelector(sel);
+  const s = (k, v) => LE.pt('results', k, v);
+
+  /* ==================================================================== 状态 */
+  const S = {
+    sources: new Set(), topics: new Set(), years: new Set(),
+    discovery: new Set(), screening: new Set(), retrieval: new Set(), ctx: new Set(),
+    yearFrom: null, yearTo: null,
+    text: '', sort: 'relevance', view: 'list', perPage: 20, page: 1,
+    sel: new Set(), dense: false, evidence: new Set(),
+  };
+
+  const YEARS = D.facets.years.filter((y) => y.key !== '__unknown__').map((y) => Number(y.key));
+  const Y_MIN = Math.min.apply(null, YEARS);
+  const Y_MAX = Math.max.apply(null, YEARS);
+  S.yearFrom = Y_MIN;
+  S.yearTo = Y_MAX;
+
+  /* ==================================================================== 过滤 */
+  function methodsOf(p) { return (p.discovery_traces || []).map((t) => t.method); }
+  function decisionOf(p) { const d = D.helpers.decisionOf(p); return d ? d.decision : 'undecided'; }
+  function retrievalOf(p) { const r = D.helpers.retrievalOf(p); return r ? r.status : 'not_attempted'; }
+
+  function match(p, skip) {
+    if (skip !== 'sources' && S.sources.size && !S.sources.has(p.source)) return false;
+    if (skip !== 'topics' && S.topics.size && !(p.topics || []).some((x) => S.topics.has(x))) return false;
+    if (skip !== 'years') {
+      if (S.years.size) {
+        const key = p.year == null ? '__unknown__' : String(p.year);
+        if (!S.years.has(key)) return false;
+      } else if (p.year == null || p.year < S.yearFrom || p.year > S.yearTo) return false;
+    }
+    if (skip !== 'discovery' && S.discovery.size && !methodsOf(p).some((m) => S.discovery.has(m))) return false;
+    if (skip !== 'screening' && S.screening.size && !S.screening.has(decisionOf(p))) return false;
+    if (skip !== 'retrieval' && S.retrieval.size && !S.retrieval.has(retrievalOf(p))) return false;
+    if (skip !== 'ctx' && S.ctx.size && !S.ctx.has(p.score_context_id)) return false;
+    if (S.text) {
+      const hay = (p.title + ' ' + (p.abstract || '')).toLocaleLowerCase();
+      if (hay.indexOf(S.text.toLocaleLowerCase()) < 0) return false;
+    }
+    return true;
+  }
+
+  /** 相关度只在同一评分上下文内有意义：主批次在前，批内按分数，其余批次按引用数收尾。 */
+  function sortRows(list) {
+    const main = D.ctx.main;
+    const batch = (p) => (p.score_context_id === main ? 0 : 1);
+    const comparators = {
+      relevance: (a, b) => batch(a) - batch(b) || b.relevance_score - a.relevance_score,
+      citations: (a, b) => b.citation_count - a.citation_count,
+      year: (a, b) => (b.year || 0) - (a.year || 0),
+      title: (a, b) => a.title.localeCompare(b.title, LE.lang() === 'zh' ? 'zh' : 'en'),
+    };
+    return list.slice().sort(comparators[S.sort] || comparators.relevance);
+  }
+
+  const filtered = () => sortRows(D.papers.filter((p) => match(p)));
+  const pageCount = (n) => Math.max(1, Math.ceil(n / S.perPage));
+
+  /* ==================================================================== 分面栏 */
+  /* 各分组的展开/收起状态跨重建保留：刷新计数时不能把用户已经收起来的分组重新展开。 */
+  const facetOpen = {};
+
+  function facetCard(group, titleKey, items, formatter) {
+    const selected = S[group];
+    const max = Math.max.apply(null, items.map((i) => i.count).concat([1]));
+    return `
+      <details class="facet" data-group="${group}"${facetOpen[group] === false ? '' : ' open'}>
+        <summary class="facet__head">${LE.esc(LE.t(titleKey))}</summary>
+        <div class="facet__body">
+          ${items.map((it) => {
+            const on = selected.has(it.key);
+            const label = formatter ? formatter(it.key) : it.key;
+            return `<button type="button" class="facet-row" data-facet="${group}" data-key="${LE.esc(it.key)}" aria-pressed="${on}">
+              <span class="facet-row__name" title="${LE.esc(label)}">${LE.esc(label)}</span>
+              <span class="facet-row__bar"><i style="width:${Math.round(it.count / max * 100)}%"></i></span>
+              <span class="facet-row__count">${it.count}</span>
+            </button>`;
+          }).join('')}
+        </div>
+      </details>`;
+  }
+
+  function yearFacet() {
+    const bars = D.facets.years.filter((y) => y.key !== '__unknown__').map((y) => {
+      const yr = Number(y.key);
+      const inRange = yr >= S.yearFrom && yr <= S.yearTo;
+      const on = S.years.has(String(yr)) || (inRange && !S.years.size);
+      const max = Math.max.apply(null, D.facets.years.map((x) => x.count));
+      return `<i class="${on ? 'is-in' : ''}" style="height:${Math.max(8, Math.round(y.count / max * 100))}%"
+        title="${yr}: ${y.count}" data-year="${yr}"></i>`;
+    }).join('');
+    const unknown = D.facets.years.find((y) => y.key === '__unknown__');
+    return `
+      <details class="facet" data-group="years"${facetOpen.years === false ? '' : ' open'}>
+        <summary class="facet__head">${LE.esc(LE.t('facet.years'))}</summary>
+        <div class="facet__body facet-years">
+          <div class="facet-years__bars" id="yearBars">${bars}</div>
+          <div class="facet-years__range">
+            <input type="range" id="yFrom" min="${Y_MIN}" max="${Y_MAX}" value="${S.yearFrom}" aria-label="起始年份">
+            <span class="t-num"><b id="yFromLabel">${S.yearFrom}</b></span>
+          </div>
+          <div class="facet-years__range mt-2">
+            <input type="range" id="yTo" min="${Y_MIN}" max="${Y_MAX}" value="${S.yearTo}" aria-label="结束年份">
+            <span class="t-num"><b id="yToLabel">${S.yearTo}</b></span>
+          </div>
+          ${unknown ? `<button type="button" class="facet-row mt-3" data-facet="years" data-key="__unknown__" aria-pressed="${S.years.has('__unknown__')}">
+            <span class="facet-row__name">${LE.esc(LE.t('common.unknown'))}</span>
+            <span class="facet-row__count">${unknown.count}</span></button>` : ''}
+          <p class="t-xs t-muted mt-2">${LE.esc(s('unknownYear'))}</p>
+        </div>
+      </details>`;
+  }
+
+  function renderFacets() {
+    const rail = $('#facetRail');
+    const f = D.facets;
+    /* 重建之前先记下各分组的展开状态，重建后按记下的状态还原 */
+    LE.$$('details.facet[data-group]', rail).forEach((d) => { facetOpen[d.getAttribute('data-group')] = d.open; });
+    rail.innerHTML = `
+      <div class="facet-rail__head">
+        <span>${LE.esc(LE.t('facet.title'))} · <strong>${LE.esc(LE.t('facet.scope'))}</strong></span>
+        <button type="button" class="btn btn--sm btn--quiet" id="clearFacets">${LE.esc(LE.t('facet.clearAll'))}</button>
+      </div>
+      ${yearFacet()}
+      ${facetCard('sources', 'facet.sources', f.sources)}
+      ${facetCard('topics', 'facet.topics', f.topics)}
+      ${facetCard('discovery', 'facet.discovery', f.discovery, (k) => LE.facetLabel('discovery', k))}
+      ${facetCard('screening', 'facet.screening', f.screening, (k) => LE.facetLabel('screening', k))}
+      ${facetCard('retrieval', 'facet.retrieval', f.retrieval, (k) => LE.facetLabel('retrieval', k))}
+      ${facetCard('ctx', 'facet.ctx', f.score_contexts, (k) => LE.facetLabel('ctx', k))}
+      <p class="t-xs t-muted">${LE.esc(LE.t('facet.note', { n: D.papers.length }))}</p>
+      <p class="t-xs t-muted">${LE.esc(s('relevanceNote'))}</p>`;
+
+    LE.$$('[data-facet]', rail).forEach((b) => {
+      b.onclick = () => {
+        const group = b.getAttribute('data-facet');
+        const key = b.getAttribute('data-key');
+        if (S[group].has(key)) S[group].delete(key); else S[group].add(key);
+        S.page = 1;
+        render({ reason: 'facet' });
+      };
+    });
+    LE.$$('#yearBars i', rail).forEach((bar) => {
+      bar.onclick = () => {
+        const key = bar.getAttribute('data-year');
+        if (S.years.has(key)) S.years.delete(key); else S.years.add(key);
+        S.page = 1;
+        render({ reason: 'facet' });
+      };
+    });
+    /* 拖动中按帧节流、松手定稿；两者都不重建筛选栏本身 */
+    const yf = $('#yFrom'), yt = $('#yTo');
+    if (yf) {
+      yf.oninput = () => { S.yearFrom = Math.min(Number(yf.value), S.yearTo); S.years.clear(); S.page = 1; applyYears(true); };
+      yf.onchange = () => { S.yearFrom = Math.min(Number(yf.value), S.yearTo); S.years.clear(); S.page = 1; applyYears(false); };
+    }
+    if (yt) {
+      yt.oninput = () => { S.yearTo = Math.max(Number(yt.value), S.yearFrom); S.years.clear(); S.page = 1; applyYears(true); };
+      yt.onchange = () => { S.yearTo = Math.max(Number(yt.value), S.yearFrom); S.years.clear(); S.page = 1; applyYears(false); };
+    }
+    $('#clearFacets').onclick = () => {
+      ['sources', 'topics', 'years', 'discovery', 'screening', 'retrieval', 'ctx'].forEach((k) => S[k].clear());
+      S.yearFrom = Y_MIN; S.yearTo = Y_MAX; S.text = ''; S.page = 1;
+      $('#query').value = '';
+      LE.toast(s('cleared'));
+      render({ reason: 'facet' });
+    };
+  }
+
+  /* ==================================================================== 漏斗 */
+  function renderFunnel() {
+    const m = D.manifest;
+    const steps = [
+      [s('funnelProvider'), m.raw_count],
+      [s('funnelDedup'), m.unique_before_filters],
+      [s('funnelKept'), m.returned_count],
+      [s('funnelList'), D.papers.length],
+    ];
+    $('#funnel').innerHTML = steps.map(([label, value]) => `
+      <div class="funnel__step metric">
+        <span class="metric__label">${LE.esc(label)}</span>
+        <span class="metric__value" data-count="${Number(value) || 0}">0</span>
+      </div>`).join('');
+    LE.$$('#funnel [data-count]').forEach((n) => LE.fx.countUp(n, Number(n.getAttribute('data-count'))));
+    $('#funnelNote').textContent = `${s('funnelNote')} · ${s('providerHits')}: ` +
+      Object.keys(m.provider_counts).map((k) => `${k} ${m.provider_counts[k]}`).join(' · ') +
+      ` · ${s('dedupNote', { n: m.raw_count - m.unique_before_filters + D.duplicates.length })}`;
+  }
+
+  /* ==================================================================== 结果行 */
+  function evidencePanel(p) {
+    const bd = Object.keys(p.score_breakdown || {});
+    const ret = D.helpers.retrievalOf(p);
+    return `
+      <div class="result-item__evidence">
+        <div style="flex:1 1 auto;min-width:0">
+          <h5>${LE.esc(s('whyFound'))}</h5>
+          ${(p.discovery_traces || []).map((tr) => `
+            <p class="t-xs">
+              <span class="badge">${LE.esc(LE.facetLabel('discovery', tr.method))}</span>
+              <span class="t-muted">${LE.esc(tr.provider || '—')}</span>
+              ${tr.round_no != null ? `· ${LE.lang() === 'zh' ? '轮次' : 'round'} ${tr.round_no}` : ''}
+              ${tr.score != null ? `· score ${tr.score.toFixed(2)}` : ''}
+              ${tr.seed_id ? `· ${LE.lang() === 'zh' ? '种子' : 'seed'} ${LE.esc(tr.seed_id)}` : ''}
+            </p>
+            ${tr.query ? `<p class="t-mono t-xs t-muted">${LE.esc(tr.query)}</p>` : ''}
+          `).join('') || `<p class="t-xs t-muted">${LE.esc(LE.t('drawer.noTrace'))}</p>`}
+          <h5 class="mt-3">${LE.esc(s('scoreBreakdown'))}</h5>
+          ${bd.length ? bd.map((k) => `
+            <div class="row" style="gap:var(--s-2)">
+              <span class="t-xs t-muted" style="width:60px">${LE.esc(k)}</span>
+              <span class="facet-row__bar" style="flex:1 1 auto"><i style="width:${LE.pct(p.score_breakdown[k])}"></i></span>
+              <span class="t-xs t-num">${p.score_breakdown[k].toFixed(2)}</span>
+            </div>`).join('') : `<p class="t-xs t-muted">—</p>`}
+          <p class="t-xs t-muted mt-2">${LE.lang() === 'zh' ? '评分批次' : 'Score batch'}
+            <span class="t-mono">${LE.esc(p.score_context_id)}</span>
+            <span class="t-muted">· ${LE.esc(LE.lang() === 'zh' ? '同批次内可比' : 'comparable within this batch')}</span></p>
+        </div>
+        <div style="flex:0 0 auto">
+          <h5>${LE.esc(s('fulltextState'))}</h5>
+          <p>${LE.badgeRetrieval(ret ? ret.status : 'not_attempted')}</p>
+          ${ret && ret.note ? `<p class="t-xs">${LE.esc(ret.note)}</p>` : ''}
+          <p class="mt-3"><a href="paper.html?id=${encodeURIComponent(p.id)}">${LE.esc(LE.t('common.expandPage'))}</a></p>
+        </div>
+      </div>`;
+  }
+
+  function listRow(p) {
+    const dec = decisionOf(p);
+    const ret = retrievalOf(p);
+    const open = S.evidence.has(p.id);
+    const cite = p.citation_count
+      ? `<b>${LE.num(p.citation_count)}</b>`
+      : `<span class="t-muted" title="${LE.esc(s('citationsNote'))}">${LE.esc(s('citeUnknown'))}</span>`;
+    return `
+      <article class="result-item${S.dense ? ' result-item--dense' : ''}${S.sel.has(p.id) ? ' is-picked' : ''}" data-row="${LE.esc(p.id)}">
+        <div class="result-item__pick">
+          <input type="checkbox" ${S.sel.has(p.id) ? 'checked' : ''} data-pick="${LE.esc(p.id)}" aria-label="${LE.esc(p.title)}">
+        </div>
+        <div style="min-width:0">
+          <button type="button" class="result-item__title" data-open="${LE.esc(p.id)}">${LE.esc(p.title)}</button>
+          <div class="result-item__meta">
+            <span>${p.year || LE.t('common.unknown')}</span>
+            <span class="sep">·</span>
+            <span>${LE.esc((p.authors || []).map((a) => a.name).slice(0, 2).join(', ') || LE.t('common.notProvided'))}${(p.authors || []).length > 2 ? ' et al.' : ''}</span>
+            <span class="sep">·</span>
+            <span>${LE.esc(p.venue || LE.t('common.notProvided'))}</span>
+            <span class="sep">·</span>
+            <span class="t-num">${cite}</span>
+            <span class="sep">·</span>
+            ${LE.badgeSource(p.source)}
+          </div>
+          ${S.dense ? '' : `<p class="result-item__abstract">${LE.esc(p.abstract || s('noAbstract'))}</p>`}
+          <div class="result-item__flags">
+            ${LE.badgeScreening(dec)}
+            ${LE.badgeRetrieval(ret)}
+            ${(p.discovery_traces || []).slice(0, 1).map((tr) => `<span class="badge">${LE.esc(LE.facetLabel('discovery', tr.method))}</span>`).join('')}
+            ${p.score_context_id !== D.ctx.main ? `<span class="badge badge--warn">${LE.esc(LE.lang() === 'zh' ? '另一评分批次' : 'other score batch')}</span>` : ''}
+            <span class="rel"><span class="rel__bar"><i style="width:${LE.pct(p.relevance_score)}"></i></span>
+              <span class="t-num">${p.relevance_score.toFixed(3)}</span></span>
+            <button type="button" class="btn btn--sm btn--quiet" data-evidence="${LE.esc(p.id)}"
+              aria-expanded="${open}" aria-label="${LE.esc(s('toggleEvidence'))}">${open ? '－' : '＋'}</button>
+          </div>
+          <div class="result-item__evwrap" data-evwrap="${LE.esc(p.id)}">${open ? evidencePanel(p) : ''}</div>
+        </div>
+        <div class="result-item__side">
+          <span class="result-item__cite">${LE.lang() === 'zh' ? '被引' : 'cited'} ${cite}</span>
+          <span class="t-xs t-mono">${LE.esc(p.id.length > 22 ? p.id.slice(0, 22) + '…' : p.id)}</span>
+        </div>
+      </article>`;
+  }
+
+  function tableRow(p) {
+    const dec = decisionOf(p);
+    const ret = retrievalOf(p);
+    return `
+      <tr data-row="${LE.esc(p.id)}" class="${S.sel.has(p.id) ? 'is-picked' : ''}" aria-selected="${S.sel.has(p.id)}">
+        <td><input type="checkbox" ${S.sel.has(p.id) ? 'checked' : ''} data-pick="${LE.esc(p.id)}" aria-label="${LE.esc(p.title)}"></td>
+        <td class="title-cell"><button type="button" data-open="${LE.esc(p.id)}">${LE.esc(p.title)}</button>
+          <div class="t-xs t-muted">${LE.esc((p.authors || []).map((a) => a.name).slice(0, 2).join(', ') || LE.t('common.notProvided'))}</div></td>
+        <td class="num">${p.year || LE.t('common.unknown')}</td>
+        <td>${LE.esc(p.venue || LE.t('common.notProvided'))}</td>
+        <td>${LE.badgeSource(p.source)}</td>
+        <td class="num">${p.citation_count ? LE.num(p.citation_count) : `<span class="t-muted">${LE.esc(s('citeUnknown'))}</span>`}</td>
+        <td class="num">${p.relevance_score.toFixed(3)}${p.score_context_id !== D.ctx.main ? ' *' : ''}</td>
+        <td>${LE.badgeScreening(dec)}</td>
+        <td>${LE.badgeRetrieval(ret)}</td>
+      </tr>`;
+  }
+
+  /* ------------------------------------------------------------------ 局部更新
+     勾选文献、展开证据只更新**相关行**与工具栏，不重建整列：重建会丢掉阅读位置和键盘
+     焦点，还会把入场动画重播一遍。只有"行集合"真的变了（筛选、排序、翻页、切视图）
+     才走 renderResults 全量重建。 */
+  let currentSlice = [];
+
+  function rowEl(id) { return LE.$('[data-row="' + id + '"]', $('#resultArea')); }
+
+  function paintRow(el, picked) {
+    el.classList.toggle('is-picked', picked);
+    if (el.tagName === 'TR') el.setAttribute('aria-selected', String(picked));
+    const box = LE.$('[data-pick]', el);
+    if (box) box.checked = picked;
+  }
+
+  function updateRow(id) { const el = rowEl(id); if (el) paintRow(el, S.sel.has(id)); }
+
+  function syncRows() {
+    LE.$$('[data-row]', $('#resultArea')).forEach((el) => paintRow(el, S.sel.has(el.getAttribute('data-row'))));
+    const head = $('#headPick');
+    if (head) head.checked = currentSlice.length > 0 && currentSlice.every((p) => S.sel.has(p.id));
+  }
+
+  function toggleEvidence(id) {
+    const el = rowEl(id);
+    const p = D.byId.get(id);
+    if (!el || !p) return;
+    const open = !S.evidence.has(id);
+    if (open) S.evidence.add(id); else S.evidence.delete(id);
+    const wrap = LE.$('[data-evwrap]', el);
+    if (wrap) { wrap.innerHTML = open ? evidencePanel(p) : ''; if (open) LE.fx.replay(wrap, 'fx-swap'); }
+    const btn = LE.$('[data-evidence]', el);
+    if (btn) { btn.setAttribute('aria-expanded', String(open)); btn.textContent = open ? '－' : '＋'; }
+  }
+
+  /* 滚动策略（统一）：分页 → 平滑定位到结果区顶部；排序/筛选/切视图 → 结果区若已在
+     视口内就不动，否则瞬间定位。偏移取顶栏真实高度，不再用写死的 top: 200。 */
+  function scrollToResults(smooth) {
+    const anchor = $('#resultArea');
+    if (!anchor) return;
+    const bar = document.querySelector('.topbar');
+    const offset = (bar ? bar.getBoundingClientRect().height : 56) + 16;
+    const rect = anchor.getBoundingClientRect();
+    if (!smooth && rect.top >= offset - 4 && rect.top <= window.innerHeight * 0.55) return;
+    const top = Math.max(0, rect.top + window.scrollY - offset);
+    window.scrollTo({ top, behavior: smooth && !LE.motion.reduced() ? 'smooth' : 'auto' });
+  }
+
+  function renderResults(opts) {
+    const o = opts || {};
+    const rows = filtered();
+    const total = rows.length;
+    const pages = pageCount(total);
+    if (S.page > pages) S.page = pages;
+    const slice = rows.slice((S.page - 1) * S.perPage, S.page * S.perPage);
+    currentSlice = slice;
+
+    $('#countLabel').textContent = total === D.papers.length ? s('countUnit') : s('countUnitFiltered');
+    LE.fx.countUp($('#countNum'), total, { duration: 460 });
+    $('#countSub').textContent = s('ofTotal', { n: D.papers.length });
+    /* 入场渐次只在首次进入播放；排序、筛选、勾选、展开都不重播整列动画 */
+    const animating = o.reason === 'init';
+
+    const cross = rows.filter((p) => p.score_context_id !== D.ctx.main).length;
+    const area = $('#resultArea');
+    if (!total) {
+      area.innerHTML = `<div class="state">
+        <span class="state__icon" aria-hidden="true">∅</span>
+        <h3>${LE.esc(s('empty'))}</h3>
+        <p>${LE.esc(s('emptyHint'))}</p>
+        <button type="button" class="btn" id="emptyReset">${LE.esc(LE.t('facet.clearAll'))}</button>
+      </div>`;
+      const b = $('#emptyReset');
+      if (b) b.onclick = () => $('#clearFacets').click();
+      $('#pager').innerHTML = '';
+      return;
+    }
+
+    if (S.view === 'list') {
+      area.innerHTML = `<div class="result-list">${slice.map(listRow).join('')}</div>
+        ${cross ? `<p class="t-xs t-muted mt-3">${LE.esc(s('crossCtxWarn', { n: cross }))}</p>` : ''}`;
+      if (animating) LE.fx.stagger(area.querySelector('.result-list'), { max: 12 });
+    } else {
+      area.innerHTML = `<div class="table-wrap"><div class="table-scroll"><table class="table">
+        <thead><tr>
+          <th style="width:32px"><input type="checkbox" id="headPick" aria-label="${LE.esc(s('selectAll', { n: slice.length }))}"></th>
+          <th>${LE.esc(s('colTitle'))}</th>
+          <th class="num">${LE.esc(s('colYear'))}</th>
+          <th>${LE.esc(s('colVenue'))}</th>
+          <th>${LE.esc(s('colProvider'))}</th>
+          <th class="num">${LE.esc(s('colCitations'))}</th>
+          <th class="num">${LE.esc(s('colRelevance'))}</th>
+          <th>${LE.esc(s('colScreening'))}</th>
+          <th>${LE.esc(s('colFulltext'))}</th>
+        </tr></thead>
+        <tbody>${slice.map(tableRow).join('')}</tbody>
+      </table></div></div>
+      ${cross ? `<p class="t-xs t-muted mt-3">${LE.esc(s('crossCtxWarn', { n: cross }))} *</p>` : ''}`;
+      if (animating) LE.fx.stagger(area.querySelector('tbody'), { max: 20 });
+      const head = $('#headPick');
+      if (head) {
+        head.checked = slice.every((p) => S.sel.has(p.id));
+        head.onchange = () => {
+          slice.forEach((p) => { if (head.checked) S.sel.add(p.id); else S.sel.delete(p.id); });
+          syncRows();          /* 只刷新勾选态，不重建表格 */
+          renderBanner();
+        };
+      }
+    }
+
+    /* 分页 */
+    const win = 2;
+    let from = Math.max(1, S.page - win);
+    let to = Math.min(pages, S.page + win);
+    if (S.page - win < 1) to = Math.min(pages, to + (win - (S.page - 1)));
+    if (S.page + win > pages) from = Math.max(1, from - (S.page + win - pages));
+    let btns = '';
+    for (let i = from; i <= to; i += 1) {
+      btns += `<button type="button" data-page="${i}" ${i === S.page ? 'aria-current="page"' : ''}>${i}</button>`;
+    }
+    $('#pager').innerHTML = `
+      <nav class="pager" aria-label="pagination">
+        <button type="button" data-page="1" ${S.page === 1 ? 'disabled' : ''}>«</button>
+        <button type="button" data-page="${S.page - 1}" ${S.page === 1 ? 'disabled' : ''}>‹</button>
+        <span class="pager__pages">${btns}</span>
+        <button type="button" data-page="${S.page + 1}" ${S.page === pages ? 'disabled' : ''}>›</button>
+        <button type="button" data-page="${pages}" ${S.page === pages ? 'disabled' : ''}>»</button>
+        <span class="pager__info">${LE.esc(LE.lang() === 'zh' ? `第 ${S.page} / ${pages} 页` : `Page ${S.page} of ${pages}`)}</span>
+      </nav>`;
+    LE.$$('#pager button[data-page]').forEach((b) => {
+      b.onclick = () => {
+        const n = Number(b.getAttribute('data-page'));
+        if (n >= 1 && n <= pages && n !== S.page) {
+          S.page = n;
+          render({ reason: 'page' });
+          scrollToResults(true);
+        }
+      };
+    });
+
+    /* 接线：勾选与展开只改动这一行 */
+    LE.$$('[data-open]', area).forEach((b) => { b.onclick = () => LE.openDrawer(b.getAttribute('data-open'), { push: true }); });
+    LE.$$('[data-pick]', area).forEach((c) => {
+      c.onchange = () => {
+        const id = c.getAttribute('data-pick');
+        if (c.checked) S.sel.add(id); else S.sel.delete(id);
+        updateRow(id);
+        renderBanner();
+      };
+    });
+    LE.$$('[data-evidence]', area).forEach((b) => {
+      b.onclick = () => toggleEvidence(b.getAttribute('data-evidence'));
+    });
+  }
+
+  /* ==================================================================== 选择横幅
+     横幅只建一次，之后仅切换 class 与文案：首次勾选和清空都不再插入/移除节点，
+     结果区因此不会被推动。高度动画由 CSS 的 grid-template-rows: 0fr → 1fr 负责。 */
+  let bannerReady = false;
+  function renderBanner() {
+    const n = S.sel.size;
+    const box = $('#selectionBanner');
+    if (!box) return;
+    if (!bannerReady) {
+      box.classList.add('selbanner-slot');
+      box.innerHTML = `
+        <div class="selbanner">
+          <strong id="selCount"></strong>
+          <button type="button" class="btn btn--sm" id="selAll"></button>
+          <button type="button" class="btn btn--sm" id="selClear"></button>
+          <span class="spacer"></span>
+          <button type="button" class="btn btn--sm btn--primary" id="selSeed"></button>
+          <a class="btn btn--sm" href="review.html" id="selScreen"></a>
+          <button type="button" class="btn btn--sm" id="selExport"></button>
+        </div>`;
+      $('#selClear').textContent = s('clearSelection');
+      $('#selSeed').textContent = s('seedAction');
+      $('#selScreen').textContent = s('screeningAction');
+      $('#selExport').textContent = s('exportAction');
+      $('#selAll').onclick = () => { currentSlice.forEach((p) => S.sel.add(p.id)); syncRows(); renderBanner(); };
+      $('#selClear').onclick = () => { S.sel.clear(); syncRows(); renderBanner(); };
+      $('#selSeed').onclick = () => {
+        Array.from(S.sel).forEach((id) => { if (LE.state.seeds.indexOf(id) < 0) LE.state.seeds.push(id); });
+        LE.toast(LE.t('toast.seedAdded', { n: LE.state.seeds.length }));
+      };
+      $('#selExport').onclick = () => LE.toast(LE.t('toast.exported', { name: 'RIS', n: S.sel.size }));
+      bannerReady = true;
+    }
+    box.classList.toggle('is-on', n > 0);
+    box.setAttribute('aria-hidden', String(n === 0));
+    $('#selCount').textContent = s('selectedBanner', { n });
+    $('#selAll').textContent = s('selectAll', { n: currentSlice.length });
+  }
+
+  /* ==================================================================== 静态文案 */
+  function renderStatic() {
+    document.title = s('title') + ' — LEExtractor';
+    $('#skipLink').textContent = s('skip');
+    $('#pageTitle').textContent = s('title');
+    $('#pageLead').innerHTML = LE.rich(s('lead'));
+    $('#backToSearch').textContent = s('backToSearch');
+    $('#toScreening').textContent = s('screeningAction');
+    $('#toExpand').textContent = s('toExpand');
+    $('#sortLabel').textContent = s('sortLabel');
+    $('#perPageLabel').textContent = s('perPageLabel');
+    $('#viewListBtn').textContent = s('viewList');
+    $('#viewTableBtn').textContent = s('viewTable');
+    $('#densityBtn').textContent = s('density');
+    $('#funnelNote') && renderFunnel();
+    $('#nextTitle').textContent = s('nextStep');
+    $('#n1').textContent = s('toExpand');
+    $('#n2').textContent = s('toLandscape');
+    $('#n3').textContent = s('toReview');
+    $('#n4').textContent = s('toExport');
+    $('#seedHint').textContent = s('seedHint');
+    $('#query').setAttribute('placeholder', s('queryPh') || '');
+    $('#sort').innerHTML = `
+      <option value="relevance">${LE.esc(s('sortRelevance') || LE.t('sort.relevance'))}</option>
+      <option value="citations">${LE.esc(LE.t('sort.citations'))}</option>
+      <option value="year">${LE.esc(LE.t('sort.year'))}</option>
+      <option value="title">${LE.esc(LE.t('sort.title'))}</option>`;
+    $('#sort').value = S.sort;
+    $('#perPage').innerHTML = [10, 20, 50, 100].map((n) => `<option value="${n}">${n}</option>`).join('');
+    $('#perPage').value = String(S.perPage);
+  }
+
+  /* ==================================================================== 主渲染
+     opts.facets === false 时不动筛选栏 —— 年份滑块正在被拖动，重建等于把它从手里换掉。
+     opts.reason 决定两件事：是否播放入场动画，以及是否把结果区带回视野（策略见
+     scrollToResults）。滚动只在这里发生，调用方不再各自滚动。 */
+  function render(opts) {
+    const o = typeof opts === 'string' ? { reason: opts } : (opts || {});
+    if (o.facets !== false) renderFacets();
+    renderBanner();
+    renderResults(o);
+    $('#viewListBtn').setAttribute('aria-pressed', String(S.view === 'list'));
+    $('#viewTableBtn').setAttribute('aria-pressed', String(S.view === 'table'));
+    $('#densityBtn').setAttribute('aria-pressed', String(S.dense));
+    if (o.reason === 'page') scrollToResults(true);
+    else if (['sort', 'view', 'perPage', 'facet'].indexOf(o.reason) >= 0) scrollToResults(false);
+  }
+
+  /* 年份滑块：拖动中只更新标签与柱状高亮，并按帧节流刷新结果，**不重建筛选栏**；
+     松手（change）时再走一次完整渲染。这样滑块不会被从用户手里换掉。 */
+  let yearRaf = 0;
+  function applyYears(live) {
+    const a = $('#yFromLabel');
+    const b = $('#yToLabel');
+    if (a) a.textContent = String(S.yearFrom);
+    if (b) b.textContent = String(S.yearTo);
+    LE.$$('#yearBars i').forEach((bar) => {
+      const yr = Number(bar.getAttribute('data-year'));
+      bar.classList.toggle('is-in', (yr >= S.yearFrom && yr <= S.yearTo) || S.years.has(String(yr)));
+    });
+    if (yearRaf) cancelAnimationFrame(yearRaf);
+    if (live) yearRaf = requestAnimationFrame(() => { yearRaf = 0; render({ facets: false, reason: 'year' }); });
+    else render({ reason: 'year' });
+  }
+
+  function wire() {
+    $('#sort').onchange = () => { S.sort = $('#sort').value; S.page = 1; render({ reason: 'sort' }); };
+    $('#perPage').onchange = () => { S.perPage = Number($('#perPage').value); S.page = 1; render({ reason: 'perPage' }); };
+    LE.$$('#viewMode button').forEach((b) => {
+      b.onclick = () => {
+        S.view = b.getAttribute('data-view');
+        S.page = 1;
+        render({ reason: 'view' });
+        LE.fx.replay($('#resultArea'), 'fx-swap');
+      };
+    });
+    $('#densityBtn').onclick = () => { S.dense = !S.dense; render({ reason: 'density' }); };
+    $('#query').oninput = () => { S.text = $('#query').value.trim(); S.page = 1; render({ reason: 'text' }); };
+    $('#query').value = S.text;
+    $('#ctxBadge').innerHTML = LE.esc(LE.lang() === 'zh' ? '当前项目 · 示例语料' : 'Current project · sample corpus');
+  }
+
+  document.addEventListener('le:lang', () => { renderStatic(); wire(); render({ reason: 'lang' }); });
+  renderStatic();
+  wire();
+  render({ reason: 'init' });
+  renderFunnel();
+  LE.mount({ page: 'results' });
+
+  // 从首页带过来的查询
+  try {
+    const q = sessionStorage.getItem('le.query');
+    if (q) { $('#query').value = q; S.text = ''; $('#query').setAttribute('title', q); }
+  } catch (e) { /* file:// 下可能受限 */ }
+})();
+</script>
+</body>
+</html>

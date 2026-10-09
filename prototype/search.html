@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="LEExtractor 文献搜索 — 快速检索、高级条件与检索计划（界面演示）">
+<title>文献搜索 — LEExtractor</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231b1c20'/%3E%3Cpath d='M10 10L22 22M22 10L10 22' stroke='white' stroke-width='5'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body data-page="search">
+
+<a class="skip-link" href="#main" id="skipLink"></a>
+<div id="shell"></div>
+
+<main id="main" class="page">
+  <div class="container container--wide">
+
+    <div class="page-head">
+      <div class="page-head__row">
+        <div>
+          <h1 id="pageTitle"></h1>
+          <p id="pageLead"></p>
+        </div>
+        <div class="page-head__actions">
+          <a class="btn" href="index.html" id="toHome"></a>
+          <a class="btn" href="results.html" id="toResults"></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="shell shell--wide shell--main-first">
+      <!-- ============================================== 左：三种检索模式 -->
+      <section>
+        <div class="card" style="padding:0">
+          <div class="card__head">
+            <h3 id="conditionsTitle"></h3>
+          </div>
+
+          <div class="card__body">
+            <!-- 分段控件放在卡片体内而不是头部：头部统一只放 h3，
+                 这样左右两栏的卡片头高度一致，不会一边高一边矮。 -->
+            <div class="segmented mb-3" role="tablist" id="modeTabs"></div>
+            <p class="t-xs t-muted mb-4" id="modeBadge"></p>
+
+            <!-- 模式一：快速检索 -->
+            <div id="panelQuick" role="tabpanel">
+              <div class="searchbar mb-4">
+                <label class="visually-hidden" for="q" id="qLabel"></label>
+                <input id="q" type="text" autocomplete="off" maxlength="300">
+                <button type="button" class="searchbar__submit" id="qGo" aria-label="检索">
+                  <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                    <path d="M4 12h15M13 5l7 7-7 7"></path>
+                  </svg>
+                </button>
+              </div>
+              <p class="t-xs t-muted" id="quickHint"></p>
+
+              <div class="mt-6">
+                <span class="label" id="quickYearLabel"></span>
+                <div class="chips mt-2" id="quickYears"></div>
+              </div>
+              <div class="mt-4">
+                <span class="label" id="quickProviderLabel"></span>
+                <div class="chips mt-2" id="quickProviders"></div>
+              </div>
+            </div>
+
+            <!-- 模式二：高级条件 -->
+            <div id="panelAdvanced" role="tabpanel" hidden>
+              <div class="cols-2">
+                <div class="field">
+                  <label for="aQ" id="aQLabel"></label>
+                  <input class="input" id="aQ" type="text" maxlength="300">
+                </div>
+                <div class="field">
+                  <label for="aDir" id="aDirLabel"></label>
+                  <input class="input" id="aDir" type="text" maxlength="300">
+                </div>
+                <div class="field">
+                  <label for="aYear" id="aYearLabel"></label>
+                  <select class="select" id="aYear"></select>
+                </div>
+                <div class="field">
+                  <label for="aMax" id="aMaxLabel"></label>
+                  <select class="select" id="aMax"></select>
+                </div>
+              </div>
+
+              <div class="mt-4">
+                <span class="label" id="aProviderLabel"></span>
+                <div class="provider-pick cols-2 mt-2" id="aProviders"></div>
+              </div>
+
+              <p class="t-xs t-muted mt-4" id="advancedNote"></p>
+
+              <div class="table-wrap mt-4">
+                <div class="table-scroll">
+                  <table class="table">
+                    <thead><tr>
+                      <th id="thProvider"></th>
+                      <th id="thCapability"></th>
+                      <th id="thFilter"></th>
+                    </tr></thead>
+                    <tbody id="capabilityBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- 模式三：检索计划 -->
+            <div id="panelPlan" role="tabpanel" hidden>
+              <p class="t-xs t-muted" id="planHint"></p>
+              <div class="mt-4" id="planRows"></div>
+              <div id="planDegraded"></div>
+            </div>
+          </div>
+
+          <div class="card__foot">
+            <div class="row row--between">
+              <span class="t-xs t-muted" id="runHint"></span>
+              <div class="row">
+                <button type="button" class="btn btn--quiet" id="resetBtn"></button>
+                <button type="button" class="btn" id="saveBtn"></button>
+                <button type="button" class="btn btn--primary" id="runBtn"></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================== 右：研究意图与项目状态 -->
+      <aside class="stack stack--sm" aria-label="研究意图与项目状态">
+        <div class="card">
+          <div class="card__head"><h3 id="intentTitle"></h3></div>
+          <div class="card__body stack stack--sm" id="intentBody"></div>
+        </div>
+
+        <div class="card">
+          <div class="card__head"><h3 id="stateTitle"></h3></div>
+          <div class="card__body">
+            <dl class="dl dl--tight" id="stateBody"></dl>
+          </div>
+        </div>
+
+        <div class="panel-note" id="crossNote"></div>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<div id="foot"></div>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script src="assets/i18n-pages.js"></script>
+<script>
+(function () {
+  'use strict';
+  const D = window.LED;
+  const $ = (sel) => document.querySelector(sel);
+  const s = (k, v) => LE.pt('search', k, v);
+
+  const MODES = [
+    { id: 'quick', labelKey: 'tabQuick', hintKey: 'tabQuickHint' },
+    { id: 'advanced', labelKey: 'tabAdvanced', hintKey: 'tabAdvancedHint' },
+    { id: 'plan', labelKey: 'tabPlan', hintKey: 'tabPlanHint' },
+  ];
+  let mode = 'quick';
+
+  const PANELS = { quick: '#panelQuick', advanced: '#panelAdvanced', plan: '#panelPlan' };
+
+  /* 标签只在第一次建 DOM，之后仅同步文案与 aria-selected —— 每次重建会把正在被点击
+     的按钮换掉，焦点就掉回 body。左右方向键在标签间移动，符合 tablist 的预期操作。 */
+  function renderTabs() {
+    const box = $('#modeTabs');
+    const labelOf = (id) => s(MODES.find((m) => m.id === id).labelKey);
+    if (!box.children.length) {
+      box.innerHTML = MODES.map((m) => `
+        <button type="button" role="tab" id="tab-${m.id}" data-mode="${m.id}" aria-selected="${m.id === mode}"
+          aria-controls="${PANELS[m.id].slice(1)}" tabindex="${m.id === mode ? '0' : '-1'}"></button>`).join('');
+      LE.$$('#modeTabs button').forEach((b) => {
+        b.onclick = () => selectMode(b.getAttribute('data-mode'));
+        b.onkeydown = (e) => {
+          const dir = e.key === 'ArrowLeft' ? -1 : e.key === 'ArrowRight' ? 1 : 0;
+          if (!dir) return;
+          e.preventDefault();
+          const ids = MODES.map((m) => m.id);
+          selectMode(ids[(ids.indexOf(mode) + dir + ids.length) % ids.length], true);
+        };
+      });
+    }
+    LE.$$('#modeTabs button').forEach((b) => {
+      const on = b.getAttribute('data-mode') === mode;
+      b.textContent = labelOf(b.getAttribute('data-mode'));
+      b.setAttribute('aria-selected', String(on));
+      b.setAttribute('tabindex', on ? '0' : '-1');
+    });
+    $('#modeBadge').textContent = s(MODES.find((m) => m.id === mode).hintKey);
+  }
+
+  function selectMode(next, focusTab) {
+    if (!next || next === mode) return;
+    mode = next;
+    renderPanels(true);
+    renderTabs();
+    if (focusTab) { const b = $('#tab-' + mode); if (b) b.focus(); }
+  }
+
+  /* 切换模式时协调高度：先把切换前的高度写死，再过渡到切换后的高度，避免下方内容瞬间
+     跳动；过渡结束立刻把高度交还给自动。连续切换会取消上一个收尾计时器，不叠加过期动画。 */
+  let panelCloseTimer = 0;
+  function renderPanels(animate) {
+    const host = $('#modeTabs').parentElement;
+    if (panelCloseTimer) { clearTimeout(panelCloseTimer); panelCloseTimer = 0; }
+    const from = host.getBoundingClientRect().height;
+    Object.keys(PANELS).forEach((k) => { $(PANELS[k]).hidden = k !== mode; });
+    LE.fx.replay($(PANELS[mode]), 'fx-swap');
+    const plain = () => { host.style.transition = ''; host.style.height = ''; host.style.overflow = ''; };
+    if (!animate || LE.motion.reduced() || typeof requestAnimationFrame !== 'function') { plain(); return; }
+    const to = host.getBoundingClientRect().height;
+    if (Math.abs(to - from) < 2) { plain(); return; }
+    host.style.overflow = 'hidden';
+    host.style.height = from + 'px';
+    void host.offsetHeight;
+    host.style.transition = 'height var(--dur-swap) var(--ease-out)';
+    host.style.height = to + 'px';
+    panelCloseTimer = setTimeout(() => { panelCloseTimer = 0; plain(); }, 280);
+  }
+
+  function renderQuick() {
+    $('#qLabel').textContent = s('queryLabel');
+    $('#q').setAttribute('placeholder', s('queryPh'));
+    $('#quickHint').textContent = s('tabQuickHint');
+    $('#quickYearLabel').textContent = s('yearLabel');
+    $('#quickProviderLabel').textContent = s('providerLabel');
+
+    const yNow = new Date().getFullYear();
+    /* 由新到旧排列；默认选中与检索清单一致的起始年 */
+    const years = [yNow - 4, yNow - 3, yNow - 5];
+    const activeYear = String(D.manifest.research_intent.year_from);
+    $('#quickYears').innerHTML = years.map((y) => `
+      <button type="button" class="chip" data-year="${y}" aria-pressed="${String(y) === activeYear}">${LE.esc(LE.pt('home', 'yearFrom', { y }))}</button>`).join('');
+    LE.$$('#quickYears .chip').forEach((c) => {
+      c.onclick = () => {
+        LE.$$('#quickYears .chip').forEach((x) => x.setAttribute('aria-pressed', String(x === c)));
+        $('#aYear').value = c.getAttribute('data-year');
+      };
+    });
+
+    $('#quickProviders').innerHTML = D.settings.providers.map((p) => `
+      <button type="button" class="chip" data-provider="${p.id}" aria-pressed="${p.configured}">
+        ${LE.esc(p.name)} <span class="chip__count">${p.configured ? '✓' : '—'}</span>
+      </button>`).join('');
+    LE.$$('#quickProviders .chip').forEach((c) => {
+      c.onclick = () => {
+        const on = c.getAttribute('aria-pressed') === 'true';
+        c.setAttribute('aria-pressed', String(!on));
+        const box = LE.$$('#aProviders input').find((x) => x.value === c.getAttribute('data-provider'));
+        if (box) box.checked = !on;
+      };
+    });
+  }
+
+  function renderAdvanced() {
+    $('#aQLabel').textContent = s('queryLabel');
+    $('#aDirLabel').textContent = s('directionLabel');
+    $('#aYearLabel').textContent = s('yearLabel');
+    $('#aMaxLabel').textContent = s('maxLabel');
+    $('#aProviderLabel').textContent = s('providerLabel');
+    $('#advancedNote').textContent = s('advancedNote');
+    $('#thProvider').textContent = s('providerCol');
+    $('#thCapability').textContent = s('capabilityCol');
+    $('#thFilter').textContent = 'filter';
+
+    const yNow = new Date().getFullYear();
+    const prev = $('#aYear').value;
+    $('#aYear').innerHTML = `<option value="any">${LE.esc(LE.pt('home', 'yearAny'))}</option>` +
+      [1, 3, 5, 10, 20].map((n) => `<option value="${yNow - n + 1}">${LE.esc(LE.pt('home', 'yearFrom', { y: yNow - n + 1 }))}</option>`).join('');
+    $('#aYear').value = prev || '2023';
+
+    const prevMax = $('#aMax').value;
+    $('#aMax').innerHTML = [100, 200, 500].map((n) => `<option value="${n}">${n}</option>`).join('');
+    $('#aMax').value = prevMax || '200';
+
+    const prevProv = LE.$$('#aProviders input:checked').map((x) => x.value);
+    $('#aProviders').innerHTML = D.settings.providers.map((p) => `
+      <label class="check">
+        <input type="checkbox" value="${p.id}" ${(prevProv.length ? prevProv.includes(p.id) : p.configured) ? 'checked' : ''}>
+        <span>${LE.esc(p.name)} <small>${LE.esc(p.rate_note)}</small></span>
+      </label>`).join('');
+
+    $('#capabilityBody').innerHTML = D.manifest.research_intent.per_source.map((row) => `
+      <tr>
+        <td>${LE.esc(row.label)}</td>
+        <td>${LE.esc(row.note)}</td>
+        <td class="t-mono t-xs">${LE.esc(row.filter || '—')}</td>
+      </tr>`).join('');
+  }
+
+  function renderPlan() {
+    const intent = D.manifest.research_intent;
+    $('#planHint').textContent = s('planReplay');
+    $('#planRows').innerHTML = intent.per_source.map((row) => `
+      <div class="plan__row">
+        <div class="plan__src">${LE.esc(row.label)}<small>${LE.esc(row.date_range || '')}</small></div>
+        <div>
+          <div class="plan__q">${LE.esc(row.query)}</div>
+          ${row.filter ? `<div class="t-xs t-muted mt-2">filter: <code>${LE.esc(row.filter)}</code></div>` : ''}
+          <div class="t-xs t-muted mt-2">${LE.esc(row.note)}</div>
+        </div>
+      </div>`).join('');
+    $('#planDegraded').innerHTML = intent.degradation_note
+      ? `<div class="panel-note mt-4" style="background:var(--warn-bg);border:1px solid var(--warn-line)">
+           <strong>${LE.esc(s('planDegraded'))}</strong>：${LE.esc(intent.degraded_sources.join(', '))}<br>${LE.esc(intent.degradation_note)}
+         </div>`
+      : '';
+  }
+
+  function renderAside() {
+    const intent = D.manifest.research_intent;
+    $('#intentTitle').textContent = s('intentTitle');
+    /* 词表用 chip 而不是逗号长串：右栏与左栏（数据源、年份）就说同一种视觉语言了 */
+    const chipRow = (labelKey, terms) => `
+      <div>
+        <span class="label">${LE.esc(s(labelKey))}</span>
+        <div class="chips mt-2">${terms.map((x) => `<span class="chip">${LE.esc(x)}</span>`).join('')}</div>
+      </div>`;
+    $('#intentBody').innerHTML = `
+      ${chipRow('intentTerms', intent.topic_terms)}
+      ${chipRow('intentDir', intent.direction_terms)}
+      <dl class="dl dl--tight">
+        <dt>${LE.esc(s('intentYears'))}</dt><dd class="t-num">${intent.year_from}–${intent.year_to}</dd>
+        <dt>${LE.esc(s('parseDegrade'))}</dt>
+        <dd>${intent.degraded
+          ? `<span class="badge badge--warn">${LE.esc(s('planDegraded'))}</span>`
+          : `<span class="badge badge--ok">${LE.esc(s('parseOk'))}</span>`}</dd>
+      </dl>`;
+
+    $('#stateTitle').textContent = LE.lang() === 'zh' ? '当前项目状态' : 'Current project state';
+    const tally = D.helpers.decisionTally();
+    $('#stateBody').innerHTML = `
+      <dt>${LE.esc(LE.lang() === 'zh' ? '研究问题' : 'Question')}</dt><dd>${LE.esc(D.manifest.query)}</dd>
+      <dt>${LE.esc(LE.lang() === 'zh' ? '语料' : 'Corpus')}</dt><dd class="t-num">${D.papers.length} ${LE.esc(LE.lang() === 'zh' ? '篇' : 'papers')}</dd>
+      <dt>${LE.esc(LE.lang() === 'zh' ? '初筛纳入' : 'Preliminary includes')}</dt><dd class="t-num">${tally.include}</dd>
+      <dt>${LE.esc(LE.lang() === 'zh' ? '待复核冲突' : 'Conflicts')}</dt><dd class="t-num">${D.conflicts.length}</dd>
+      <dt>${LE.esc(LE.lang() === 'zh' ? '自动筛选' : 'Auto screening')}</dt>
+      <dd><span class="badge ${D.screening.auto_screen ? 'badge--warn' : ''}">${D.screening.auto_screen ? 'on' : 'off'}</span></dd>
+      <dt>${LE.esc(LE.lang() === 'zh' ? '标定状态' : 'Calibration')}</dt>
+      <dd><span class="badge badge--warn">${LE.esc(D.screening.calibration.status)}</span></dd>`;
+
+    $('#crossNote').textContent = s('crossNote');
+  }
+
+  function renderStatic() {
+    document.title = s('title') + ' — LEExtractor';
+    $('#skipLink').textContent = LE.pt('home', 'skip');
+    $('#pageTitle').textContent = s('title');
+    $('#pageLead').textContent = s('lead');
+    $('#conditionsTitle').textContent = s('conditionsTitle');
+    $('#toHome').textContent = LE.lang() === 'zh' ? '← 研究探索' : '← Explore';
+    $('#toResults').textContent = LE.lang() === 'zh' ? '文献结果 →' : 'Results →';
+    $('#runBtn').textContent = s('run');
+    $('#saveBtn').textContent = s('savePlan');
+    $('#resetBtn').textContent = s('reset');
+    $('#runHint').textContent = s('runHint');
+    if (!$('#q').value) $('#q').value = D.manifest.query;
+    if (!$('#aQ').value) $('#aQ').value = D.manifest.query;
+    if (!$('#aDir').value) $('#aDir').value = D.manifest.research_direction;
+  }
+
+  function rerender() {
+    renderTabs(); renderPanels(); renderQuick(); renderAdvanced(); renderPlan(); renderAside();
+  }
+
+  function submit() {
+    const q = (mode === 'quick' ? $('#q').value : $('#aQ').value || $('#q').value || '').trim();
+    if (!q) { LE.toast(s('needQuery')); return; }
+    try { sessionStorage.setItem('le.query', q); } catch (e) { /* file:// 下可能受限 */ }
+    LE.toast(s('submitted'));
+    setTimeout(() => { window.location.href = 'results.html'; }, 560);
+  }
+
+  $('#runBtn').onclick = submit;
+  $('#qGo').onclick = submit;
+  $('#q') .addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
+  $('#saveBtn').onclick = () => LE.toast(LE.lang() === 'zh' ? '演示原型：检索方案保存将在阶段二写入会话。' : 'Prototype: saving a search plan writes to the session in stage two.');
+  $('#resetBtn').onclick = () => {
+    $('#q').value = ''; $('#aQ').value = ''; $('#aDir').value = '';
+    LE.$$('#quickYears .chip').forEach((x, i) => x.setAttribute('aria-pressed', String(i === 0)));
+    LE.$$('#quickProviders .chip').forEach((x) => x.setAttribute('aria-pressed', 'false'));
+    LE.$$('#aProviders input').forEach((x) => { x.checked = false; });
+    renderAside();
+    LE.toast(s('reset') + ' ✓');
+  };
+
+  document.addEventListener('le:lang', () => { renderStatic(); rerender(); });
+  renderStatic();
+  rerender();
+  LE.mount({ page: 'search' });
+})();
+</script>
+</body>
+</html>
