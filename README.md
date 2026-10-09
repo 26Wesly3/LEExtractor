@@ -4,7 +4,7 @@
 
 From research questions to traceable literature evidence.
 
-**v0.9.9** connects the v0.9.6 interface design to the v0.9.5 algorithms with Vue 3, Vuetify and a local FastAPI service. The existing Streamlit and MCP entries remain available.
+**v0.9.10** connects the v0.9.6 interface design to the v0.9.5 algorithms with Vue 3, Vuetify and a local FastAPI service. The existing Streamlit and MCP entries remain available.
 
 ## Get started
 
@@ -52,7 +52,7 @@ The following earlier concept image is illustrative, not a screenshot of current
 
 - [Setup and current capabilities](README.dev.md)
 - [Web integration and API boundaries](docs/web-integration.md)
-- [Current validation](VALIDATION_v0.9.9.md)
+- [Current validation](VALIDATION_v0.9.10.md)
 - [Architecture](ARCHITECTURE.md), [changes](CHANGES.md), [roadmap](ROADMAP.md), [team handoff](ONBOARDING.md)
 
 Frontend development: `cd web`, `npm ci`, `npm run dev`; start FastAPI separately on port 8000. The Vite proxy forwards `/api`. Before releasing, run `npm run build`, then `python scripts/sync_web_assets.py` from the repository root.

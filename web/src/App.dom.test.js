@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach,beforeEach,describe,expect,it,vi } from 'vitest'
+import { readFileSync } from 'node:fs'
 import { createApp,nextTick } from 'vue'
 import { createMemoryHistory } from 'vue-router'
 import App from './App.vue'
@@ -7,7 +8,9 @@ import { createWorkspaceRouter,createWorkspaceTheme } from './bootstrap.js'
 
 const pid='d'.repeat(32),key='a'.repeat(64),secondKey='b'.repeat(64),jid='c'.repeat(32)
 const basePaper={paper_key:key,canonical_id:'10.1000/observed-record',title:'Evidence retained from a provider',abstract:'A complete abstract supplied by the backend.',authors:[{name:'Researcher A'}],year:2024,venue:'Test Journal',doi:'10.1000/observed-record',citation_count:12,reference_count:2,source:'openalex',providers:['openalex'],topics:[],url:'https://example.org/paper',relevance_score:.75,score_context_id:'ctx-1',score_breakdown:{lexical:.75},discovery_traces:[{method:'keyword',provider:'openalex',query:'evidence',seed_id:'',round_no:0,score:.75,evidence_ids:[],timestamp:'2026-10-09T10:00:00Z'}],screening:{title_decision:'pending',full_text_decision:'pending',full_text_retrieved:false,retrieval_attempted:false,reason:'',full_text_reason:'',status:'not_started',requires_manual_review:false}}
-let app,router,project,paperRows,job,requests,unexpected,errors,domHost,scholarConfigured
+let app,router,project,paperRows,job,requests,unexpected,errors,domHost,scholarConfigured,styleHost
+const workspaceStyles=readFileSync('src/styles.css','utf8')
+const inertDescriptor=Object.getOwnPropertyDescriptor(HTMLElement.prototype,'inert')
 function response(data,status=200){return {ok:status<400,status,statusText:status<400?'OK':'Error',json:async()=>structuredClone(data)}}
 async function settle(){for(let i=0;i<80;i++){await Promise.resolve();await nextTick()}}
 function button(text){return [...document.querySelectorAll('button,a.v-btn')].find(el=>el.textContent.trim()===text)}
@@ -38,6 +41,9 @@ function mockServer(url,options={}){
   unexpected.push({path,method,body});return response({error:{message:'Unexpected mock endpoint',detail:path}},404)
 }
 beforeEach(()=>{
+  styleHost=document.createElement('style');styleHost.textContent=workspaceStyles;document.head.appendChild(styleHost)
+  // Reflect the browser's boolean inert property, which jsdom does not provide.
+  if(!inertDescriptor)Object.defineProperty(HTMLElement.prototype,'inert',{configurable:true,get(){return this.hasAttribute('inert')},set(value){this.toggleAttribute('inert',Boolean(value))}})
   localStorage.clear();sessionStorage.clear();document.body.innerHTML='';requests=[];unexpected=[];errors=[];scholarConfigured=true
   project={project_id:pid,name:'Verified project',revision:7,created_at:'2026-10-09T10:00:00Z',updated_at:'2026-10-09T10:00:00Z',demo:false,topic:'evidence',research_direction:'Trace sources',phase:'systematic',score_context_id:'ctx-1',stop_reason:'',http_budget:{requests:0},run_history:[],search_manifest:{},screening:{},counts:{records_in_corpus:1,records_identified:1,reports_sought:0,reports_retrieved:0,records_final_included:0},active_job_id:null}
   paperRows=[structuredClone(basePaper)];job={job_id:jid,project_id:pid,kind:'search',status:'running',stop_reason:'',http_budget:{},progress:{stage:'search'},result:null,error:null,created_at:'2026-10-09T10:00:00Z',started_at:null,finished_at:null,cancel_requested:false}
@@ -46,8 +52,25 @@ beforeEach(()=>{
   vi.stubGlobal('matchMedia',()=>({matches:false,addEventListener(){},removeEventListener(){},addListener(){},removeListener(){}}))
   window.scrollTo=vi.fn();Element.prototype.scrollTo=vi.fn()
 })
-afterEach(()=>{app?.unmount();app=null;vi.useRealTimers();vi.restoreAllMocks();vi.unstubAllGlobals();document.body.innerHTML='';expect(errors).toEqual([]);expect(unexpected).toEqual([])})
+afterEach(()=>{app?.unmount();app=null;styleHost?.remove();if(!inertDescriptor)delete HTMLElement.prototype.inert;vi.useRealTimers();vi.restoreAllMocks();vi.unstubAllGlobals();document.body.innerHTML='';expect(errors).toEqual([]);expect(unexpected).toEqual([])})
 describe('workspace DOM and API integration',()=>{
+  it.each([1280,390])('keeps paper actions above the scrim at viewport width %i and dismisses it cleanly',async width=>{
+    vi.stubGlobal('innerWidth',width)
+    await mount(`/projects/${pid}/papers/${key}`)
+    const drawer=document.querySelector('.paper-drawer'),scrim=document.querySelector('.v-navigation-drawer__scrim')
+    expect(drawer).toBeTruthy();expect(scrim).toBeTruthy()
+    expect(drawer.parentElement).toBe(scrim.parentElement)
+    expect(Number(getComputedStyle(drawer).zIndex)).toBeGreaterThan(Number(getComputedStyle(scrim).zIndex))
+    expect(drawer.hasAttribute('inert')).toBe(false)
+    await click('设为扩展种子');expect(button('取消种子选择')).toBeTruthy()
+    const link=button('打开论文页面 ↗');expect(link.href).toBe(basePaper.url);expect(link.target).toBe('_blank')
+    await click('关闭 ×');expect(router.currentRoute.value.fullPath).toBe(`/projects/${pid}/results`)
+    expect(document.querySelector('.v-navigation-drawer__scrim')).toBeNull()
+    await navigate(`/projects/${pid}/papers/${key}`)
+    const pushes=vi.spyOn(router,'push');document.querySelector('.v-navigation-drawer__scrim').click();await pushes.mock.results.at(-1).value;await settle()
+    expect(router.currentRoute.value.fullPath).toBe(`/projects/${pid}/results`)
+    expect(document.querySelector('.paper-drawer')).toBeNull();expect(document.querySelector('.v-navigation-drawer__scrim')).toBeNull()
+  })
   it('leaves unconfigured Scholar unselected and saves its key without retaining the input',async()=>{
     scholarConfigured=false;await mount(`/projects/${pid}/search`)
     expect(input('Google Scholar').checked).toBe(false)
