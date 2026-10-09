@@ -50,6 +50,9 @@ class RequestGuard:
             transport = provider._transport_request
 
             def guarded(_source, method, url, _transport=transport, **kwargs):
+                available = getattr(_source, "ensure_available", None)
+                if available:
+                    available()
                 self.check()
                 return _transport(method, url, **kwargs)
 

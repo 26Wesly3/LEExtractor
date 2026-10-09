@@ -3,13 +3,13 @@
 > **面向开发与运维的技术 README**（原 `README.md` 的内容，改为本名保留）。
 > 项目介绍请见 [`README.md`](README.md)（English）/ [`README.zh-CN.md`](README.zh-CN.md)（简体中文）。
 
-科研文献发现、引文扩展与证据组织工具。当前版本 **v0.9.7**（版本号唯一来源：`litsearch/version.py`；`pyproject.toml` 由测试断言与之一致）。
+科研文献发现、引文扩展与证据组织工具。当前版本 **v0.9.8**（版本号唯一来源：`litsearch/version.py`；`pyproject.toml` 由测试断言与之一致）。
 
 本文件只描述**当前真实能力**。历史版本改动见 [CHANGES.md](CHANGES.md)，模块与数据流见 [ARCHITECTURE.md](ARCHITECTURE.md)，未完成与后续计划见 [ROADMAP.md](ROADMAP.md)。
 
 ## 启动
 
-需要 Python 3.10 或以上。发布包已含 Vue / Vuetify 生产构建，运行时不需要 Node.js。双击「启动Web版.bat」，或手动启动：
+需要 Python 3.10 或以上。发布包已含 Vue / Vuetify 生产构建，运行时不需要 Node.js。双击「启动LEExtractor.bat」（或「启动Web版.bat」），或手动启动：
 
 ```powershell
 python -m venv .venv
@@ -23,7 +23,7 @@ python -m venv .venv
 
 原 Streamlit 入口保留：
 
-Windows 可双击仓库内的 `启动LEExtractor_收到后改回bat.bat`（发布包自动重命名为 `启动LEExtractor.bat`）启动 Streamlit。
+发布包 `启动LEExtractor.bat` 默认启动整合 Web 界面。Streamlit 请双击 `启动Streamlit版.bat`，运行在 8501。
 
 已确认服务可用时不重复启动。推荐脚本方式（不自动开浏览器）：
 

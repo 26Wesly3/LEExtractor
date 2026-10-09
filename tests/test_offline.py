@@ -299,8 +299,8 @@ def test_load_state_missing_file_returns_none(tmp_path, monkeypatch):
 # --------------------------------------------------------------------------
 
 
-def test_s2_request_retries_on_429(monkeypatch):
-    """429 must trigger a bounded retry, not an infinite loop."""
+def test_s2_request_pauses_on_first_429(monkeypatch):
+    """A rate limit returns promptly so the next database can be queried."""
     from litsearch.sources import SemanticScholarSource, reset_s2_stats, s2_stats
 
     src = SemanticScholarSource(cache=None)
@@ -318,9 +318,10 @@ def test_s2_request_retries_on_429(monkeypatch):
 
     monkeypatch.setattr(src._session, "request", fake_request)
     resp = src._request("GET", "https://example.invalid")
-    assert resp.status_code == 200
-    assert calls["n"] == 4
-    assert s2_stats()["rate_limited"] == 3
+    assert resp.status_code == 429
+    assert calls["n"] == 1
+    assert s2_stats()["rate_limited"] == 1
+    assert s2_stats()["retries"] == 0
 
 
 def test_s2_request_gives_up_after_max_retries(monkeypatch):

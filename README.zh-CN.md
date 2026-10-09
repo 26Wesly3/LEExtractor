@@ -4,11 +4,11 @@
 
 从研究问题，走向可追溯的文献证据。
 
-**v0.9.7** 将 v0.9.6 界面设计与 v0.9.5 算法连接为 Vue 3 / Vuetify + 本机 FastAPI 工作台，保留 Streamlit 和 MCP 入口。
+**v0.9.8** 将 v0.9.6 界面设计与 v0.9.5 算法连接为 Vue 3 / Vuetify + 本机 FastAPI 工作台，保留 Streamlit 和 MCP 入口。
 
 ## 开始使用
 
-Windows 双击 **启动Web版.bat**。脚本创建 Python 环境、安装依赖并打开 http://127.0.0.1:8000。发布包已包含构建后的界面，只有修改前端时才需要 Node.js。
+Windows 双击 **启动LEExtractor.bat**（或 **启动Web版.bat**）。脚本创建 Python 环境、安装依赖并打开 http://127.0.0.1:8000。发布包已包含构建后的界面，只有修改前端时才需要 Node.js。
 
 手动启动（Python 3.10+）：
 
@@ -46,7 +46,7 @@ python -m litsearch.web --port 8000
 
 - [安装与当前能力](README.dev.md)
 - [Web 整合说明与接口边界](docs/web-integration.md)
-- [本版验证记录](VALIDATION_v0.9.7.md)
+- [本版验证记录](VALIDATION_v0.9.8.md)
 - [架构](ARCHITECTURE.md)、[更新记录](CHANGES.md)、[后续计划](ROADMAP.md)、[团队接手](ONBOARDING.md)
 
 前端开发：进入 `web` 后运行 `npm ci`、`npm run dev`，另行在 8000 端口启动 FastAPI；Vite 将 `/api` 代理到后端。发布前运行 `npm run build`，再从仓库根目录运行 `python scripts/sync_web_assets.py`。

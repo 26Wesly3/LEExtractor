@@ -6,7 +6,7 @@ from types import SimpleNamespace
 import pytest
 import requests
 
-from litsearch.sources import OpenAlexSource, RetrievalBudgetExceeded, SemanticScholarSource
+from litsearch.sources import OpenAlexSource, RetrievalBudgetExceeded
 from litsearch.stop_reasons import get_http_budget, reset_http_budget
 from litsearch.web.jobs import RequestGuard
 
@@ -55,15 +55,15 @@ def test_replaced_verb_is_still_honored_and_counted_once(monkeypatch):
 
 def test_budget_denied_retry_does_not_count_as_a_transport_retry(monkeypatch):
     response = requests.Response()
-    response.status_code = 429
+    response.status_code = 500
     monkeypatch.setattr(requests.Session, "request", lambda *a, **k: response)
     monkeypatch.setattr("litsearch.sources.time.sleep", lambda *a: None)
-    source = SemanticScholarSource()
-    monkeypatch.setattr(source, "_pace", lambda: None)
-    RequestGuard(threading.Event(), 2).bind(SimpleNamespace(s2=source))
+    source = OpenAlexSource()
+    RequestGuard(threading.Event(), 2).bind(SimpleNamespace(oa=source))
     reset_http_budget()
     with pytest.raises(RetrievalBudgetExceeded):
-        source._request("GET", "https://api.semanticscholar.org/graph/v1/paper/search")
+        source._request_with_retries("GET", "https://api.openalex.org/works", deadline=float("inf"))
     counters = get_http_budget().snapshot()
-    assert counters["requests"] == counters["rate_limited"] == 2
+    assert counters["requests"] == 2
+    assert counters["rate_limited"] == 0
     assert counters["retries"] == 1

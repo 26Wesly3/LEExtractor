@@ -36,6 +36,9 @@ collect_ignore_glob = ["_workspace_tmp/*"]
 
 @pytest.fixture(autouse=True)
 def no_external_network(monkeypatch):
+    from litsearch.sources import reset_provider_cooldowns
+
+    reset_provider_cooldowns()
     def blocked(*args, **kwargs):
         raise AssertionError("Unexpected network request in an offline test")
     monkeypatch.setattr(requests.Session, "request", blocked)

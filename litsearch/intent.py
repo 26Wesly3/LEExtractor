@@ -123,6 +123,18 @@ PLANNED_SOURCES = ("semantic_scholar", "openalex", "arxiv", "crossref")
 
 _CJK_CLASS = "\u4e00-\u9fff"
 
+TOPIC_ALIASES = {
+    "深度学习": "deep learning", "机器学习": "machine learning",
+    "计算机视觉": "computer vision", "强化学习": "reinforcement learning",
+    "自然语言处理": "natural language processing", "情感分析": "sentiment analysis",
+    "情绪识别": "emotion recognition", "多模态": "multimodal",
+}
+
+
+def database_topic(topic: str) -> str:
+    """Map exact known topics only; unknown research phrases remain verbatim."""
+    return TOPIC_ALIASES.get(topic.strip(), topic)
+
 
 # ---------------------------------------------------------------------------
 # Data model
@@ -617,7 +629,7 @@ def build_query_plan(
         },
         "crossref": {
             "query": flat or raw,
-            "note": "仅用于 DOI / 元数据解析，不作为主检索源。Metadata resolution only.",
+            "note": "选择 Crossref 时检索出版元数据；摘要可能缺失，不代表全文检索。Metadata search when selected; abstracts may be unavailable.",
         },
     }
 
@@ -647,11 +659,10 @@ def _plain_plan(query: str, year_from: int, year_to: int, reason: str) -> dict:
             "date_range": f"submittedDate:[{year_from}01010000 TO {year_to}12312359]",
             "note": reason,
         },
-        # Crossref resolves DOIs and metadata; it is not a primary search source,
-        # and the note has to keep saying so even on this degraded path.
+        # Crossref uses metadata queries when explicitly selected by the caller.
         "crossref": {
             "query": query,
-            "note": f"{reason} 仅用于 DOI / 元数据解析，不作为主检索源。Metadata resolution only.",
+            "note": f"{reason} 选择 Crossref 时检索出版元数据；摘要可能缺失。Metadata search when selected.",
         },
     }
 
@@ -680,9 +691,13 @@ def plan_payload(topic: str, direction: str, year_from: int, year_to: int) -> di
         "degraded": False,
     }
 
-    topic_language = _detect_language(topic)
+    search_topic = database_topic(topic)
+    if search_topic != topic:
+        payload["query_normalization"] = {"original": topic, "keywords": search_topic, "rule": "exact_topic_alias"}
+        payload["warnings"].append(f"常用主题词映射为 {search_topic}；原研究方向保留，英文检索词可在主题栏手动调整。Exact topic alias, not sentence translation.")
+    topic_language = _detect_language(search_topic)
     mismatch = (
-        topic not in ("", direction)
+        search_topic not in ("", direction)
         and topic_language != "mixed"
         and intent.language != "mixed"
         and topic_language != intent.language
@@ -694,7 +709,7 @@ def plan_payload(topic: str, direction: str, year_from: int, year_to: int) -> di
             "仅保留意图解析结果作为记录。Language mismatch between the "
             "research question and the search keywords; the keywords were kept."
         )
-        payload["queries"] = _plain_plan(topic, year_from, year_to, reason)
+        payload["queries"] = _plain_plan(search_topic, year_from, year_to, reason)
         payload["degraded"] = True
         payload["warnings"].append(reason)
         return payload

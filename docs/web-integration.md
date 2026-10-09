@@ -1,4 +1,4 @@
-# Web 界面与后端整合（v0.9.7）
+# Web 界面与后端整合（v0.9.8）
 
 ## 版本基线
 
@@ -6,7 +6,7 @@
 
 ## 启动与开发
 
-Windows 使用根目录「启动Web版.bat」，其他环境安装 `python -m pip install -e ".[web]" -c constraints.txt` 后运行 `python -m litsearch.web --port 8000`。默认访问 http://127.0.0.1:8000，交互式接口说明在 `/docs`。API 与生产界面共用端口，不需要跨域配置。
+Windows 使用发布包根目录「启动LEExtractor.bat」（或「启动Web版.bat」），其他环境安装 `python -m pip install -e ".[web]" -c constraints.txt` 后运行 `python -m litsearch.web --port 8000`。默认访问 http://127.0.0.1:8000，交互式接口说明在 `/docs`。API 与生产界面共用端口，不需要跨域配置。
 
 前端源码位于 `web`；开发时运行 `npm ci`、`npm run dev`，同时在 8000 端口启动后端。开发代理转发 `/api`。构建后运行根目录 `python scripts/sync_web_assets.py`，同步 `web/dist` 到 Python 包的静态资源，供 wheel 安装使用。完整安装说明见 [README.dev.md](../README.dev.md)。
 
@@ -49,4 +49,14 @@ Windows 使用根目录「启动Web版.bat」，其他环境安装 `python -m pi
 
 语义向量检索、RRF、自动全文综述、研究创新性评分、GROBID 和 Zotero 同步没有在此版本实现。雪球低产停止是启发式，不是检索穷尽证明。演示文献无法下载真实全文。语料图为可读性展示最多 48 个节点、160 条边，完整关系仍由接口与证据包保存。真实来源的限流、凭据和开放获取权限需要在比赛使用环境实测。
 
-本版验证记录见 [VALIDATION_v0.9.7.md](../VALIDATION_v0.9.7.md)。
+本版验证记录见 [VALIDATION_v0.9.8.md](../VALIDATION_v0.9.8.md)。
+
+## v0.9.8 检索与启动修复
+
+默认启动文件现在打开 Vue 界面，`启动Streamlit版.bat` 显式打开旧界面。检测到旧版本或其他程序占用端口时，提示关闭对应窗口或选择其他端口，不终止该程序。浏览器无法自动打开时服务继续运行。
+
+Web 检索支持 Semantic Scholar、OpenAlex、arXiv 和 Crossref，默认全选。`providers` 至少一项、不得重复，后端只查询所选库。Crossref 返回出版元数据，摘要和引文资料可能缺失，不能声称获得全文或完整覆盖。[Crossref 官方文档](https://www.crossref.org/documentation/retrieve-metadata/rest-api/)说明公共 API 与元数据查询方式。
+
+429 触发来源冷却，立即交给下一库；Retry-After 支持秒数和 HTTP 日期，缺失时 60 秒，边界 1–300 秒。冷却按来源与凭据哈希保存，改变凭据使用独立额度身份。命中冷却不会产生网络请求、重试或预算扣减。5xx 和网络瞬时错误仍有有限重试。页面逐库显示失败，已有记录保留。
+
+中文主题只对八个精确常用词应用英文别名，完整句子和未知词保持原文。查询计划记录 `query_normalization` 与降级说明。国际数据库推荐手动输入英文关键词，原研究方向继续保存；词法排名不提供跨语言语义理解。

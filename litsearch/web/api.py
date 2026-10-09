@@ -31,6 +31,7 @@ from litsearch.search import LiteratureReviewWorkflow, ReviewState, ranking_quer
 from litsearch.session_schema import SessionSchemaError, validate_session_dict
 from litsearch.sources import SourceManager
 from litsearch.stop_reasons import get_http_budget
+from litsearch.version import __version__
 from litsearch.web.dto import (
     evidence_dto,
     facets_dto,
@@ -70,6 +71,7 @@ class PlanInput(Input):
 
 
 class SearchInput(Revision):
+    providers: list[Literal["semantic_scholar", "openalex", "arxiv", "crossref"]] = Field(default_factory=lambda: ["semantic_scholar", "openalex", "arxiv", "crossref"], min_length=1, max_length=4)
     query: str | None = Field(default=None, min_length=1, max_length=4000)
     research_direction: str | None = Field(default=None, max_length=4000)
     mode: Literal["systematic", "scoping"] = "systematic"
@@ -193,7 +195,7 @@ def create_app(data_dir=None, workflow_factory=None, static_dir=None):
         yield
         jobs.shutdown()
 
-    app = FastAPI(title="LEExtractor Local API", version="0.9.7", lifespan=lifespan,
+    app = FastAPI(title="LEExtractor Local API", version=__version__, lifespan=lifespan,
                   docs_url="/api/docs", openapi_url="/api/openapi.json", redoc_url=None)
     app.state.repository, app.state.jobs = repository, jobs
 
@@ -243,7 +245,7 @@ def create_app(data_dir=None, workflow_factory=None, static_dir=None):
 
     @app.get("/api/health")
     def health():
-        return {"status": "ok", "app_name": "LEExtractor", "version": "0.9.7", "local_only": True,
+        return {"status": "ok", "app_name": "LEExtractor", "version": __version__, "ui": "vue", "local_only": True,
                 "storage": "ready", "unreadable_projects": repository.load_errors,
                 "dependencies": {"fastapi": True, "algorithms": True}}
 
@@ -375,6 +377,8 @@ def create_app(data_dir=None, workflow_factory=None, static_dir=None):
     @app.post("/api/projects/{pid}/search", status_code=202)
     def search(pid: str, body: SearchInput):
         _window(body.year_from, body.year_to)
+        if len(body.providers) != len(set(body.providers)):
+            raise APIError(422, "duplicate_providers", "来源不能重复选择")
         project = repository.get(pid)
         if project.demo:
             raise APIError(409, "demo_search_disabled", "演示项目只运行本地模拟扩展；请新建真实检索项目")
@@ -382,6 +386,9 @@ def create_app(data_dir=None, workflow_factory=None, static_dir=None):
             raise APIError(422, "query_required", "请填写检索主题")
 
         def operation(workflow, state, guard, checkpoint):
+            configure = getattr(workflow.sources, "set_search_providers", None)
+            if configure:
+                configure(body.providers)
             state.topic = body.query or state.topic
             state.research_direction = body.research_direction if body.research_direction is not None else state.research_direction
             state.stop_reason = ""

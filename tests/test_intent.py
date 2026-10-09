@@ -160,6 +160,7 @@ def test_plan_reaches_each_provider(monkeypatch):
     from litsearch.sources import SourceManager
 
     manager = SourceManager.__new__(SourceManager)
+    manager.set_search_providers(["semantic_scholar", "openalex", "arxiv"])
     manager.s2 = _FakeSource("semantic_scholar")
     manager.oa = _FakeSource("openalex")
     manager.arxiv = _FakeSource("arxiv")
@@ -183,6 +184,7 @@ def test_without_a_plan_behaviour_is_unchanged():
     from litsearch.sources import SourceManager
 
     manager = SourceManager.__new__(SourceManager)
+    manager.set_search_providers(["semantic_scholar", "openalex", "arxiv"])
     manager.s2 = _FakeSource("semantic_scholar")
     manager.oa = _FakeSource("openalex")
     manager.arxiv = _FakeSource("arxiv")

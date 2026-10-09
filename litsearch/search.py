@@ -23,7 +23,7 @@ from litsearch.filters import (
     corpus_hash,
     ranking_input_hash,
 )
-from litsearch.intent import plan_payload
+from litsearch.intent import database_topic, plan_payload
 from litsearch.models import DiscoveryTrace, Paper
 from litsearch.prisma import (
     PRISMAReport,
@@ -66,7 +66,7 @@ def ranking_query(state: "ReviewState") -> str:
     """Keep the research goal verbatim; use English keywords if a Chinese-only
     goal is paired with an English database query. This is not translation."""
     direction = state.research_direction
-    return direction if re.search(r"[a-zA-Z]{3,}", direction) else state.topic
+    return direction if re.search(r"[a-zA-Z]{3,}", direction) else database_topic(state.topic)
 
 
 def research_plan(state: "ReviewState", year_from: int, year_to: int) -> dict:
@@ -521,13 +521,13 @@ class LiteratureReviewWorkflow:
         provider_results = getattr(self.sources, "search_all_sources_result", None)
         if not callable(provider_results):
             papers = self.sources.search_all_sources(
-                state.topic, limit=limit, year_from=year_from, year_to=year_to,
+                database_topic(state.topic), limit=limit, year_from=year_from, year_to=year_to,
                 query_plan=(plan or {}).get("queries"),
             )
             return list(papers or []), [], None
 
         results = provider_results(
-            state.topic, limit=limit, year_from=year_from, year_to=year_to,
+            database_topic(state.topic), limit=limit, year_from=year_from, year_to=year_to,
             query_plan=(plan or {}).get("queries"),
         ) or []
         papers = [p for result in results for p in (result.papers or [])]

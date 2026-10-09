@@ -34,7 +34,7 @@ function mockServer(url,options={}){
   if(path===`/api/projects/${pid}/review`)return response({facts:{threshold_calibrated:false,calibration:{status:'not_calibrated',threshold:null}},prisma:{},ledger:[],queue:paperRows,records:[],revision:project.revision,score_context_id:'ctx-1'})
   if(path===`/api/projects/${pid}/exports`)return response({file_id:'e'.repeat(32),filename:'evidence_pack.zip',size:512,media_type:'application/zip',download_url:'/api/files/'+('e'.repeat(32))})
   if(path==='/api/settings')return response({providers:{semantic_scholar:{configured:false},openalex:{configured:true},unpaywall:{configured:false}},max_pdf_size_mib:50,local_only:true})
-  if(path==='/api/health')return response({status:'ok',version:'0.9.7',local_only:true,dependencies:{fastapi:true,algorithms:true}})
+  if(path==='/api/health')return response({status:'ok',version:'0.9.8',ui:'vue',local_only:true,dependencies:{fastapi:true,algorithms:true}})
   unexpected.push({path,method,body});return response({error:{message:'Unexpected mock endpoint',detail:path}},404)
 }
 beforeEach(()=>{
@@ -48,6 +48,19 @@ beforeEach(()=>{
 })
 afterEach(()=>{app?.unmount();app=null;vi.useRealTimers();vi.restoreAllMocks();vi.unstubAllGlobals();document.body.innerHTML='';expect(errors).toEqual([]);expect(unexpected).toEqual([])})
 describe('workspace DOM and API integration',()=>{
+  it('sends only the selected provider and explains actual rate limits',async()=>{
+    await mount(`/projects/${pid}/search`)
+    for(const label of ['Semantic Scholar','OpenAlex','arXiv']){input(label).click();await settle()}
+    const pushes=vi.spyOn(router,'push');await click('开始检索');await pushes.mock.results.at(-1).value;await settle()
+    expect(requests.find(r=>r.path.endsWith('/search')&&r.method==='POST').body.providers).toEqual(['crossref'])
+    project.search_manifest={selected_providers:['crossref'],provider_results:[{provider:'crossref',status:'rate_limited',paper_count:0,request_stats:{requests:1,rate_limited:1}}]}
+    project.active_job_id=null;job.status='partial';await navigate('/settings')
+    await navigate(`/projects/${pid}/search`)
+    expect(document.querySelector('.provider-outcomes').textContent).toContain('来源限流')
+    expect(document.querySelector('.provider-outcomes').textContent).toContain('冷却')
+    expect(input('Crossref').checked).toBe(true)
+    expect(input('OpenAlex').checked).toBe(false)
+  })
   it('creates a server demo before showing results and opens an opaque-key detail route',async()=>{
     await mount('/');await click('创建离线演示项目')
     expect(requests.find(r=>r.path==='/api/demo/projects'&&r.method==='POST')).toBeTruthy()
@@ -69,7 +82,7 @@ describe('workspace DOM and API integration',()=>{
   })
   it('starts a revision-bound search and refreshes corpus facts only after the backend completes',async()=>{
     await mount(`/projects/${pid}/search`);const pushes=vi.spyOn(router,'push');await click('开始检索');await pushes.mock.results.at(-1).value;await settle()
-    const start=requests.find(r=>r.path.endsWith('/search')&&r.method==='POST');expect(start.body.expected_revision).toBe(7);expect(start.body.mode).toBe('systematic');expect(start.body.providers).toBeUndefined()
+    const start=requests.find(r=>r.path.endsWith('/search')&&r.method==='POST');expect(start.body.expected_revision).toBe(7);expect(start.body.mode).toBe('systematic');expect(start.body.providers).toEqual(['semantic_scholar','openalex','arxiv','crossref'])
     expect(document.querySelector('.job-panel').textContent).toContain('进行中')
     paperRows.push({...basePaper,paper_key:secondKey,title:'Newly completed backend record'});project.counts.records_in_corpus=2;project.revision=8;project.active_job_id=null;job={...job,status:'completed',progress:{stage:'finished',records:2},result:{records:2}}
     await new Promise(resolve=>setTimeout(resolve,1500));await settle()

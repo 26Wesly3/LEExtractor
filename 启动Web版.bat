@@ -4,14 +4,15 @@ chcp 65001 >nul
 cd /d "%~dp0"
 if not exist ".venv\Scripts\python.exe" (
     python -m venv .venv
+    if errorlevel 1 py -3 -m venv .venv
     if errorlevel 1 goto failed
 )
-".venv\Scripts\python.exe" -c "import fastapi, uvicorn, litsearch; from importlib.metadata import version; assert version('litsearch') == litsearch.__version__" >nul 2>&1
+".venv\Scripts\python.exe" -c "import uvicorn, litsearch.web.api; from importlib.metadata import version; from litsearch.version import __version__; assert version('litsearch') == __version__" >nul 2>&1
 if errorlevel 1 (
     ".venv\Scripts\python.exe" -m pip install -e ".[web]" -c constraints.txt
     if errorlevel 1 goto failed
 )
-".venv\Scripts\python.exe" scripts\launch_web.py
+".venv\Scripts\python.exe" scripts\launch_web.py %*
 if errorlevel 1 goto failed
 exit /b 0
 :failed

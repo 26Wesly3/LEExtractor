@@ -34,7 +34,7 @@ def public(value):
             if secret:
                 value = value.replace(secret, "[redacted]")
         value = re.sub(r"(?i)(api_key|apikey|token|password)=([^&\s]+)", r"\1=[redacted]", value)
-        value = re.sub(r"[A-Za-z]:[/\\][^\s\"<>]+", "[local file]", value)
+        value = re.sub(r"(?<![A-Za-z0-9])[A-Za-z]:[/\\][^\s\"<>]+", "[local file]", value)
         if value.startswith("file:"):
             value = "[local file]"
         return value

@@ -601,6 +601,7 @@ class _StubProvider:
 
 def _manager_with(providers):
     manager = SourceManager.__new__(SourceManager)
+    manager.set_search_providers(["semantic_scholar", "openalex", "arxiv"])
     manager.s2, manager.oa, manager.arxiv, manager.cr = providers
     return manager
 

@@ -1,6 +1,6 @@
 # LEExtractor 架构
 
-版本 v0.9.7。本文件描述**当前实现的模块边界与数据流**，不描述计划中的能力（计划见 [ROADMAP.md](ROADMAP.md)），也不重复改动历史（见 [CHANGES.md](CHANGES.md)）。
+版本 v0.9.8。本文件描述**当前实现的模块边界与数据流**，不描述计划中的能力（计划见 [ROADMAP.md](ROADMAP.md)），也不重复改动历史（见 [CHANGES.md](CHANGES.md)）。
 
 ## 1. 分层
 

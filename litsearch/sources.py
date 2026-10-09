@@ -1,10 +1,13 @@
 """API clients for Semantic Scholar, OpenAlex, Crossref and arXiv."""
 
+import hashlib
 import logging
 import re
+import threading
 import time
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 
 import requests
 
@@ -12,6 +15,7 @@ from litsearch.cache import Cache
 from litsearch.config import current_year, openalex_api_key, semantic_scholar_api_key
 from litsearch.diagnostics import (
     ParseError,
+    RateLimitedError,
     SourceError,
     SourceErrorKind,
     classify_http_error,
@@ -39,6 +43,22 @@ from litsearch.stop_reasons import (
 )
 
 logger = logging.getLogger(__name__)
+
+# Credentials stay out of the registry: only a digest participates in identity.
+# Sharing across provider instances prevents a new project/browser rerun from
+# immediately repeating requests against a quota which just returned HTTP 429.
+_COOLDOWN_LOCK = threading.Lock()
+_PROVIDER_COOLDOWNS: dict[tuple[str, str], float] = {}
+DEFAULT_COOLDOWN_SECONDS = 60.0
+MAX_COOLDOWN_SECONDS = 300.0
+SEARCH_PROVIDERS = ("semantic_scholar", "openalex", "arxiv")
+AVAILABLE_SEARCH_PROVIDERS = (*SEARCH_PROVIDERS, "crossref")
+
+
+def reset_provider_cooldowns() -> None:
+    """Clear process cooldowns, primarily for isolated offline tests."""
+    with _COOLDOWN_LOCK:
+        _PROVIDER_COOLDOWNS.clear()
 
 
 class RetrievalCanceled(RuntimeError):
@@ -220,6 +240,50 @@ class BaseSource(ABC):
         run would still be reported as a completed one.
         """
         self._cancel_check = predicate
+
+    def _quota_identity(self) -> tuple[str, str]:
+        credential = (semantic_scholar_api_key() if self.name == "semantic_scholar"
+                      else openalex_api_key() if self.name == "openalex" else "")
+        return self.name, hashlib.sha256(credential.encode("utf-8")).hexdigest()
+
+    def cooldown_remaining(self) -> float:
+        identity = self._quota_identity()
+        with _COOLDOWN_LOCK:
+            deadline = _PROVIDER_COOLDOWNS.get(identity, 0.0)
+            remaining = max(0.0, deadline - time.monotonic())
+            if remaining == 0.0:
+                _PROVIDER_COOLDOWNS.pop(identity, None)
+            return remaining
+
+    def ensure_available(self) -> None:
+        """Reject a cooled provider before transport/accounting; caches may win."""
+        remaining = self.cooldown_remaining()
+        if remaining:
+            raise RateLimitedError(self.name, f"rate limit cooldown active; retry in {remaining:.0f}s", 429)
+
+    def _note_rate_limit(self, response) -> None:
+        raw = str((getattr(response, "headers", {}) or {}).get("Retry-After") or "").strip()
+        seconds = DEFAULT_COOLDOWN_SECONDS
+        if raw:
+            try:
+                seconds = float(raw)
+            except ValueError:
+                try:
+                    deadline = parsedate_to_datetime(raw)
+                    if deadline.tzinfo is None:
+                        deadline = deadline.replace(tzinfo=timezone.utc)
+                    seconds = deadline.timestamp() - time.time()
+                except (ValueError, TypeError, OverflowError):
+                    pass
+        seconds = max(1.0, min(seconds, MAX_COOLDOWN_SECONDS))
+        identity = self._quota_identity()
+        with _COOLDOWN_LOCK:
+            current = time.monotonic()
+            # Prune expired entries so changing keys does not grow memory forever.
+            expired = [key for key, deadline in _PROVIDER_COOLDOWNS.items() if deadline <= current]
+            for key in expired:
+                del _PROVIDER_COOLDOWNS[key]
+            _PROVIDER_COOLDOWNS[identity] = current + seconds
 
     def set_request_budget(self, limit: int | None) -> None:
         """Cap how many HTTP requests one logical retrieval may issue.
@@ -510,6 +574,7 @@ class BaseSource(ABC):
         silently report zero requests for an entire suite of mocked calls.
         An attempt that raises is still an attempt the provider saw.
         """
+        self.ensure_available()
         if retry_attempt:
             self._session.note_retry()
         session = self._session
@@ -521,6 +586,8 @@ class BaseSource(ABC):
         get_http_budget().note_request(
             self.name, getattr(resp, "status_code", None)
         )
+        if getattr(resp, "status_code", None) == 429:
+            self._note_rate_limit(resp)
         return resp
 
     @staticmethod
@@ -553,7 +620,8 @@ class BaseSource(ABC):
     def _request_with_retries(self, method: str, url: str, *, deadline: float, **kwargs):
         """Issue one HTTP call with bounded retries, cancellation and deadline.
 
-        Retries only transient outcomes (429 and 5xx). A 404 or a 400 is a
+        Retries transient transport failures and 5xx. HTTP 429 immediately
+        starts a provider cooldown and returns to the caller. A 404 or a 400 is a
         final answer — retrying it wastes the caller's budget and hides the
         real problem.
         """
@@ -568,7 +636,7 @@ class BaseSource(ABC):
                 )
             try:
                 resp = self._transport_request(method, url, retry_attempt=attempt > 0, **kwargs)
-            except (RetrievalCanceled, RetrievalTimeout, RetrievalBudgetExceeded):
+            except (RetrievalCanceled, RetrievalTimeout, RetrievalBudgetExceeded, RateLimitedError):
                 # Workflow stop signals are final; retrying them wastes time
                 # and counts nonexistent provider attempts as retries.
                 raise
@@ -578,7 +646,9 @@ class BaseSource(ABC):
                     raise
                 time.sleep(self._retry_delay(attempt))
                 continue
-            if resp.status_code == 429 or resp.status_code >= 500:
+            if resp.status_code == 429:
+                return resp
+            if resp.status_code >= 500:
                 if attempt >= self.MAX_HTTP_RETRIES:
                     return resp
                 time.sleep(self._retry_delay(attempt, resp))
@@ -824,8 +894,8 @@ class SemanticScholarSource(BaseSource):
     """Semantic Scholar Academic Graph API client.
 
     Without an API key S2 hands out a very small shared quota, so every
-    request is paced and 429s are retried with exponential backoff instead of
-    silently degrading the search.
+    request is paced. The first 429 stops immediately and cools the provider,
+    allowing the other databases to run instead of retrying a shared quota.
     """
 
     name = "semantic_scholar"
@@ -851,45 +921,25 @@ class SemanticScholarSource(BaseSource):
         self._last_request_at = time.time()
 
     def _request(self, method: str, url: str, **kwargs):
-        """Send a request with pacing and 429 backoff.
-
-        Honours `Retry-After` when present, otherwise backs off
-        exponentially (3s → 6s → 12s).  After MAX_RETRIES the last response is
-        returned as-is so callers can degrade gracefully.
-        """
+        """Send one paced request; HTTP 429 is final for this logical call."""
+        self.ensure_available()
+        if self.is_canceled():
+            raise RetrievalCanceled("semantic_scholar: canceled before request")
         api_key = semantic_scholar_api_key()
         if api_key:
             self._session.headers["x-api-key"] = api_key
         else:
             self._session.headers.pop("x-api-key", None)
         kwargs.setdefault("timeout", 30)
-        last = None
-        for attempt in range(self.MAX_RETRIES + 1):
-            self._pace()
-            _S2_STATS["requests"] += 1
-            # Through the shared transport so the HTTP budget, cancellation and
-            # failure accounting see S2's requests too; S2 additionally counts
-            # its own retry statistics for the 429 guidance in the UI.
-            if self.is_canceled():
-                raise RetrievalCanceled("semantic_scholar: canceled before request")
-            resp = self._transport_request(method, url, retry_attempt=attempt > 0, **kwargs)
-            if resp.status_code != 429:
-                return resp
-            last = resp
+        self._pace()
+        if self.is_canceled():
+            raise RetrievalCanceled("semantic_scholar: canceled before request")
+        resp = self._transport_request(method, url, **kwargs)
+        _S2_STATS["requests"] += 1
+        if resp.status_code == 429:
             _S2_STATS["rate_limited"] += 1
-            if attempt == self.MAX_RETRIES:
-                break
-            retry_after = (resp.headers.get("Retry-After") or "").strip()
-            delay = float(retry_after) if retry_after.isdigit() else 3.0 * (2 ** attempt)
-            delay = min(delay, 60.0)
-            logger.warning(
-                "S2 rate limited (429) on %s — retrying in %.1fs (attempt %d/%d). "
-                "Set S2_API_KEY for a much larger quota.",
-                url, delay, attempt + 1, self.MAX_RETRIES,
-            )
-            time.sleep(delay)
-            _S2_STATS["retries"] += 1
-        return last
+            logger.warning("S2 rate limited (429); paused this provider so other databases can continue")
+        return resp
 
     def _paper_from_s2(self, data: dict) -> Paper:
         ext = data.get("externalIds") or {}
@@ -2219,8 +2269,9 @@ _HARDCODED_IF: dict[str, float] = {
 class SourceManager:
     """Facade that tries Semantic Scholar first, falls back to OpenAlex."""
 
-    def __init__(self, cache: Cache | None = None):
+    def __init__(self, cache: Cache | None = None, search_providers=None):
         self._cache = cache or Cache()
+        self.set_search_providers(SEARCH_PROVIDERS if search_providers is None else search_providers)
         self.s2 = SemanticScholarSource(self._cache)
         self.oa = OpenAlexSource(self._cache)
         self.cr = CrossrefSource(self._cache)
@@ -2233,6 +2284,12 @@ class SourceManager:
     @property
     def cache(self) -> Cache:
         return self._cache
+
+    def set_search_providers(self, providers) -> None:
+        values = list(providers)
+        if not values or len(values) != len(set(values)) or any(value not in AVAILABLE_SEARCH_PROVIDERS for value in values):
+            raise ValueError("Select one or more known search providers without duplicates")
+        self.search_providers = tuple(values)
 
     # -- cancellation ---------------------------------------------------
 
@@ -2284,8 +2341,10 @@ class SourceManager:
         PRISMA 2020 asks for the exact search per database.
         """
         plan = []
-        for source, size in ((self.s2, limit), (self.oa, max(1, limit // 2)),
-                             (self.arxiv, max(1, limit // 4))):
+        choices = {"semantic_scholar": (self.s2, limit), "openalex": (self.oa, max(1, limit // 2)),
+                   "arxiv": (self.arxiv, max(1, limit // 4)), "crossref": (self.cr, limit)}
+        for name in self.search_providers:
+            source, size = choices[name]
             source_query = query
             entry = (query_plan or {}).get(source.name) or {}
             candidate = str(entry.get("query") or "").strip()
@@ -2300,7 +2359,8 @@ class SourceManager:
         manifest = {
             "query": query, "year_from": year_from, "year_to": year_to,
             "requested_limit": limit, "provider_counts": provider_counts,
-            "raw_count": raw_count, "crossref_role": "metadata_resolution",
+            "selected_providers": list(self.search_providers),
+            "raw_count": raw_count, "crossref_role": "keyword_search_and_metadata_resolution" if "crossref" in self.search_providers else "metadata_resolution",
             "per_source_queries": per_source_queries,
             "query_plan": query_plan,
             "diagnostics": [{"source": e.source, "kind": e.kind.value, "message": e.message} for e in get_diagnostics().events],

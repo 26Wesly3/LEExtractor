@@ -70,6 +70,7 @@ WHITELIST_ROOT_FILES = (
     # (see RELEASE_RENAMES).
     "启动LEExtractor_收到后改回bat.bat",
     "启动Web版.bat",
+    "启动Streamlit版.bat",
     ".env.example",
     ".gitignore",
 )
