@@ -36,7 +36,34 @@ def test_browser_failure_leaves_matching_service_available(monkeypatch, capsys, 
 
 def test_packaged_default_delegates_to_web_and_forwards_arguments():
     root = Path(__file__).resolve().parents[1]
-    default = (root / "启动LEExtractor_收到后改回bat.bat").read_text(encoding="utf-8")
+    default = (root / "启动LEExtractor.bat").read_text(encoding="utf-8")
     assert '启动Web版.bat" %*' in default
     assert "launch_gui" not in default
     assert "scripts\\launch_web.py %*" in (root / "启动Web版.bat").read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize('skip,ready', [(False, True), (False, False), (True, True)])
+def test_prepares_models_before_starting_server_or_explicitly_skips(monkeypatch, skip, ready):
+    events = []
+    responses = iter([None, {'app_name': 'LEExtractor', 'version': launch_web.read_version(), 'ui': 'vue'}])
+    monkeypatch.setattr(launch_web, 'health', lambda url: next(responses))
+    monkeypatch.setattr(launch_web, 'port_in_use', lambda port: False)
+    monkeypatch.setattr(launch_web, 'prepare', lambda: events.append('models') or ready)
+
+    class Child:
+        returncode = None
+
+        def poll(self):
+            return self.returncode
+
+        def wait(self, timeout=None):
+            self.returncode = 0
+            return 0
+
+    def start(*args, **kwargs):
+        events.append('server')
+        return Child()
+
+    monkeypatch.setattr(launch_web.subprocess, 'Popen', start)
+    assert launch_web.main(['--no-browser'] + (['--skip-models'] if skip else [])) == 0
+    assert events == (['server'] if skip else ['models', 'server'])

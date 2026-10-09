@@ -64,10 +64,8 @@ WHITELIST_ROOT_FILES = (
     "ARCHITECTURE.md",
     "ROADMAP.md",
     "ONBOARDING.md",
-    # The launcher. Its working name in the repository says "rename me back to
-    # .bat on receipt"; the package ships it under the name README/ONBOARDING
-    # actually promise, so a user who follows the instructions finds the file
-    # (see RELEASE_RENAMES).
+    "启动LEExtractor.bat",
+    # Accept the legacy working filename when packaging an older checkout.
     "启动LEExtractor_收到后改回bat.bat",
     "启动Web版.bat",
     "启动Streamlit版.bat",
@@ -88,6 +86,7 @@ RELEASE_RENAMES = {
 WHITELIST_ROOT_PREFIXES = (
     "VALIDATION_v",
     "审计响应_v",
+    "交接说明_v",
 )
 
 #: Directory names that are never traversed, even inside a whitelisted tree.

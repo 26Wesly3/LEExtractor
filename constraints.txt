@@ -1,4 +1,4 @@
-# Reproducible dependency pins for LEExtractor v0.9.9.
+# Reproducible dependency pins for LEExtractor v0.9.11.
 # Install all validation dependencies: pip install -e ".[dev,web]" -c constraints.txt
 # Python 3.10 uses compatible scikit-learn/networkx releases. Other pins are shared.
 # tests/test_release_version.py checks installed metadata against active markers.

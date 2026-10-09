@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "litsearch"
 # Must equal litsearch/version.py (asserted by tests/test_release_version.py).
-version = "0.9.10"
+version = "0.9.11"
 description = "Literature review toolkit with a Vue/FastAPI workspace, Streamlit GUI and MCP server"
 requires-python = ">=3.10"
 classifiers = [

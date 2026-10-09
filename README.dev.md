@@ -3,7 +3,7 @@
 > **面向开发与运维的技术 README**（原 `README.md` 的内容，改为本名保留）。
 > 项目介绍请见 [`README.md`](README.md)（English）/ [`README.zh-CN.md`](README.zh-CN.md)（简体中文）。
 
-科研文献发现、引文扩展与证据组织工具。当前版本 **v0.9.10**（版本号唯一来源：`litsearch/version.py`；`pyproject.toml` 由测试断言与之一致）。
+科研文献发现、引文扩展与证据组织工具。当前版本 **v0.9.11**（版本号唯一来源：`litsearch/version.py`；`pyproject.toml` 由测试断言与之一致）。
 
 本文件只描述**当前真实能力**。历史版本改动见 [CHANGES.md](CHANGES.md)，模块与数据流见 [ARCHITECTURE.md](ARCHITECTURE.md)，未完成与后续计划见 [ROADMAP.md](ROADMAP.md)。
 

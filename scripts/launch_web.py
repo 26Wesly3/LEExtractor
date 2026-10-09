@@ -14,6 +14,7 @@ import webbrowser
 from pathlib import Path
 
 from launch_gui import read_version
+from prepare_models import prepare
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -52,6 +53,7 @@ def main(argv=None) -> int:
     parser.add_argument("--port", type=int, default=8000)
     parser.add_argument("--no-browser", action="store_true")
     parser.add_argument("--version", action="store_true")
+    parser.add_argument("--skip-models", action="store_true", help="Open the UI without preparing local models")
     args = parser.parse_args(argv)
     if args.version:
         print("LEExtractor " + read_version())
@@ -72,6 +74,8 @@ def main(argv=None) -> int:
     if existing or port_in_use(args.port):
         print(f"端口 {args.port} 已被旧版本或其他程序占用。请关闭旧服务窗口，或运行：启动Web版.bat --port {args.port + 1 if args.port < 65535 else 8000}")
         return 1
+    if not args.skip_models and not prepare():
+        print("部分本地模型尚未就绪；界面继续启动。稍后可重试准备模型。", flush=True)
     child = subprocess.Popen([sys.executable, "-m", "litsearch.web", "--port", str(args.port)], cwd=ROOT)
     try:
         deadline = time.monotonic() + 45
