@@ -1114,6 +1114,8 @@ class PRISMATracker:
                     "full_text_retrieved": r.full_text_retrieved,
                     "full_text_decision": r.full_text_decision.value,
                     "full_text_reason": r.full_text_reason,
+                    "retrieval_attempted": r.retrieval_attempted,
+                    "retrieval_failure_reason": r.retrieval_failure_reason,
                     "relevance_score": r.relevance_score,
                     "score_context_id": r.score_context_id,
                     "requires_manual_review": r.requires_manual_review,

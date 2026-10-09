@@ -50,6 +50,12 @@ Downloads/
 
 .reference/
 .venv/
+.venv-*/
+node_modules/
+.web-data/
+web/.vite/
+!web/dist/
+!web/dist/**
 artifacts/
 deliverables/
 .ruff_cache/

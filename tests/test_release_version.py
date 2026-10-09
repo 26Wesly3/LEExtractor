@@ -20,7 +20,12 @@ import zipfile
 from pathlib import Path
 
 import pytest
-import tomllib
+from packaging.requirements import Requirement
+
+try:
+    import tomllib
+except ModuleNotFoundError:  # Python 3.10's standard library predates tomllib.
+    import tomli as tomllib
 
 REPO = Path(__file__).resolve().parents[1]
 SCRIPTS = REPO / "scripts"
@@ -271,7 +276,8 @@ def test_the_packaged_tree_contains_the_release_documents(outdir):
     summary = package_release.package(REPO, outdir)
     with zipfile.ZipFile(summary["path"]) as archive:
         names = {name.split("/", 1)[1] for name in archive.namelist() if "/" in name}
-    for document in ("README.md", "CHANGES.md", "ARCHITECTURE.md", "ROADMAP.md"):
+    for document in ("README.md", "CHANGES.md", "ARCHITECTURE.md", "ROADMAP.md",
+                     f"VALIDATION_v{__version__}.md", "docs/web-integration.md"):
         assert document in names, f"{document} is missing from the release"
 
 
@@ -310,8 +316,12 @@ def constraints() -> dict:
         if not line:
             continue
         assert "==" in line, f"constraints must pin exact versions: {line}"
-        name, _, pinned = line.partition("==")
-        pins[name.strip().lower()] = pinned.strip()
+        requirement = Requirement(line)
+        if requirement.marker and not requirement.marker.evaluate():
+            continue
+        exact = [spec.version for spec in requirement.specifier if spec.operator == "=="]
+        assert len(exact) == 1, f"constraints must contain one exact pin: {line}"
+        pins[requirement.name.lower()] = exact[0]
     return pins
 
 

@@ -15,6 +15,7 @@ import os
 import re
 import tempfile
 import time
+from copy import deepcopy
 from dataclasses import asdict
 
 from litsearch.config import BASE_DIR
@@ -41,6 +42,8 @@ SESSION_DIR = os.path.join(BASE_DIR, ".sessions")
 AUTOSAVE_NAME = "autosave.json"
 #: v4 adds the screening calibration, per-decision audit trail, merge conflicts
 #: and the provider-raw count ledger. Older files simply lack those keys.
+#: Runtime accounting, score provenance and retrieval attempt facts are also
+#: optional v4 fields so historical v4 documents remain valid.
 SCHEMA_VERSION = 4
 
 
@@ -120,6 +123,8 @@ def state_to_dict(state: ReviewState) -> dict:
             "next_seed_ids": sn.next_seed_ids,
             "parameters": sn.parameters,
             "completed": sn.completed,
+            "stop_reason": sn.stop_reason,
+            "seed_ids": list(getattr(sn, "seed_ids", [])),
             "all_papers": {k: paper_to_dict(p) for k, p in sn.all_papers.items()},
             "rounds": [
                 {
@@ -131,6 +136,10 @@ def state_to_dict(state: ReviewState) -> dict:
                     "unique_count": r.unique_count,
                     "relevant_count": r.relevant_count,
                     "cumulative_unique": r.cumulative_unique,
+                    "failed_seeds": r.failed_seeds,
+                    "seed_ids": list(r.seed_ids),
+                    "pending_seeds": list(r.pending_seeds),
+                    "canceled": r.canceled,
                 }
                 for r in sn.rounds
             ],
@@ -155,6 +164,13 @@ def state_to_dict(state: ReviewState) -> dict:
         "snowball_result": snowball,
         "prisma": prisma,
         "search_manifest": state.search_manifest,
+        "stop_reason": state.stop_reason,
+        "http_budget": deepcopy(state.http_budget),
+        "run_history": deepcopy(state.run_history),
+        "score_context_id": state.score_context_id,
+        "score_context_stage": state.score_context_stage,
+        "score_context_history": deepcopy(state.score_context_history),
+        "calibration_context_id": state.calibration_context_id,
         # The calibration is screening state: it travels with the session so a
         # restored session knows whether its threshold may still be trusted.
         "calibration": (
@@ -217,6 +233,12 @@ def load_calibration(state: ReviewState, data: dict | None) -> CalibrationRecord
 
 
 def state_from_dict(d: dict) -> ReviewState:
+    # Every import route (including Web and MCP callers) shares the same
+    # migration/version checks as a disk restore. Never silently downgrade a
+    # future session merely because the caller already decoded its JSON.
+    from litsearch.session_schema import validate_session_dict
+
+    d = validate_session_dict(d)
     state = ReviewState(
         topic=d.get("topic", ""),
         research_direction=d.get("research_direction", ""),
@@ -224,6 +246,12 @@ def state_from_dict(d: dict) -> ReviewState:
     )
     state.start_time = d.get("start_time", 0.0)
     state.search_manifest = d.get("search_manifest", {}) or {}
+    state.stop_reason = d.get("stop_reason", "")
+    state.http_budget = deepcopy(d.get("http_budget", {}))
+    state.run_history = deepcopy(d.get("run_history", []))
+    state.score_context_id = d.get("score_context_id", "")
+    state.score_context_stage = d.get("score_context_stage", "")
+    state.score_context_history = deepcopy(d.get("score_context_history", []))
     state.scoping_papers = [paper_from_dict(p) for p in d.get("scoping_papers", [])]
     state.topic_clusters = d.get("topic_clusters", {}) or {}
     state.key_journals = [tuple(x) for x in d.get("key_journals", [])]
@@ -247,6 +275,7 @@ def state_from_dict(d: dict) -> ReviewState:
             next_seed_ids=sn.get("next_seed_ids", []),
             parameters=sn.get("parameters", {}),
             completed=sn.get("completed", True),
+            stop_reason=sn.get("stop_reason", ""),
         )
         result.rounds = [
             SnowballRound(
@@ -258,9 +287,15 @@ def state_from_dict(d: dict) -> ReviewState:
                 unique_count=r.get("unique_count", len(r.get("new_papers", []))),
                 relevant_count=r.get("relevant_count", 0),
                 cumulative_unique=r.get("cumulative_unique", 0),
+                failed_seeds=r.get("failed_seeds", 0),
+                seed_ids=r.get("seed_ids", []),
+                pending_seeds=r.get("pending_seeds", []),
+                canceled=r.get("canceled", False),
             )
             for i, r in enumerate(sn.get("rounds", []))
         ]
+        if "seed_ids" in sn:
+            result.seed_ids = list(sn["seed_ids"])
         state.snowball_result = result
 
     prisma_data = d.get("prisma")
@@ -288,6 +323,8 @@ def state_from_dict(d: dict) -> ReviewState:
                 full_text_decision=ScreeningDecision(
                     rec.get("full_text_decision", "pending")),
                 full_text_reason=rec.get("full_text_reason", ""),
+                retrieval_attempted=rec.get("retrieval_attempted", False),
+                retrieval_failure_reason=rec.get("retrieval_failure_reason", ""),
                 relevance_score=rec.get("relevance_score", 0.0),
                 score_context_id=rec.get("score_context_id", ""),
                 requires_manual_review=bool(rec.get("requires_manual_review", False)),
@@ -310,9 +347,20 @@ def state_from_dict(d: dict) -> ReviewState:
     # calibration, so the calibration property stamps the correct scale.
     contexts = RelevanceFilter.score_contexts_of(current_scored_corpus(state))
     contexts.discard("")
-    if len(contexts) == 1:
+    if "score_context_id" not in d and len(contexts) == 1:
         state.score_context_id = next(iter(contexts))
     state.calibration = load_calibration(state, d)
+    if "calibration_context_id" in d:
+        # Assignment normally stamps the current context. An imported record
+        # must retain the context in which it was actually fitted, however;
+        # stamping it anew would make a stale calibration look current.
+        state.calibration_context_id = d["calibration_context_id"]
+        if (state.calibration is not None
+                and state.calibration_context_id != state.score_context_id):
+            state.calibration.mark_invalid(
+                "scoring context changed: saved calibration context does not "
+                "match the restored corpus context"
+            )
 
     return state
 

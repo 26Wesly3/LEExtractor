@@ -22,11 +22,13 @@ def main():
     for source in (SemanticScholarSource(), OpenAlexSource(), ArxivSource(), CrossrefSource()):
         reset_diagnostics()
         source.MAX_RETRIES = 0
-        original_request = source._session.request
+        original_request = source._transport_request
         def bounded(method, url, _request=original_request, **kwargs):
             kwargs["timeout"] = 12
             return _request(method, url, **kwargs)
-        source._session.request = bounded
+        source._transport_request = bounded
+        source.MAX_HTTP_RETRIES = 0
+        source.set_request_budget(1)
         if source.name == "crossref":
             paper = source.get_paper("10.1038/nature14539")
             papers = [paper] if paper else []

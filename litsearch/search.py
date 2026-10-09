@@ -195,10 +195,10 @@ class LiteratureReviewWorkflow:
     Gusenbauer (2024) and the TARCiS statement, with PRISMA 2020 reporting.
     """
 
-    def __init__(self, source_manager: SourceManager | None = None):
+    def __init__(self, source_manager: SourceManager | None = None, downloader: PaperDownloader | None = None):
         self.sources = source_manager or SourceManager()
         self.filters = RelevanceFilter()
-        self.downloader = PaperDownloader()
+        self.downloader = downloader if downloader is not None else PaperDownloader()
 
     # ------------------------------------------------------------------
     # Phase 1: Scoping
@@ -211,6 +211,8 @@ class LiteratureReviewWorkflow:
         years_back: int = 20,
         initial_limit: int = 50,
         use_query_plan: bool = True,
+        year_from: int | None = None,
+        year_to: int | None = None,
     ) -> ReviewState:
         """Phase 1: Broad scoping search to understand the field landscape.
 
@@ -224,8 +226,10 @@ class LiteratureReviewWorkflow:
             start_time=time.time(),
         )
 
-        year_from = year_from_years_back(years_back, floor=1990)
-        year_to = current_year()
+        year_from = year_from if year_from is not None else year_from_years_back(years_back, floor=1990)
+        year_to = year_to if year_to is not None else current_year()
+        if not 1990 <= year_from <= year_to <= current_year():
+            raise ValueError("Invalid publication year range")
         plan = research_plan(state, year_from, year_to) if use_query_plan else None
 
         reset_http_budget()
@@ -546,14 +550,18 @@ class LiteratureReviewWorkflow:
         years_back: int = 20,
         min_citations: int = 0,
         use_query_plan: bool = True,
+        year_from: int | None = None,
+        year_to: int | None = None,
     ) -> ReviewState:
         """Phase 2: Execute multi-database systematic keyword search.
 
         Searches S2 + OpenAlex + arXiv + Crossref, deduplicates,
         scores relevance, and registers results in the PRISMA tracker.
         """
-        year_from = year_from_years_back(years_back, floor=1990)
-        year_to = current_year()
+        year_from = year_from if year_from is not None else year_from_years_back(years_back, floor=1990)
+        year_to = year_to if year_to is not None else current_year()
+        if not 1990 <= year_from <= year_to <= current_year():
+            raise ValueError("Invalid publication year range")
         plan = research_plan(state, year_from, year_to) if use_query_plan else None
 
         reset_http_budget()

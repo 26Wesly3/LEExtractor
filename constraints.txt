@@ -1,20 +1,17 @@
-# Verified dependency pins for LEExtractor v0.9.1.
-#
-# What "verified" means here: every pin below was checked against the exact
-# environment in which the v0.9.1 test suite ran (Windows, Python 3.13.1,
-# 2026-10-08). `tests/test_release_version.py`
-# re-checks each pin against the installed metadata on every run, so a pin that
-# stops matching this environment fails the suite instead of drifting silently.
-#
-# Install:  pip install -e . -c constraints.txt
-#
-# Not pinned because it is not installed in the validated environment (CI
-# installs it through the "dev" extra); pin it where it is actually present:
-#   ruff==0.16.10
+# Reproducible dependency pins for LEExtractor v0.9.7.
+# Install all validation dependencies: pip install -e ".[dev,web]" -c constraints.txt
+# Python 3.10 uses compatible scikit-learn/networkx releases. Other pins are shared.
+# tests/test_release_version.py checks installed metadata against active markers.
 requests==2.32.5
 streamlit==1.54.0
-scikit-learn==1.8.0
+scikit-learn==1.8.0; python_version >= "3.11"
+scikit-learn==1.7.2; python_version < "3.11"
 fastmcp==3.2.4
 python-dotenv==1.2.2
-networkx==3.6.1
+networkx==3.6.1; python_version >= "3.11"
+networkx==3.4.2; python_version < "3.11"
 pytest==9.0.3
+fastapi==0.143.0
+uvicorn==0.54.0
+httpx==0.28.1
+ruff==0.16.10

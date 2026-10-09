@@ -9,7 +9,7 @@
 | 项 | 状态 | 说明 |
 | --- | --- | --- |
 | 【v0.9.1 已修复，此处保留供核对】PRISMA「未获取」与「全文排除」分开 | `verified` | 已修复：`mark_full_text_retrieved(..., False)` 不再自动置 `REJECT`，记录保持 `PENDING`，只计入 `reports_not_retrieved`；`retrieval_attempted` 区分「尝试过但失败」与「尚未尝试」；人工仍可显式排除并计入 `full_text_excluded`。回归测试：`tests/test_acceptance_abc.py::test_acceptance_g6_*`（3 项）。 |
-| 跨浏览器会话隔离 | `in_progress` | v0.9.1 已提供 `project_id`、按项目独立保存路径与写入冲突检测（`litsearch/session_schema.py`），但尚未在 UI/持久化全链路接线；多人部署还需要认证与用户级隔离。 |
+| 本机 Web 多项目与多标签隔离 | `verified` | v0.9.7 接入项目级文件、任务绑定与 revision 冲突检测；共享数据源统计要求检索任务串行。多人部署仍需要认证与用户级隔离，不能把本机项目隔离当作账号隔离。 |
 | 重复来源的计数一致性 | `planned` | 目前计数单位是 record/report；同一研究的多个报告尚未合并到研究层面。 |
 
 ## 2. Benchmark 与评测
@@ -42,7 +42,7 @@
 - `deferred`：FullTextResolver 完整顺序（本地/Zotero → OA resolver → arXiv → 机构 provider → 出版社落地页 → 人工兜底）、机构认证（用户授权流程，不保存校园密码）。
 - `deferred`：Zotero —— RIS/BibTeX/Evidence Pack → Pyzotero 本地读取 POC → 元数据同步 → collection 同步 → PDF 附件 → 双向同步（先解决冲突、删除与重复实体语义）。
 - `deferred`：Scientific PDF —— GROBID → 章节切分 → 参考文献解析 → 图表元数据 → 证据抽取 → 全文证据图/RAG；逐条绑定文件哈希、页码/区段与抽取来源。
-- `deferred`：REST/OpenAPI、CLI、MCP SDK 标准化；REST/CLI/MCP 复用同一业务层与数据合同。
+- `verified`：v0.9.7 本机 FastAPI / OpenAPI 已接入 Web 界面，复用现有领域算法；通用 CLI 与 MCP SDK 标准化仍 `deferred`。
 - `deferred`：Screening 从 PRISMA 状态容器中抽为通用组件，PRISMA/PRISMA-ScR 作为可选报告适配层（含数据迁移与计数单位说明）。
 - `deferred`：多用户隔离、Institution framework、多机构适配、Agent orchestration、大型向量服务；规模与场景决定是否实现。
 - `deferred`：自动综述写作、移动端、复杂代理系统（不阻塞比赛冻结）。
@@ -51,6 +51,7 @@
 
 - `pending_external`：真实专家标签（Benchmark 人工金标准）。
 - `pending_external`：API 凭据（`S2_API_KEY`、`OPENALEX_API_KEY`、`LEEXTRACTOR_UNPAYWALL_EMAIL`）下的真实 provider smoke —— 未配置时不得声称已跑通。
-- `pending_external`：Python 3.10 边界的安装测试（本机只有 3.13.1，见 VALIDATION：未执行）。
-- `planned`：CI 真实运行记录（`.github/workflows/ci.yml` 已声明 3.10/3.13 × ubuntu/windows；本机无法触发）。
+- `pending_external`：Python 3.10/3.13 边界安装由 CI 矩阵验证；本轮本机环境为 Python 3.12.4，不能当作边界测试。
+- `planned`：每个发布提交核对 GitHub Actions 真实结果（Python 3.10/3.13 × Ubuntu/Windows，加 Node 24 前端测试/构建）。
+- `pending_external`：比赛机器上的浏览器视觉验收；本轮因电脑控制工具无法判定浏览器网址而停止，DOM 测试不能替代视觉验收。
 - `planned`：PPT / 展示材料核对（未收到材料时只能记录「待检查」）。

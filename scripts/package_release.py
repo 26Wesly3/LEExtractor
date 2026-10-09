@@ -45,6 +45,8 @@ WHITELIST_DIRS: dict[str, tuple[str, ...]] = {
     # and reproduce the comparison. The recorded snapshot is included so the
     # sample report can be regenerated offline.
     "benchmarks": (".md", ".json"),
+    "web": (".vue", ".js", ".ts", ".json", ".css", ".html", ".svg", ".png", ".ttf", ".woff2", ".txt", ".md"),
+    "docs": (".md", ".png", ".svg"),
 }
 
 #: Root files that are shipped, by exact name (everything else at the root is
@@ -67,6 +69,7 @@ WHITELIST_ROOT_FILES = (
     # actually promise, so a user who follows the instructions finds the file
     # (see RELEASE_RENAMES).
     "启动LEExtractor_收到后改回bat.bat",
+    "启动Web版.bat",
     ".env.example",
     ".gitignore",
 )
@@ -92,9 +95,9 @@ WHITELIST_ROOT_PREFIXES = (
 #: test scratch — including unpacked third-party tools.
 FORBIDDEN_PARTS = frozenset({
     "__pycache__", ".sessions", "deliverables", "dist", "build", ".venv", "venv",
-    ".git", ".pytest_cache", ".ruff_cache", ".pytest_bt", ".pytest_tmp",
+    ".git", ".web-data", ".pytest_cache", ".ruff_cache", ".pytest_bt", ".pytest_tmp",
     "_workspace_tmp", "_sys_tmp", "artifacts", "backups", "logs",
-    "node_modules", ".mypy_cache", ".idea", ".vscode",
+    "node_modules", ".vite", ".mypy_cache", ".idea", ".vscode",
 })
 
 #: Directory-name prefixes that are never traversed (pytest's own scratch dirs).
@@ -153,7 +156,12 @@ def _is_scratch_dir(part: str) -> bool:
 
 def _is_forbidden(path: Path, root: Path) -> bool:
     relative = path.relative_to(root)
-    if any(_is_scratch_dir(part) for part in relative.parts[:-1]):
+    # The production Web bundle is an intentional release asset. Other build
+    # trees remain excluded, including nested dist directories under packages.
+    directory_parts = list(relative.parts[:-1])
+    if tuple(relative.parts[:2]) == ("web", "dist"):
+        directory_parts.remove("dist")
+    if any(_is_scratch_dir(part) for part in directory_parts):
         return True
     if path.name in FORBIDDEN_NAMES:
         return True

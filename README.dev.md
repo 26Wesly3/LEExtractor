@@ -3,15 +3,27 @@
 > **面向开发与运维的技术 README**（原 `README.md` 的内容，改为本名保留）。
 > 项目介绍请见 [`README.md`](README.md)（English）/ [`README.zh-CN.md`](README.zh-CN.md)（简体中文）。
 
-科研文献发现、引文扩展与证据组织工具。当前版本 **v0.9.5**（版本号唯一来源：`litsearch/version.py`；`pyproject.toml` 由测试断言与之一致）。
+科研文献发现、引文扩展与证据组织工具。当前版本 **v0.9.7**（版本号唯一来源：`litsearch/version.py`；`pyproject.toml` 由测试断言与之一致）。
 
 本文件只描述**当前真实能力**。历史版本改动见 [CHANGES.md](CHANGES.md)，模块与数据流见 [ARCHITECTURE.md](ARCHITECTURE.md)，未完成与后续计划见 [ROADMAP.md](ROADMAP.md)。
 
 ## 启动
 
-需要 Python 3.10 或以上（声明范围 `>=3.10`，CI 覆盖 3.10 与 3.13；本机验证环境为 3.13.1）。
+需要 Python 3.10 或以上。发布包已含 Vue / Vuetify 生产构建，运行时不需要 Node.js。双击「启动Web版.bat」，或手动启动：
 
-Windows 可直接双击仓库内的启动批处理（当前文件名为 `启动LEExtractor_收到后改回bat.bat`，发布时改回 `启动LEExtractor.bat`）：脚本自行准备解释器与依赖、启动同目录的 `app.py`，**等服务健康接口真正可用后再打开浏览器**，控制台保留日志，关闭窗口即停止。
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -e ".[web]" -c constraints.txt
+.\.venv\Scripts\python.exe scripts\launch_web.py --no-browser
+```
+
+访问 http://127.0.0.1:8000 。FastAPI 同时提供页面与 `/api`，API 说明在 `/docs`。项目、任务和导出文件保存在 `.web-data`，按项目分开；多个浏览器标签使用保存版本检测冲突。任务后台执行，进度来自真实阶段与计数；取消会传到数据源，重启后未完成任务显示为中断。相关接口与边界见 [Web 整合说明](docs/web-integration.md)。
+
+开发前端需要 Node.js 20.19+（CI 使用 24）：在 `web` 执行 `npm ci`、`npm run build`，再执行 `python scripts/sync_web_assets.py` 更新 Python 包内静态资源。开发代理由 Vite 转发 `/api` 到本机 8000。
+
+原 Streamlit 入口保留：
+
+Windows 可双击仓库内的 `启动LEExtractor_收到后改回bat.bat`（发布包自动重命名为 `启动LEExtractor.bat`）启动 Streamlit。
 
 已确认服务可用时不重复启动。推荐脚本方式（不自动开浏览器）：
 
@@ -72,7 +84,7 @@ python -m venv .venv
 
 ```powershell
 $env:PYTHONPATH="."
-python -m pip install -e ".[dev]" -c constraints.txt
+python -m pip install -e ".[dev,web]" -c constraints.txt
 python -m pytest -q -p no:cacheprovider          # 全量（离线）
 python -m ruff check litsearch scripts tests app.py
 ```
@@ -86,7 +98,7 @@ python scripts/package_release.py --output deliverables
 ```
 
 - 版本从 `litsearch/version.py` **用 `ast` 解析**读取，打包过程不导入 `litsearch`（不拉起 streamlit / 网络依赖）。
-- 只打包白名单：`litsearch/`、`scripts/`、`tests/`、`.github/` 下的源码 + 仓库根目录列明的文档；`.env.local`、会话、日志、备份、缓存数据库及其 sidecar、`__pycache__`、旧 zip 都不会进入包内。
+- 只打包白名单：Python 与 Web 源码、Web 生产构建、必要资源和文档；`.env.local`、项目会话、日志、备份、缓存数据库及其 sidecar、`node_modules`、`__pycache__`、旧 zip 都不会进入包内。
 - 产出 `LEExtractor_v<版本>.zip`、包内 `MANIFEST.sha256`（逐文件 SHA-256）与同名 `.sha256`（压缩包自身校验值）。
 
 ## MCP

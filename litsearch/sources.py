@@ -49,6 +49,10 @@ class RetrievalTimeout(RuntimeError):
     """The total wall-clock budget for one logical retrieval ran out."""
 
 
+class RetrievalBudgetExceeded(RuntimeError):
+    """The enclosing workflow exhausted its transport request budget."""
+
+
 def retrieval_status_for_exception(exc: BaseException) -> RetrievalStatus:
     """Which retrieval status an escaping exception means.
 
@@ -60,6 +64,8 @@ def retrieval_status_for_exception(exc: BaseException) -> RetrievalStatus:
         return RetrievalStatus.CANCELED
     if isinstance(exc, RetrievalTimeout):
         return RetrievalStatus.TIMEOUT
+    if isinstance(exc, RetrievalBudgetExceeded):
+        return RetrievalStatus.BUDGET_EXHAUSTED
     if isinstance(exc, SourceError) and exc.kind is SourceErrorKind.RATE_LIMITED:
         return RetrievalStatus.RATE_LIMITED
     if isinstance(exc, (requests.exceptions.Timeout, TimeoutError)):
@@ -242,7 +248,7 @@ class BaseSource(ABC):
                 RetrievalStatus.BUDGET_EXHAUSTED.value,
                 f"{self.name}: request budget of {self._request_budget} exhausted",
             )
-        if time.monotonic() > deadline:
+        if time.monotonic() >= deadline:
             return (
                 RetrievalStatus.TIMEOUT.value,
                 f"{self.name}: total timeout of {self.TOTAL_TIMEOUT_SECONDS:.0f}s exceeded",
@@ -490,7 +496,7 @@ class BaseSource(ABC):
                 return min(float(str(header).strip()), 30.0)
         return min(2.0 * (2 ** attempt), 30.0)
 
-    def _transport_request(self, method: str, url: str, **kwargs):
+    def _transport_request(self, method: str, url: str, *, retry_attempt=False, **kwargs):
         """Send one request through whichever transport object is in play.
 
         ``self._session`` is normally the counting wrapper, which deliberately
@@ -504,6 +510,8 @@ class BaseSource(ABC):
         silently report zero requests for an entire suite of mocked calls.
         An attempt that raises is still an attempt the provider saw.
         """
+        if retry_attempt:
+            self._session.note_retry()
         session = self._session
         try:
             resp = self._dispatch_request(session, method, url, **kwargs)
@@ -528,6 +536,10 @@ class BaseSource(ABC):
                 requests.Session, method.lower(), None
             ):
                 return verb(url, **kwargs)
+            # BaseSource owns accounting at _transport_request. Dispatch to
+            # the inner Session here so CountingSession.request cannot count
+            # the same successful request (or exception) a second time.
+            session = inner
         request = getattr(session, "request", None)
         if callable(request):
             return request(method, url, **kwargs)
@@ -550,23 +562,25 @@ class BaseSource(ABC):
         for attempt in range(self.MAX_HTTP_RETRIES + 1):
             if self.is_canceled():
                 raise RetrievalCanceled(f"{self.name}: canceled before request")
-            if time.monotonic() > deadline:
+            if time.monotonic() >= deadline:
                 raise RetrievalTimeout(
                     f"{self.name}: total timeout of {self.TOTAL_TIMEOUT_SECONDS:.0f}s exceeded"
                 )
             try:
-                resp = self._transport_request(method, url, **kwargs)
+                resp = self._transport_request(method, url, retry_attempt=attempt > 0, **kwargs)
+            except (RetrievalCanceled, RetrievalTimeout, RetrievalBudgetExceeded):
+                # Workflow stop signals are final; retrying them wastes time
+                # and counts nonexistent provider attempts as retries.
+                raise
             except Exception as exc:
                 last_exc = exc
                 if attempt >= self.MAX_HTTP_RETRIES:
                     raise
-                self._session.note_retry()
                 time.sleep(self._retry_delay(attempt))
                 continue
             if resp.status_code == 429 or resp.status_code >= 500:
                 if attempt >= self.MAX_HTTP_RETRIES:
                     return resp
-                self._session.note_retry()
                 time.sleep(self._retry_delay(attempt, resp))
                 continue
             return resp
@@ -858,7 +872,7 @@ class SemanticScholarSource(BaseSource):
             # its own retry statistics for the 429 guidance in the UI.
             if self.is_canceled():
                 raise RetrievalCanceled("semantic_scholar: canceled before request")
-            resp = self._transport_request(method, url, **kwargs)
+            resp = self._transport_request(method, url, retry_attempt=attempt > 0, **kwargs)
             if resp.status_code != 429:
                 return resp
             last = resp

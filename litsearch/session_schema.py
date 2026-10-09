@@ -45,6 +45,8 @@ from pathlib import Path
 
 #: Schema version written by ``persistence.state_to_dict`` (v4 adds the
 #: calibration, the per-decision history/conflict trail and the count ledger).
+#: Optional v4 runtime/audit fields preserve stop reasons, HTTP accounting,
+#: scoring provenance and actual full-text retrieval attempts.
 SESSION_SCHEMA_VERSION = 4
 
 #: Versions this build can migrate from.
@@ -58,6 +60,9 @@ ERROR_PREFIX = "SESSION_SCHEMA_INVALID"
 MAX_PAPERS = 50_000
 MAX_RECORDS = 50_000
 MAX_TEXT = 4096
+MAX_HISTORY = 10_000
+MAX_METADATA_ITEMS = 100_000
+MAX_METADATA_DEPTH = 16
 MIN_YEAR = 1000
 MAX_YEAR = 2200
 
@@ -115,7 +120,7 @@ def _ok_text(errors: list[dict], value, field: str, *, allow_empty: bool = True)
 def _ok_number(errors: list[dict], value, field: str) -> None:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         _error(errors, field, "not_a_number", f"expected a number, found {type(value).__name__}")
-    elif not math.isfinite(value):
+    elif isinstance(value, float) and not math.isfinite(value):
         _error(errors, field, "not_finite", "NaN and Infinity cannot be stored in a session")
 
 
@@ -152,6 +157,113 @@ def _ok_str_list(errors: list[dict], value, field: str, *, limit: int = MAX_PAPE
         _ok_text(errors, item, f"{field}[{index}]")
 
 
+def _ok_bool(errors: list[dict], value, field: str) -> None:
+    if not isinstance(value, bool):
+        _error(errors, field, "not_a_boolean",
+               f"expected a boolean, found {type(value).__name__}")
+
+
+def _validate_json_metadata(errors: list[dict], value, field: str, *,
+                            depth: int = 0, budget: list[int] | None = None) -> None:
+    """Bound audit metadata and reject non-JSON / non-finite nested values."""
+    budget = budget if budget is not None else [MAX_METADATA_ITEMS]
+    budget[0] -= 1
+    if budget[0] < 0:
+        _error(errors, field, "too_large", "metadata contains too many values")
+        return
+    if depth > MAX_METADATA_DEPTH:
+        _error(errors, field, "too_deep", "metadata exceeds the maximum nesting depth")
+        return
+    if value is None or isinstance(value, bool):
+        return
+    if isinstance(value, str):
+        _ok_text(errors, value, field)
+    elif isinstance(value, (int, float)):
+        _ok_number(errors, value, field)
+    elif isinstance(value, (dict, list)):
+        if len(value) > MAX_METADATA_ITEMS:
+            _error(errors, field, "too_large", "metadata container exceeds the entry limit")
+            return
+        entries = value.items() if isinstance(value, dict) else enumerate(value)
+        for key, item in entries:
+            if budget[0] <= 0:
+                _error(errors, field, "too_large", "metadata contains too many values")
+                break
+            if isinstance(value, dict):
+                _ok_text(errors, key, f"{field}.<key>")
+            _validate_json_metadata(errors, item, f"{field}.{key}",
+                                    depth=depth + 1, budget=budget)
+    else:
+        _error(errors, field, "not_json", f"unsupported value {type(value).__name__}")
+
+
+def _validate_stop_reason(errors: list[dict], value, field: str) -> None:
+    from litsearch.stop_reasons import StopReason
+
+    _ok_text(errors, value, field)
+    if not isinstance(value, str) or value not in ("", *(r.value for r in StopReason)):
+        _error(errors, field, "invalid_enum", "expected an empty or known stop reason")
+
+
+def _validate_http_budget(errors: list[dict], value, field: str) -> None:
+    if not _ok_dict(errors, value, field):
+        return
+    _validate_json_metadata(errors, value, field)
+    counters = ("requests", "retries", "cache_hits", "rate_limited", "errors")
+    for name in counters:
+        if name in value:
+            _ok_int(errors, value[name], f"{field}.{name}", minimum=0)
+    if "canceled" in value:
+        _ok_bool(errors, value["canceled"], f"{field}.canceled")
+    if "elapsed_seconds" in value:
+        elapsed = value["elapsed_seconds"]
+        _ok_number(errors, elapsed, f"{field}.elapsed_seconds")
+        if isinstance(elapsed, (int, float)) and not isinstance(elapsed, bool) and elapsed < 0:
+            _error(errors, f"{field}.elapsed_seconds", "out_of_range", "must not be negative")
+    if "by_source" in value and _ok_dict(errors, value["by_source"], f"{field}.by_source"):
+        for source, counts in value["by_source"].items():
+            source_field = f"{field}.by_source.{source}"
+            if not _ok_dict(errors, counts, source_field):
+                continue
+            for name in counters:
+                if name in counts:
+                    _ok_int(errors, counts[name], f"{source_field}.{name}", minimum=0)
+
+
+def _validate_state_extensions(errors: list[dict], data: dict) -> None:
+    """Optional v4 runtime/audit fields; absence remains an unknown fact."""
+    if "stop_reason" in data:
+        _validate_stop_reason(errors, data["stop_reason"], "stop_reason")
+    if "http_budget" in data:
+        _validate_http_budget(errors, data["http_budget"], "http_budget")
+    for name in ("score_context_id", "score_context_stage", "calibration_context_id"):
+        if name in data:
+            _ok_text(errors, data[name], name)
+    for name in ("run_history", "score_context_history"):
+        if name not in data or not _ok_list(errors, data[name], name, limit=MAX_HISTORY):
+            continue
+        _validate_json_metadata(errors, data[name], name)
+        for index, entry in enumerate(data[name]):
+            entry_field = f"{name}[{index}]"
+            if not _ok_dict(errors, entry, entry_field):
+                continue
+            for key in ("stage", "at", "context_id", "previous_context_id", "previous_stage",
+                        "score_context_id", "query", "saturation_reason"):
+                if key in entry:
+                    _ok_text(errors, entry[key], f"{entry_field}.{key}")
+            for key in ("papers", "provider_raw", "unique_records", "returned", "rounds",
+                        "discovered", "failed_seeds", "pending_seeds", "found", "bc", "cc"):
+                if key in entry:
+                    _ok_int(errors, entry[key], f"{entry_field}.{key}", minimum=0)
+            if "stop_reason" in entry:
+                _validate_stop_reason(errors, entry["stop_reason"], f"{entry_field}.stop_reason")
+            if "incomplete" in entry:
+                _ok_bool(errors, entry["incomplete"], f"{entry_field}.incomplete")
+            for key in ("http", "http_budget"):
+                if key in entry:
+                    _validate_http_budget(errors, entry[key], f"{entry_field}.{key}")
+
+
 def _validate_paper(errors: list[dict], paper, field: str) -> None:
     if not _ok_dict(errors, paper, field):
         return
@@ -174,6 +286,8 @@ def _validate_paper(errors: list[dict], paper, field: str) -> None:
             _ok_int(errors, paper[name], f"{field}.{name}", minimum=0)
     if "relevance_score" in paper:
         _ok_number(errors, paper["relevance_score"], f"{field}.relevance_score")
+    if "score_context_id" in paper:
+        _ok_text(errors, paper["score_context_id"], f"{field}.score_context_id")
     for name in ("citation_ids", "reference_ids", "topics"):
         if name in paper:
             _ok_str_list(errors, paper[name], f"{field}.{name}")
@@ -265,13 +379,14 @@ def _validate_prisma(errors: list[dict], prisma, field: str) -> None:
                 if name in record and record[name] not in _DECISIONS:
                     _error(errors, f"{record_field}.{name}", "invalid_enum",
                            f"expected one of {', '.join(_DECISIONS)}")
-            for name in ("full_text_retrieved",):
+            for name in ("full_text_retrieved", "retrieval_attempted"):
                 if name in record and not isinstance(record[name], bool):
                     _error(errors, f"{record_field}.{name}", "not_a_boolean",
                            f"expected a boolean, found {type(record[name]).__name__}")
             if "relevance_score" in record:
                 _ok_number(errors, record["relevance_score"], f"{record_field}.relevance_score")
-            for name in ("source", "screening_reason", "full_text_reason", "score_context_id"):
+            for name in ("source", "screening_reason", "full_text_reason", "score_context_id",
+                         "retrieval_failure_reason"):
                 if name in record:
                     _ok_text(errors, record[name], f"{record_field}.{name}")
             for name in ("requires_manual_review",):
@@ -342,7 +457,9 @@ def _validate_snowball(errors: list[dict], snowball, field: str) -> None:
         return
     if not _ok_dict(errors, snowball, field):
         return
-    for name in ("initial_ids", "next_seed_ids"):
+    if "stop_reason" in snowball:
+        _validate_stop_reason(errors, snowball["stop_reason"], f"{field}.stop_reason")
+    for name in ("initial_ids", "next_seed_ids", "seed_ids"):
         if name in snowball:
             _ok_str_list(errors, snowball[name], f"{field}.{name}")
     for name in ("saturated", "completed"):
@@ -361,15 +478,19 @@ def _validate_snowball(errors: list[dict], snowball, field: str) -> None:
                 continue
             _ok_int(errors, round_.get("round_number"), f"{round_field}.round_number", minimum=1)
             _ok_text(errors, round_.get("direction"), f"{round_field}.direction")
-            for name in ("raw_count", "unique_count", "relevant_count", "cumulative_unique"):
+            for name in ("raw_count", "unique_count", "relevant_count", "cumulative_unique",
+                         "failed_seeds"):
                 if name in round_:
                     _ok_int(errors, round_[name], f"{round_field}.{name}", minimum=0)
             if "new_papers" in round_ and _ok_list(errors, round_["new_papers"],
                                                    f"{round_field}.new_papers"):
                 for paper_index, paper in enumerate(round_["new_papers"]):
                     _validate_paper(errors, paper, f"{round_field}.new_papers[{paper_index}]")
-            if "source_papers" in round_:
-                _ok_str_list(errors, round_["source_papers"], f"{round_field}.source_papers")
+            for name in ("source_papers", "seed_ids", "pending_seeds"):
+                if name in round_:
+                    _ok_str_list(errors, round_[name], f"{round_field}.{name}")
+            if "canceled" in round_:
+                _ok_bool(errors, round_["canceled"], f"{round_field}.canceled")
 
 
 def _validate_document(data) -> list[dict]:
@@ -379,6 +500,7 @@ def _validate_document(data) -> list[dict]:
         return errors
     # The schema version is checked before migration (see `_check_version`); by
     # the time a document reaches this function it is at the current version.
+    _validate_state_extensions(errors, data)
     for name in ("topic", "research_direction"):
         if name in data:
             _ok_text(errors, data[name], name)
@@ -626,6 +748,10 @@ def validate_session_dict(data, *, warnings: list[dict] | None = None) -> dict:
     _check_version(version_errors, data)
     if version_errors:
         raise SessionSchemaError(version_errors)
+    extension_errors: list[dict] = []
+    _validate_state_extensions(extension_errors, data)
+    if extension_errors:
+        raise SessionSchemaError(extension_errors)
     migrated = migrate_session_dict(data, warnings=notes)
     errors = _validate_document(migrated)
     if errors:

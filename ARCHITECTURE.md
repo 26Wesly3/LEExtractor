@@ -1,11 +1,12 @@
 # LEExtractor 架构
 
-版本 v0.9.4。本文件描述**当前实现的模块边界与数据流**，不描述计划中的能力（计划见 [ROADMAP.md](ROADMAP.md)），也不重复改动历史（见 [CHANGES.md](CHANGES.md)）。
+版本 v0.9.7。本文件描述**当前实现的模块边界与数据流**，不描述计划中的能力（计划见 [ROADMAP.md](ROADMAP.md)），也不重复改动历史（见 [CHANGES.md](CHANGES.md)）。
 
 ## 1. 分层
 
 ```text
-入口层      app.py（Streamlit）        server.py → litsearch/server.py（FastMCP，12 工具）
+入口层      web/（Vue + Vuetify） → litsearch/web/（FastAPI、DTO、项目与后台任务）
+            app.py（Streamlit）        server.py → litsearch/server.py（FastMCP，12 工具）
 工作流层    litsearch/search.py（LiteratureReviewWorkflow / ReviewState）
             litsearch/snowball.py     litsearch/similar.py
 数据源层    litsearch/sources.py      litsearch/retrieval.py  litsearch/cache.py
@@ -39,7 +40,7 @@
 
 | 模块 | 职责 |
 | --- | --- |
-| `litsearch/version.py` | 版本唯一来源（`__version__` 0.9.4、`version_tag()`、`package_name()`）；无第三方导入，供打包用 `ast` 解析 |
+| `litsearch/version.py` | 版本唯一来源（`__version__` 0.9.7、`version_tag()`、`package_name()`）；无第三方导入，供打包用 `ast` 解析 |
 | `litsearch/config.py` | 路径、年份、密钥读取；`max_pdf_size()`（默认 100 MiB，`LEEXTRACTOR_MAX_PDF_SIZE` 覆盖）与 `max_pdf_size_mib()` |
 | `litsearch/models.py` | `Paper` / `Author` / `SearchResult` / `CitationNetwork` / `DiscoveryTrace`；`score_context_id`、`stop_reason`、`http_budget` 字段 |
 | `litsearch/identifiers.py` | DOI / OpenAlex / arXiv 归一化、别名集合、兜底键 |
@@ -52,7 +53,7 @@
 | `litsearch/snowball.py` | 正向/反向引文扩展，按轮次记录 raw/unique/relevant/累计，支持断点续跑 |
 | `litsearch/similar.py` | 基于文献耦合 / 共被引的相似论文发现 |
 | `litsearch/filters.py` | 词法相关度（word/char/coverage 混合）、去重、`CalibrationRecord` 标定记录 |
-| `litsearch/prisma.py` | PRISMA 状态容器、决定冲突留痕、计数账本 `PRISMALedger`（record/report 级别）、自动筛选的唯一闸门 |
+| `litsearch/prisma.py` | PRISMA 状态容器、决定冲突留痕、计数账本 `RetrievalLedger`（record/report 级别）、自动筛选的唯一闸门 |
 | `litsearch/evidence.py` | `EvidenceGraph`：引文图（PageRank/社群/路径只跑引文边）+ 多关系边（每对可同时有 3 种关系，不互相加权） |
 | `litsearch/landscape.py` | 主题聚类、时间演变、新颖度、覆盖平衡（全部限定当前样本） |
 | `litsearch/questions.py` | 候选研究问题（组合空白 / 覆盖不足 / 无人跟进），全部 `status=hypothesis` |
