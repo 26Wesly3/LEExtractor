@@ -14,6 +14,8 @@ python -m venv .venv
 
 默认固定抽取 30 个问题，种子 42，候选库使用全部 5,183 篇文献，不根据相关性筛选候选库。正式扩大试验时使用 `--queries 0` 跑完整 300 个 test 问题，结果另存目录，避免覆盖试跑记录。CPU 首轮向量计算较慢，后续复用独立向量缓存；每 256 个文本块保存一次缓存。不要在 test 标签上挑选权重后再把同一 test 成绩描述为独立验证。
 
+扩大试验同时复用本轮向量可加 `--vector-cache artifacts/benchmark-scifact/model-cache`，只复用论文文本向量，不复用排名或相关性标签。
+
 数据取自 [BEIR 官方 SciFact 下载地址](https://github.com/beir-cellar/beir)，下载压缩包 SHA-256 固定为 `536e14446a0ba56ed1398ab1055f39fe852686ecad24a6306c80c490fa8e0165`。来源说明见 [SciFact 原项目](https://github.com/allenai/scifact)。它测试生物医学科学声明到论文摘要的检索，不代表计算机会议覆盖率。
 
 对照系统：

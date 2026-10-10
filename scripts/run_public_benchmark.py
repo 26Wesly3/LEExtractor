@@ -119,13 +119,13 @@ def ranked_ids(ids, scores, limit=50):
     return [ids[index] for index in np.argsort(-np.asarray(scores), kind="stable")[:limit]]
 
 
-def run(archive, output, count=30, seed=42):
+def run(archive, output, count=30, seed=42, vector_cache=None):
     if count < 0:
         raise ValueError("queries must be zero (all) or positive")
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
     # Benchmark vector cache is separate from application/user project state.
-    os.environ["LEEXTRACTOR_MODEL_DIR"] = str(output / "model-cache")
+    os.environ["LEEXTRACTOR_MODEL_DIR"] = str(vector_cache or output / "model-cache")
     corpus, queries, qrels = load_data(archive)
     all_queries = sorted(qrels)
     selected = sorted(random.Random(seed).sample(all_queries, min(count, len(all_queries)))) if count else all_queries
@@ -215,8 +215,9 @@ def main(argv=None):
     parser.add_argument("--out", default="artifacts/benchmark-scifact")
     parser.add_argument("--queries", type=int, default=30, help="0 evaluates all 300 test questions")
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--vector-cache", default="", help="optional existing benchmark vector cache directory")
     args = parser.parse_args(argv)
-    run(args.archive, args.out, args.queries, args.seed)
+    run(args.archive, args.out, args.queries, args.seed, args.vector_cache or None)
     return 0
 
 
