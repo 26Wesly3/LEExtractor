@@ -176,10 +176,10 @@ def run(archive, output, count=30, seed=42, vector_cache=None):
         record("current_hybrid", [p.id for p in hybrid[:50]], time.perf_counter() - started + row["minilm_title_abstract"]["latency_seconds"])
         print(f"Ranked {number}/{len(selected)} query {query_id}", flush=True)
         # Persist intermediate rankings so a failed long run is inspectable.
-        (output / "systems.json").write_text(json.dumps(snapshot, ensure_ascii=False), encoding="utf-8")
+        (output / "systems.json").write_text(json.dumps(snapshot, ensure_ascii=False), encoding="utf-8", newline="\n")
     dataset = BenchmarkDataset(name=f"BEIR SciFact test pilot ({len(selected)} queries)", frozen_on="BEIR scifact.zip sha256 pinned",
                                cases=cases, environment={"dataset_url": DATA_URL, "dataset_sha256": DATA_SHA256})
-    (output / "dataset.json").write_text(json.dumps(dataset.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8")
+    (output / "dataset.json").write_text(json.dumps(dataset.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8", newline="\n")
     results = build_results(dataset, snapshot, live=False, limit=50)
     payload = report_payload(dataset, results, live=False)
     payload["protocol"] = {"candidate_documents": len(ids), "pool_id_sha256": pool_hash,

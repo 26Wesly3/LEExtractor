@@ -25,11 +25,11 @@ def paired_bootstrap(per_case, baseline, challenger, metric="ndcg@20", seed=42, 
 def write_exports(payload, path):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8", newline="\n")
     aggregates = payload["aggregate_by_system"]
     columns = ["system", "cases_scored", "cases_skipped", "precision@20", "ndcg@20", "recall@50", "mrr", "latency_seconds"]
     with path.with_suffix(".csv").open("w", encoding="utf-8-sig", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=columns)
+        writer = csv.DictWriter(handle, fieldnames=columns, lineterminator="\n")
         writer.writeheader()
         for name, row in aggregates.items():
             writer.writerow({key: name if key == "system" else row.get(key) for key in columns})
@@ -45,4 +45,4 @@ def write_exports(payload, path):
                   "## 解释边界", ""])
     lines.extend("- " + warning for warning in payload.get("warnings", []))
     lines.extend(["", "完整逐题分数见同名 JSON；系统宏平均见同名 CSV。"])
-    path.with_suffix(".md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    path.with_suffix(".md").write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
