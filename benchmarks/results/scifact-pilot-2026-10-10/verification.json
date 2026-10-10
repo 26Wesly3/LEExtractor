@@ -7,10 +7,10 @@
   ],
   "snapshot_replay_equal": true,
   "local_python_tests": 800,
-  "implementation_commit": "1a5f21a9b3325678af5c455a0f06ddd5ffcc99b3",
+  "implementation_commit": "d77240e4146e284d981e6ce97b7147cac82d36df",
   "input_sha256": {
-    "dataset.json": "3fbe60c5b91cedf9d7e3016dd3f2d352c63af90f7b20472a7e9a17296b33bd13",
-    "systems.json": "5269e1e9ecfe23f21da333938697e072859d22949f9085a824b44b8b3933eaa2"
+    "dataset.json": "c064d9d38b1e2820d643ceabb236747aec16121e40d2efb85fe31b7711acba43",
+    "systems.json": "825139b46633c41ca352f3928254101434a66401e25e4250ca4dc9136416dbec"
   },
   "snapshot_rescore_metrics_equal": true,
   "first_run_pool_preparation_seconds": 784.907,
