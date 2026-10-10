@@ -54,7 +54,7 @@ python -m venv .venv
 .venv\Scripts\python.exe -m scripts.run_topic_benchmark --direction "计算机视觉领域的多智能体合作问题" --out artifacts/benchmark-topic
 ```
 
-复用产品实际中文翻译和分库查询规则，默认 2020 年至当前年、每个来源最多 30 条、传输请求预算 5 次、逻辑检索时限 45 秒。单个网络请求及服务器 Retry-After 等待可能影响实际耗时，时限不是硬杀进程。可以用 `--english` 输入人工英文译文作另一次独立对照。自动译文不算人工质量标签。
+复用产品实际中文翻译和分库查询规则，默认 2020 年至当前年、每个来源最多 30 条、单次分页检索请求预算 5 次、逻辑检索时限 45 秒。OpenReview 的 v2/v1 是分开的检索，最终请求总量保留在来源统计中；不能把调用次数当作 HTTP 请求次数。单个网络请求及服务器 Retry-After 等待可能影响实际耗时，时限不是硬杀进程。可以用 `--english` 输入人工英文译文作另一次独立对照。自动译文不算人工质量标签。
 
 输出 `providers.json` 保存译文、每库实际查询、结果状态、请求计数和耗时；`candidates.json` 保存原始论文元数据；`systems.json` 保存来源原始排序和同一候选池上的产品 lexical / hybrid 排序。来源快照是各数据源 API 的表现，Semantic Scholar API 不等同于其网站交互搜索。
 

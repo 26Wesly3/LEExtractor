@@ -1,7 +1,13 @@
 import math
+import sys
+from pathlib import Path
 
 import numpy as np
 import pytest
+
+# The pytest console entry point does not add the repository root to sys.path.
+# Scripts are repository utilities, outside the installed litsearch package.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from litsearch.benchmark import (
     CORE_RELEVANT,
