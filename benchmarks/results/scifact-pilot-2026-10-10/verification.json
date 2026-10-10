@@ -1,0 +1,22 @@
+{
+  "ranking_runs_verified": 150,
+  "metrics_each": [
+    "sklearn.metrics.ndcg_score@20",
+    "independent set-based P@20",
+    "independent set-based Recall@50"
+  ],
+  "snapshot_replay_equal": true,
+  "local_python_tests": 800,
+  "implementation_commit": "1a5f21a9b3325678af5c455a0f06ddd5ffcc99b3",
+  "input_sha256": {
+    "dataset.json": "3fbe60c5b91cedf9d7e3016dd3f2d352c63af90f7b20472a7e9a17296b33bd13",
+    "systems.json": "5269e1e9ecfe23f21da333938697e072859d22949f9085a824b44b8b3933eaa2"
+  },
+  "snapshot_rescore_metrics_equal": true,
+  "first_run_pool_preparation_seconds": 784.907,
+  "cached_rerun_queries": [
+    "1266"
+  ],
+  "cached_rerun_rankings_equal": true,
+  "cached_pool_preparation_seconds": 30.785
+}

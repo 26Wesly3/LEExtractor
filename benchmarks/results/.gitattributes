@@ -1,0 +1,4 @@
+# Preserve frozen JSON fingerprints across Windows and Linux checkouts.
+**/*.json text eol=lf
+**/*.csv text eol=lf
+**/*.md text eol=lf

@@ -1,0 +1,6 @@
+﻿system,cases_scored,cases_skipped,precision@20,ndcg@20,recall@50,mrr,latency_seconds
+bm25,30,0,0.045,0.6631,0.8433,0.6367,0.0033
+current_hybrid,30,0,0.0467,0.68,0.8767,0.6379,16.961
+lexical,30,0,0.045,0.5941,0.81,0.5339,14.7106
+minilm_title,30,0,0.035,0.5438,0.73,0.504,0.0184
+minilm_title_abstract,30,0,0.0383,0.4856,0.7367,0.4268,0.0176

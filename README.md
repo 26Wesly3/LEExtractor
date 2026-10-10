@@ -61,6 +61,8 @@ The following earlier concept image is illustrative, not a screenshot of current
 
 Benchmark pilot: see [public SciFact ranking comparisons, live topic snapshots and human annotation](benchmarks/PILOT_GUIDE.md). Run `python -m scripts.run_public_benchmark --queries 30` for per-system JSON, CSV and Markdown metrics using public qrels; synthetic sample labels are not competition results.
 
+[First pilot results and handoff, 2026-10-10](benchmarks/results/scifact-pilot-2026-10-10/SUMMARY.zh-CN.md): 5,183 candidates and 30 seeded test questions, with frozen rankings and per-query metrics for offline rescoring.
+
 - [Setup and current capabilities](README.dev.md)
 - [Web integration and API boundaries](docs/web-integration.md)
 - [Current validation](VALIDATION_v0.9.11.md)

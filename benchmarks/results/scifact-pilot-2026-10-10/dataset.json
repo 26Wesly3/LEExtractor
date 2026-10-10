@@ -1,0 +1,616 @@
+{
+  "name": "BEIR SciFact test pilot (30 queries)",
+  "frozen_on": "BEIR scifact.zip sha256 pinned",
+  "label_guide": "",
+  "environment": {
+    "dataset_url": "https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/scifact.zip",
+    "dataset_sha256": "536e14446a0ba56ed1398ab1055f39fe852686ecad24a6306c80c490fa8e0165"
+  },
+  "cases": [
+    {
+      "case_id": "1014",
+      "domain": "biomedical scientific claim retrieval",
+      "query": "Rapamycin decreases the concentration of triacylglycerols in fruit flies.",
+      "search_date": "BEIR frozen test split",
+      "providers": [],
+      "notes": "",
+      "labelled_by": "SciFact public qrels via BEIR",
+      "judgment_policy": "unjudged_as_nonrelevant",
+      "papers": [
+        {
+          "paper_id": "6277638",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        }
+      ]
+    },
+    {
+      "case_id": "1086",
+      "domain": "biomedical scientific claim retrieval",
+      "query": "Sildenafil improves erectile function in men who experience sexual dysfunction as a result of the use of SSRI antidepressants.",
+      "search_date": "BEIR frozen test split",
+      "providers": [],
+      "notes": "",
+      "labelled_by": "SciFact public qrels via BEIR",
+      "judgment_policy": "unjudged_as_nonrelevant",
+      "papers": [
+        {
+          "paper_id": "39281140",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        }
+      ]
+    },
+    {
+      "case_id": "1088",
+      "domain": "biomedical scientific claim retrieval",
+      "query": "Silencing of Bcl2 is important for the maintenance and progression of tumors.",
+      "search_date": "BEIR frozen test split",
+      "providers": [],
+      "notes": "",
+      "labelled_by": "SciFact public qrels via BEIR",
+      "judgment_policy": "unjudged_as_nonrelevant",
+      "papers": [
+        {
+          "paper_id": "37549932",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        }
+      ]
+    },
+    {
+      "case_id": "1099",
+      "domain": "biomedical scientific claim retrieval",
+      "query": "Statins decrease blood cholesterol.",
+      "search_date": "BEIR frozen test split",
+      "providers": [],
+      "notes": "",
+      "labelled_by": "SciFact public qrels via BEIR",
+      "judgment_policy": "unjudged_as_nonrelevant",
+      "papers": [
+        {
+          "paper_id": "7662206",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        }
+      ]
+    },
+    {
+      "case_id": "1100",
+      "domain": "biomedical scientific claim retrieval",
+      "query": "Statins increase blood cholesterol.",
+      "search_date": "BEIR frozen test split",
+      "providers": [],
+      "notes": "",
+      "labelled_by": "SciFact public qrels via BEIR",
+      "judgment_policy": "unjudged_as_nonrelevant",
+      "papers": [
+        {
+          "paper_id": "7662206",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        }
+      ]
+    },
+    {
+      "case_id": "1204",
+      "domain": "biomedical scientific claim retrieval",
+      "query": "The combination of H3K4me3 and H3K79me2 is found in quiescent hair follicle stem cells.",
+      "search_date": "BEIR frozen test split",
+      "providers": [],
+      "notes": "",
+      "labelled_by": "SciFact public qrels via BEIR",
+      "judgment_policy": "unjudged_as_nonrelevant",
+      "papers": [
+        {
+          "paper_id": "31141365",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        }
+      ]
+    },
+    {
+      "case_id": "1216",
+      "domain": "biomedical scientific claim retrieval",
+      "query": "The extracellular domain of TMEM27 is cleaved in human beta cells.",
+      "search_date": "BEIR frozen test split",
+      "providers": [],
+      "notes": "",
+      "labelled_by": "SciFact public qrels via BEIR",
+      "judgment_policy": "unjudged_as_nonrelevant",
+      "papers": [
+        {
+          "paper_id": "24142891",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        }
+      ]
+    },
+    {
+      "case_id": "124",
+      "domain": "biomedical scientific claim retrieval",
+      "query": "Antiretroviral therapy reduces rates of tuberculosis across a broad range of CD4 strata.",
+      "search_date": "BEIR frozen test split",
+      "providers": [],
+      "notes": "",
+      "labelled_by": "SciFact public qrels via BEIR",
+      "judgment_policy": "unjudged_as_nonrelevant",
+      "papers": [
+        {
+          "paper_id": "4883040",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        }
+      ]
+    },
+    {
+      "case_id": "1266",
+      "domain": "biomedical scientific claim retrieval",
+      "query": "The risk of breast cancer among parous women increases with placental weight of pregnancies, and this association is strongest for premenopausal breast cancer.",
+      "search_date": "BEIR frozen test split",
+      "providers": [],
+      "notes": "",
+      "labelled_by": "SciFact public qrels via BEIR",
+      "judgment_policy": "unjudged_as_nonrelevant",
+      "papers": [
+        {
+          "paper_id": "37480103",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        }
+      ]
+    },
+    {
+      "case_id": "1290",
+      "domain": "biomedical scientific claim retrieval",
+      "query": "There is an inverse relationship between hip fractures and statin use.",
+      "search_date": "BEIR frozen test split",
+      "providers": [],
+      "notes": "",
+      "labelled_by": "SciFact public qrels via BEIR",
+      "judgment_policy": "unjudged_as_nonrelevant",
+      "papers": [
+        {
+          "paper_id": "4687948",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        }
+      ]
+    },
+    {
+      "case_id": "132",
+      "domain": "biomedical scientific claim retrieval",
+      "query": "Aspirin inhibits the production of PGE2.",
+      "search_date": "BEIR frozen test split",
+      "providers": [],
+      "notes": "",
+      "labelled_by": "SciFact public qrels via BEIR",
+      "judgment_policy": "unjudged_as_nonrelevant",
+      "papers": [
+        {
+          "paper_id": "7975937",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        }
+      ]
+    },
+    {
+      "case_id": "133",
+      "domain": "biomedical scientific claim retrieval",
+      "query": "Assembly of invadopodia is triggered by focal generation of phosphatidylinositol-3,4-biphosphate and the activation of the nonreceptor tyrosine kinase Src.",
+      "search_date": "BEIR frozen test split",
+      "providers": [],
+      "notes": "",
+      "labelled_by": "SciFact public qrels via BEIR",
+      "judgment_policy": "unjudged_as_nonrelevant",
+      "papers": [
+        {
+          "paper_id": "38485364",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        },
+        {
+          "paper_id": "6969753",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        },
+        {
+          "paper_id": "17934082",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        },
+        {
+          "paper_id": "16280642",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        },
+        {
+          "paper_id": "12640810",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        }
+      ]
+    },
+    {
+      "case_id": "142",
+      "domain": "biomedical scientific claim retrieval",
+      "query": "Autologous transplantation of mesenchymal stem cells causes a higher rate of opportunistic infections than induction therapy with anti-interleukin-2 receptor antibodies.",
+      "search_date": "BEIR frozen test split",
+      "providers": [],
+      "notes": "",
+      "labelled_by": "SciFact public qrels via BEIR",
+      "judgment_policy": "unjudged_as_nonrelevant",
+      "papers": [
+        {
+          "paper_id": "10582939",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        }
+      ]
+    },
+    {
+      "case_id": "185",
+      "domain": "biomedical scientific claim retrieval",
+      "query": "Breast cancer development is determined exclusively by genetic factors.",
+      "search_date": "BEIR frozen test split",
+      "providers": [],
+      "notes": "",
+      "labelled_by": "SciFact public qrels via BEIR",
+      "judgment_policy": "unjudged_as_nonrelevant",
+      "papers": [
+        {
+          "paper_id": "18340282",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        }
+      ]
+    },
+    {
+      "case_id": "198",
+      "domain": "biomedical scientific claim retrieval",
+      "query": "CCL19 is absent within dLNs.",
+      "search_date": "BEIR frozen test split",
+      "providers": [],
+      "notes": "",
+      "labelled_by": "SciFact public qrels via BEIR",
+      "judgment_policy": "unjudged_as_nonrelevant",
+      "papers": [
+        {
+          "paper_id": "2177022",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        }
+      ]
+    },
+    {
+      "case_id": "208",
+      "domain": "biomedical scientific claim retrieval",
+      "query": "CHEK2 is not associated with breast cancer.",
+      "search_date": "BEIR frozen test split",
+      "providers": [],
+      "notes": "",
+      "labelled_by": "SciFact public qrels via BEIR",
+      "judgment_policy": "unjudged_as_nonrelevant",
+      "papers": [
+        {
+          "paper_id": "13519661",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        }
+      ]
+    },
+    {
+      "case_id": "213",
+      "domain": "biomedical scientific claim retrieval",
+      "query": "CRP is not predictive of postoperative mortality following Coronary Artery Bypass Graft (CABG) surgery.",
+      "search_date": "BEIR frozen test split",
+      "providers": [],
+      "notes": "",
+      "labelled_by": "SciFact public qrels via BEIR",
+      "judgment_policy": "unjudged_as_nonrelevant",
+      "papers": [
+        {
+          "paper_id": "13625993",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        }
+      ]
+    },
+    {
+      "case_id": "230",
+      "domain": "biomedical scientific claim retrieval",
+      "query": "Carriers of the alcohol aldehyde dehydrogenase deficiency mutation drink less that non-carries.",
+      "search_date": "BEIR frozen test split",
+      "providers": [],
+      "notes": "",
+      "labelled_by": "SciFact public qrels via BEIR",
+      "judgment_policy": "unjudged_as_nonrelevant",
+      "papers": [
+        {
+          "paper_id": "3067015",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        }
+      ]
+    },
+    {
+      "case_id": "239",
+      "domain": "biomedical scientific claim retrieval",
+      "query": "Cellular aging closely links to an older appearance.",
+      "search_date": "BEIR frozen test split",
+      "providers": [],
+      "notes": "",
+      "labelled_by": "SciFact public qrels via BEIR",
+      "judgment_policy": "unjudged_as_nonrelevant",
+      "papers": [
+        {
+          "paper_id": "14079881",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        }
+      ]
+    },
+    {
+      "case_id": "312",
+      "domain": "biomedical scientific claim retrieval",
+      "query": "De novo assembly of sequence data has more specific contigs than unassembled sequence data.",
+      "search_date": "BEIR frozen test split",
+      "providers": [],
+      "notes": "",
+      "labelled_by": "SciFact public qrels via BEIR",
+      "judgment_policy": "unjudged_as_nonrelevant",
+      "papers": [
+        {
+          "paper_id": "6173523",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        }
+      ]
+    },
+    {
+      "case_id": "324",
+      "domain": "biomedical scientific claim retrieval",
+      "query": "Deleting Raptor reduces G-CSF levels.",
+      "search_date": "BEIR frozen test split",
+      "providers": [],
+      "notes": "",
+      "labelled_by": "SciFact public qrels via BEIR",
+      "judgment_policy": "unjudged_as_nonrelevant",
+      "papers": [
+        {
+          "paper_id": "2014909",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        }
+      ]
+    },
+    {
+      "case_id": "491",
+      "domain": "biomedical scientific claim retrieval",
+      "query": "HNF4A mutations can cause diabetes in mutant carriers by the age of 14 years",
+      "search_date": "BEIR frozen test split",
+      "providers": [],
+      "notes": "",
+      "labelled_by": "SciFact public qrels via BEIR",
+      "judgment_policy": "unjudged_as_nonrelevant",
+      "papers": [
+        {
+          "paper_id": "56893404",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        }
+      ]
+    },
+    {
+      "case_id": "50",
+      "domain": "biomedical scientific claim retrieval",
+      "query": "AIRE is expressed in some skin tumors.",
+      "search_date": "BEIR frozen test split",
+      "providers": [],
+      "notes": "",
+      "labelled_by": "SciFact public qrels via BEIR",
+      "judgment_policy": "unjudged_as_nonrelevant",
+      "papers": [
+        {
+          "paper_id": "12580014",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        }
+      ]
+    },
+    {
+      "case_id": "54",
+      "domain": "biomedical scientific claim retrieval",
+      "query": "AMP-activated protein kinase (AMPK) activation increases inflammation-related fibrosis in the lungs.",
+      "search_date": "BEIR frozen test split",
+      "providers": [],
+      "notes": "",
+      "labelled_by": "SciFact public qrels via BEIR",
+      "judgment_policy": "unjudged_as_nonrelevant",
+      "papers": [
+        {
+          "paper_id": "49556906",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        }
+      ]
+    },
+    {
+      "case_id": "619",
+      "domain": "biomedical scientific claim retrieval",
+      "query": "Increased vessel density along with a reduction in fibrosis decreases the efficacy of chemotherapy treatments.",
+      "search_date": "BEIR frozen test split",
+      "providers": [],
+      "notes": "",
+      "labelled_by": "SciFact public qrels via BEIR",
+      "judgment_policy": "unjudged_as_nonrelevant",
+      "papers": [
+        {
+          "paper_id": "20888849",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        },
+        {
+          "paper_id": "2565138",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        }
+      ]
+    },
+    {
+      "case_id": "628",
+      "domain": "biomedical scientific claim retrieval",
+      "query": "Infection of human T-cell lymphotropic virus type 1 is most frequent in individuals of African origin.",
+      "search_date": "BEIR frozen test split",
+      "providers": [],
+      "notes": "",
+      "labelled_by": "SciFact public qrels via BEIR",
+      "judgment_policy": "unjudged_as_nonrelevant",
+      "papers": [
+        {
+          "paper_id": "24512064",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        }
+      ]
+    },
+    {
+      "case_id": "693",
+      "domain": "biomedical scientific claim retrieval",
+      "query": "Leuko-reduced blood reduces infectious complications in red blood cell transfusion.",
+      "search_date": "BEIR frozen test split",
+      "providers": [],
+      "notes": "",
+      "labelled_by": "SciFact public qrels via BEIR",
+      "judgment_policy": "unjudged_as_nonrelevant",
+      "papers": [
+        {
+          "paper_id": "24088502",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        }
+      ]
+    },
+    {
+      "case_id": "808",
+      "domain": "biomedical scientific claim retrieval",
+      "query": "Most termination events in Okazaki fragments are sequence specific.",
+      "search_date": "BEIR frozen test split",
+      "providers": [],
+      "notes": "",
+      "labelled_by": "SciFact public qrels via BEIR",
+      "judgment_policy": "unjudged_as_nonrelevant",
+      "papers": [
+        {
+          "paper_id": "36606083",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        }
+      ]
+    },
+    {
+      "case_id": "887",
+      "domain": "biomedical scientific claim retrieval",
+      "query": "Only a minority of cells survive development after differentiation into stress-resistant spores.",
+      "search_date": "BEIR frozen test split",
+      "providers": [],
+      "notes": "",
+      "labelled_by": "SciFact public qrels via BEIR",
+      "judgment_policy": "unjudged_as_nonrelevant",
+      "papers": [
+        {
+          "paper_id": "18855191",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        }
+      ]
+    },
+    {
+      "case_id": "922",
+      "domain": "biomedical scientific claim retrieval",
+      "query": "Patients in stable partnerships have a faster progression from HIV to AIDS.",
+      "search_date": "BEIR frozen test split",
+      "providers": [],
+      "notes": "",
+      "labelled_by": "SciFact public qrels via BEIR",
+      "judgment_policy": "unjudged_as_nonrelevant",
+      "papers": [
+        {
+          "paper_id": "17077004",
+          "label": "peripheral_relevant",
+          "title": "",
+          "year": null,
+          "evidence_notes": "BEIR positive qrel; binary relevance, no core/peripheral distinction"
+        }
+      ]
+    }
+  ]
+}
