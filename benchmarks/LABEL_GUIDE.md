@@ -96,11 +96,15 @@
 必须同时报告：
 
 * `recall_denominator`：该 case 的标注相关总数。
-* `top_k_unlabelled`：前 k 中**未被标注**的论文数。数字大说明分母覆盖不足，
-  该 case 的 recall 只能作为下限参考。
+* `top_k_unlabelled`：前 k 中**未被标注**的论文数。数字大说明判断覆盖不足；
+  recall 仅描述已标注相关集合，不能解释为全领域召回率的估计或下限。
 * 标签覆盖率（`cases_labelled` / `cases_total`）与 `label_gaps`。
 
 **不得**把"已知论文集合"当作全领域完备真值。
+
+自建标注默认采用 `judgment_policy: require_judged`：TopK 存在未知标签时，P@K、nDCG@K 留空，MRR 在存储排名存在未知标签时留空；同时报告 `judged_fraction@K`。公开稀疏 qrels 可显式使用 `unjudged_as_nonrelevant`，按检索评测惯例不给未标注文献相关性收益，但不能将它们描述为已确认无关。短于 K 的正常结果仍用 K 作为 precision 分母。
+
+每个系统分别对问题取宏平均，使用 `aggregate_by_system`；旧 `aggregate` 混合系统，仅保留兼容诊断。系统发生调用失败时跳过质量评分并保留状态。DOI 别名归一化并去重后计算排名，重复输出不能提高召回率；种子排除于发现结果。真实试跑说明见 [PILOT_GUIDE.md](PILOT_GUIDE.md)。
 
 ## 7. 基线分组（规范 S1）
 

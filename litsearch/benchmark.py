@@ -30,9 +30,10 @@ Units and conventions
   known-paper set is not a complete ground truth for a field, so recall here
   answers "of the relevant work we know about, how much did it find", never
   "how much of the field did it find". Reports must say so.
-* Unlabelled candidates are neither credited nor penalised: they are counted
-  separately as ``unlabelled_in_top_k`` so a reader can see how much of the
-  top-k the denominator could not judge.
+* Custom topics require judged top-k results for precision and nDCG; otherwise
+  those metrics are null. Public sparse qrels may explicitly opt into the
+  standard IR convention ``unjudged_as_nonrelevant``. Recall always describes
+  the known labelled reference set, not complete field coverage.
 
 Every metric is computed at a fixed cutoff on a fixed candidate set, so a
 difference between two systems is a difference in ranking or candidate
@@ -45,6 +46,13 @@ import json
 import math
 from dataclasses import dataclass, field
 from pathlib import Path
+
+from litsearch.identifiers import normalize_doi
+
+
+def unique_ids(ids):
+    """Deduplicate identifier aliases before assigning ranks."""
+    return list(dict.fromkeys(normalize_doi(pid) or pid for pid in ids))
 
 #: Label vocabulary. Order matters only for stable reporting.
 CORE_RELEVANT = "core_relevant"
@@ -111,6 +119,7 @@ class LabelledPaper:
             )
         if not self.paper_id:
             raise ValueError("a labelled paper needs a canonical id")
+        self.paper_id = normalize_doi(self.paper_id) or self.paper_id
 
 
 @dataclass
@@ -125,6 +134,13 @@ class BenchmarkCase:
     notes: str = ""
     labelled_by: str = ""
     papers: list[LabelledPaper] = field(default_factory=list)
+    judgment_policy: str = "require_judged"
+
+    def __post_init__(self):
+        if self.judgment_policy not in {"require_judged", "unjudged_as_nonrelevant"}:
+            raise ValueError("unknown judgment policy")
+        if len({p.paper_id for p in self.papers}) != len(self.papers):
+            raise ValueError("duplicate labels in a case")
 
     @property
     def is_labelled(self) -> bool:
@@ -171,6 +187,10 @@ class BenchmarkDataset:
     label_guide: str = ""
     environment: dict = field(default_factory=dict)
 
+    def __post_init__(self):
+        if len({case.case_id for case in self.cases}) != len(self.cases):
+            raise ValueError("duplicate benchmark case IDs")
+
     # -- loading --------------------------------------------------------
 
     @classmethod
@@ -190,6 +210,7 @@ class BenchmarkDataset:
                 providers=list(raw.get("providers") or []),
                 notes=raw.get("notes", ""),
                 labelled_by=raw.get("labelled_by", ""),
+                judgment_policy=raw.get("judgment_policy", "require_judged"),
                 papers=[
                     LabelledPaper(
                         paper_id=row["paper_id"],
@@ -229,6 +250,7 @@ class BenchmarkDataset:
                     "providers": case.providers,
                     "notes": case.notes,
                     "labelled_by": case.labelled_by,
+                    "judgment_policy": case.judgment_policy,
                     "papers": [
                         {
                             "paper_id": p.paper_id,
@@ -278,7 +300,7 @@ def precision_at_k(ranked_ids: list[str], relevant: set[str], k: int) -> float:
     """Fraction of the top-k that is relevant. Denominator is k, not len(k)."""
     if k <= 0:
         raise ValueError("k must be positive")
-    top = ranked_ids[:k]
+    top = unique_ids(ranked_ids)[:k]
     if not top:
         return 0.0
     return len([pid for pid in top if pid in relevant]) / k
@@ -294,12 +316,12 @@ def recall_at_k(ranked_ids: list[str], relevant: set[str], k: int) -> float:
         raise ValueError("k must be positive")
     if not relevant:
         raise UnlabelledCaseError("recall needs at least one labelled relevant paper")
-    return len([pid for pid in ranked_ids[:k] if pid in relevant]) / len(relevant)
+    return len([pid for pid in unique_ids(ranked_ids)[:k] if pid in relevant]) / len(relevant)
 
 
 def reciprocal_rank(ranked_ids: list[str], relevant: set[str]) -> float:
     """1 / rank of the first relevant hit, else 0.0."""
-    for position, pid in enumerate(ranked_ids, start=1):
+    for position, pid in enumerate(unique_ids(ranked_ids), start=1):
         if pid in relevant:
             return 1.0 / position
     return 0.0
@@ -309,7 +331,7 @@ def ndcg_at_k(ranked_ids: list[str], case: BenchmarkCase, k: int) -> float:
     """Graded nDCG@k over the label gains in :data:`LABEL_GAIN`."""
     if k <= 0:
         raise ValueError("k must be positive")
-    gains = [LABEL_GAIN.get(case.label_of(pid) or "", 0.0) for pid in ranked_ids[:k]]
+    gains = [LABEL_GAIN.get(case.label_of(pid) or "", 0.0) for pid in unique_ids(ranked_ids)[:k]]
     dcg = sum(gain / math.log2(position + 1) for position, gain in enumerate(gains, start=1))
 
     ideal_gains = sorted(
@@ -332,7 +354,7 @@ def keyword_missed_recovery(
     thing an expansion method can uniquely contribute.
     """
     return [
-        pid for pid in ranked_ids[:k]
+        pid for pid in unique_ids(ranked_ids)[:k]
         if pid in case.relevant_ids and pid not in lexical_ids
     ]
 
@@ -351,22 +373,30 @@ class CaseResult:
     failures: int = 0
     candidate_ids: set[str] = field(default_factory=set)
     notes: str = ""
+    status: str = "ok"
 
     def metrics(self, case: BenchmarkCase) -> dict:
+        if self.status != "ok":
+            return {"skipped": self.notes or self.status, "status": self.status,
+                    "failures": self.failures, "rate_limited": self.rate_limited}
+        if not self.cutoffs or min(self.cutoffs) <= 0:
+            raise ValueError("cutoffs must be positive")
         if not case.is_labelled:
             raise UnlabelledCaseError(
                 f"case {case.case_id!r} has no expert labels; scoring it would "
                 f"produce invented numbers"
             )
         relevant = case.relevant_ids
+        ranked = [pid for pid in unique_ids(self.ranked_ids) if pid not in case.seed_ids]
+        unknown = [pid for pid in ranked[:max(self.cutoffs)] if case.label_of(pid) is None]
         out: dict = {
             "recall_denominator": len(relevant),
             "relevant_labelled": len(relevant),
-            "top_k_unlabelled": len([
-                pid for pid in self.ranked_ids[: max(self.cutoffs)]
-                if case.label_of(pid) is None
-            ]),
-            "mrr": round(reciprocal_rank(self.ranked_ids, relevant), 4),
+            "top_k_unlabelled": len(unknown),
+            "judgment_policy": case.judgment_policy,
+            "notes": self.notes,
+            "mrr": round(reciprocal_rank(ranked, relevant), 4)
+            if not any(case.label_of(pid) is None for pid in ranked) or case.judgment_policy == "unjudged_as_nonrelevant" else None,
             "requests": self.requests,
             "latency_seconds": round(self.latency_seconds, 3),
             "rate_limited": self.rate_limited,
@@ -374,9 +404,13 @@ class CaseResult:
             "candidates": len(self.candidate_ids) or len(self.ranked_ids),
         }
         for k in self.cutoffs:
-            out[f"recall@{k}"] = round(recall_at_k(self.ranked_ids, relevant, k), 4)
-            out[f"precision@{k}"] = round(precision_at_k(self.ranked_ids, relevant, k), 4)
-            out[f"ndcg@{k}"] = round(ndcg_at_k(self.ranked_ids, case, k), 4)
+            unjudged = sum(case.label_of(pid) is None for pid in ranked[:k])
+            out[f"unjudged@{k}"] = unjudged
+            out[f"judged_fraction@{k}"] = round((len(ranked[:k]) - unjudged) / len(ranked[:k]), 4) if ranked[:k] else 1.0
+            out[f"recall@{k}"] = round(recall_at_k(ranked, relevant, k), 4)
+            strict = unjudged > 0 and case.judgment_policy == "require_judged"
+            out[f"precision@{k}"] = None if strict else round(precision_at_k(ranked, relevant, k), 4)
+            out[f"ndcg@{k}"] = None if strict else round(ndcg_at_k(ranked, case, k), 4)
         return out
 
 
@@ -401,6 +435,7 @@ class SystemComparison:
             "label_coverage": dict(self.label_coverage),
             "per_case": self.per_case,
             "aggregate": self.aggregate(),
+            "aggregate_by_system": self.aggregate_by_system(),
         }
 
     @property
@@ -440,6 +475,23 @@ class SystemComparison:
         means["cases_skipped"] = len(self.cases_skipped)
         return means
 
+    def aggregate_by_system(self) -> dict:
+        """Macro-average across questions separately for each system."""
+        out = {}
+        for system in self.systems:
+            rows = [systems[system] for systems in self.per_case.values() if system in systems]
+            scored = [row for row in rows if "skipped" not in row]
+            keys = {key for row in scored for key, value in row.items()
+                    if isinstance(value, (int, float)) and not isinstance(value, bool)
+                    and key not in self.NON_AVERAGED}
+            out[system] = {key: round(sum(row[key] for row in scored if isinstance(row.get(key), (int, float))) /
+                                    sum(isinstance(row.get(key), (int, float)) for row in scored), 4)
+                           for key in sorted(keys)}
+            out[system]["cases_scored"] = len(scored)
+            out[system]["cases_skipped"] = len(rows) - len(scored)
+            out[system]["metric_case_counts"] = {key: sum(isinstance(row.get(key), (int, float)) for row in scored) for key in sorted(keys)}
+        return out
+
 
 def compare_systems(
     results: list[CaseResult],
@@ -470,7 +522,9 @@ def compare_systems(
     for result in results:
         case = by_case.get(result.case_id)
         if case is None:
-            continue
+            raise ValueError(f"unknown benchmark case {result.case_id!r}")
+        if result.system in comparison.per_case.get(result.case_id, {}):
+            raise ValueError("duplicate case/system result; repeated runs require separate reports")
         try:
             metrics = result.metrics(case)
         except UnlabelledCaseError as exc:

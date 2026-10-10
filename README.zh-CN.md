@@ -60,6 +60,8 @@ Embedding 使用 TraceRAG 中相同的多语言 MiniLM：`sentence-transformers/
 
 ## 开发与验证
 
+Benchmark 试跑：[公开 SciFact 排序对照、真实主题快照及人工标注步骤](benchmarks/PILOT_GUIDE.md)。运行 `python -m scripts.run_public_benchmark --queries 30` 会输出按系统分组的 JSON、CSV 和 Markdown 分数；使用真实公开 qrels，不使用合成样例作为比赛成绩。
+
 - [安装与当前能力](README.dev.md)
 - [Web 整合说明与接口边界](docs/web-integration.md)
 - [本版验证记录](VALIDATION_v0.9.11.md)

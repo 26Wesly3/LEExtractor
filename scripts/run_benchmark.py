@@ -6,7 +6,7 @@ Usage
     python -m scripts.run_benchmark --dataset benchmarks/dataset.sample.json   # harness self-check
 
 Real provider calls are **opt-in** via ``--live``. Without it the script only
-scores pre-recorded systems (``--systems``), which is what a frozen benchmark
+scores pre-recorded systems (``--snapshot``), which is what a frozen benchmark
 should do: the numbers must come from a snapshot, not from today's network.
 Live runs are recorded into the report together with the exact per-source query
 strings, the search date and the real HTTP accounting, so a reader can see what
@@ -49,7 +49,7 @@ def environment_record() -> dict:
 
         record["dependencies"] = {
             name: version(name)
-            for name in ("streamlit", "scikit-learn", "networkx", "requests", "fastmcp")
+            for name in ("streamlit", "scikit-learn", "networkx", "requests", "fastmcp", "numpy", "fastembed", "onnxruntime")
         }
     except Exception as exc:  # pragma: no cover - metadata is best-effort
         record["dependencies_error"] = str(exc)[:200]
@@ -73,12 +73,14 @@ def build_results(
             results.append(CaseResult(
                 case_id=case.case_id,
                 system=system,
-                ranked_ids=list(ranked.get("ranked_ids") or ranked) if isinstance(ranked, dict) else list(ranked),
+                ranked_ids=list(ranked.get("ranked_ids", [])) if isinstance(ranked, dict) else list(ranked),
                 requests=int((ranked or {}).get("requests", 0)) if isinstance(ranked, dict) else 0,
                 latency_seconds=float((ranked or {}).get("latency_seconds", 0.0)) if isinstance(ranked, dict) else 0.0,
                 rate_limited=int((ranked or {}).get("rate_limited", 0)) if isinstance(ranked, dict) else 0,
                 failures=int((ranked or {}).get("failures", 0)) if isinstance(ranked, dict) else 0,
-                notes="recorded snapshot",
+                candidate_ids=set(ranked.get("candidate_ids", snapshot.get("candidate_ids", []))) if isinstance(ranked, dict) else set(snapshot.get("candidate_ids", [])),
+                status=ranked.get("status", "ok") if isinstance(ranked, dict) else "ok",
+                notes="recorded snapshot; " + ranked.get("notes", "") if isinstance(ranked, dict) else "recorded snapshot",
             ))
         if live:
             results.extend(run_live_case(case, limit))
@@ -86,13 +88,7 @@ def build_results(
 
 
 def run_live_case(case, limit: int) -> list[CaseResult]:
-    """Query the providers once, then derive each baseline from that one run.
-
-    One retrieval per case on purpose: running five separate searches would
-    give the baselines different candidate pools and different request costs,
-    and the comparison would no longer be about the expansion methods.
-    """
-    from litsearch.evidence import EvidenceGraph
+    """Record keyword retrieval/ranking only; graph expansion requires real runs."""
     from litsearch.filters import RelevanceFilter
     from litsearch.sources import SourceManager
 
@@ -116,24 +112,17 @@ def run_live_case(case, limit: int) -> list[CaseResult]:
         notes=f"per-source queries: {json.dumps(manager.last_search_manifest.get('per_source_queries', {}), ensure_ascii=False)}",
     )]
 
-    graph = EvidenceGraph(
-        list(papers),
-        edge_types=("citation", "bibliographic_coupling", "co_citation", "text_similarity"),
-    )
-    for _source, _target, edge_type, score, _witnesses in graph.relation_pairs():
-        results.append(CaseResult(
-            case_id=case.case_id, system=f"lexical_{edge_type}", ranked_ids=lexical_ids,
-            requests=budget["requests"], latency_seconds=latency,
-            candidate_ids={p.canonical_id for p in papers},
-            notes=f"derived relation {edge_type}; {score}",
-        ))
+    # Graph construction alone neither retrieves nor ranks new papers. Do not
+    # label copies of this ranking as snowball/BC/CC experimental arms.
+    if not papers and budget["errors"]:
+        results[0].status = "provider_failed"
     return results
 
 
 def report_payload(dataset: BenchmarkDataset, results: list[CaseResult], live: bool) -> dict:
     comparison = compare_systems(
         results, dataset,
-        shared_candidate_set=not live,
+        shared_candidate_set=shared_candidates(results),
     )
     payload = comparison.to_dict()
     payload["dataset"] = {
@@ -148,6 +137,7 @@ def report_payload(dataset: BenchmarkDataset, results: list[CaseResult], live: b
     payload["baselines_expected"] = list(BASELINES)
     payload["semantic_baselines_expected"] = list(SEMANTIC_BASELINES)
     payload["warnings"] = build_warnings(dataset, results, live)
+    payload["warnings"].append("aggregate is a legacy pooled diagnostic; compare aggregate_by_system instead.")
     return payload
 
 
@@ -171,9 +161,8 @@ def build_warnings(dataset: BenchmarkDataset, results: list[CaseResult], live: b
         warnings.append(f"Baselines not yet recorded: {missing}")
     if not live:
         warnings.append(
-            "Scored from a recorded snapshot, so every system ranked the same candidate "
-            "pool: this measures ranking quality only and CANNOT show that a paper "
-            "outside the pool was recovered."
+            "Scored from a recorded snapshot. A shared candidate pool must be verified "
+            "from candidate_ids; ranking alone CANNOT show recovery outside that pool."
         )
     else:
         warnings.append(
@@ -185,6 +174,15 @@ def build_warnings(dataset: BenchmarkDataset, results: list[CaseResult], live: b
             "Semantic arms are reported separately from the frozen lexical baselines."
         )
     return warnings
+
+
+def shared_candidates(results: list[CaseResult]) -> bool:
+    by_case = {}
+    for result in results:
+        if result.status == "ok":
+            by_case.setdefault(result.case_id, []).append(result.candidate_ids)
+    return bool(by_case) and all(pools and all(pools) and all(pool == pools[0] for pool in pools)
+                                 for pools in by_case.values())
 
 
 def main(argv=None) -> int:
@@ -222,9 +220,10 @@ def main(argv=None) -> int:
     payload = report_payload(dataset, results, args.live)
     text = json.dumps(payload, ensure_ascii=False, indent=2)
     if args.out:
+        from litsearch.benchmark_reports import write_exports
+
         out = Path(args.out)
-        out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(text, encoding="utf-8")
+        write_exports(payload, out)
         print(f"wrote {out}")
     else:
         print(text)

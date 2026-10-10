@@ -34,7 +34,7 @@ web = ["fastapi>=0.115,<1", "uvicorn>=0.30,<1", "fastembed==0.8.0", "sentencepie
 include = ["litsearch", "litsearch.*"]
 
 [tool.setuptools.package-data]
-"litsearch" = ["translation_pins.json", "ccf_catalog.json"]
+"litsearch" = ["translation_pins.json", "embedding_pins.json", "ccf_catalog.json"]
 "litsearch.web" = ["static/**/*", "static/*"]
 
 [tool.ruff]
