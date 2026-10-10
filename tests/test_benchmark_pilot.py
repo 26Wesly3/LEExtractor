@@ -23,7 +23,12 @@ from litsearch.benchmark import (
 from litsearch.benchmark_reports import paired_bootstrap, write_exports
 from litsearch.local_models import LocalEmbedding
 from litsearch.models import Paper
-from scripts.run_benchmark import build_results, report_payload, shared_candidates
+from scripts.run_benchmark import (
+    apply_identity_aliases,
+    build_results,
+    report_payload,
+    shared_candidates,
+)
 from scripts.run_public_benchmark import BM25, document_vectors, normalize, ranked_ids
 
 
@@ -170,3 +175,23 @@ def test_annotation_import_refuses_blank_and_conflicting_labels(tmp_path):
     sheet.write_text("case_id,paper_id,label\nq,10.1234/a,known_irrelevant\n", encoding="utf-8")
     with pytest.raises(ValueError, match="conflicting"):
         main(args)
+
+
+def test_confirmed_identity_aliases_merge_labels_and_rankings_without_mutating_inputs():
+    data = dataset()
+    data.cases[0].papers.append(LabelledPaper("other-version", CORE_RELEVANT))
+    snapshot = {"candidate_ids": ["other-version", "10.1234/a"], "cases": {"q": {"s": {"ranked_ids": ["other-version", "10.1234/a"]}}}}
+    merged, ranked = apply_identity_aliases(data, snapshot, {"other-version": "10.1234/a"})
+    assert len(merged.cases[0].relevant_ids) == 1
+    assert ranked["cases"]["q"]["s"]["ranked_ids"] == ["10.1234/a"]
+    assert len(data.cases[0].relevant_ids) == 2
+    assert len(snapshot["candidate_ids"]) == 2
+
+
+def test_identity_alias_cycles_and_conflicting_judgments_are_rejected():
+    with pytest.raises(ValueError, match="cycle"):
+        apply_identity_aliases(dataset(), {}, {"a": "b", "b": "a"})
+    data = dataset()
+    data.cases[0].papers.append(LabelledPaper("other-version", "known_irrelevant"))
+    with pytest.raises(ValueError, match="conflicting labels"):
+        apply_identity_aliases(data, {}, {"other-version": "10.1234/a"})

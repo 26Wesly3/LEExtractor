@@ -75,6 +75,8 @@ python -m venv .venv
 
 自建研究方向默认 `require_judged`。TopK 仍有未知标签时，P@K 和 nDCG@K 输出空值；未知候选比例另列。调用失败、限流和缺凭据的系统跳过质量评分，保留状态，不当作“零分竞品”。重复文献按 DOI 别名归一化后去重；对没有公共 ID 的同文献跨源重复，正式标注前还需要人工核对合并。
 
+跨源重复确认后，创建 `identities.confirmed.json`，内容形如 `{"openreview:旧版本ID": "arxiv:最终版本ID"}`；评分命令加 `--aliases identities.confirmed.json`，会同时归并标注分母、候选池和各系统排名，并保留映射。别名环路、同一论文的冲突标签会报错，需先由标注者解决。工具不根据相似标题自动确认论文身份。
+
 ## 4. 外部产品比较的后续步骤
 
 第一轮可采用 Semantic Scholar、Google Scholar 作为关键词检索参照；Connected Papers 或 ResearchRabbit 作为种子扩展参照。用同一组研究问题、人工确认的英文检索词、同一日期、年份和最大结果条数保存结果。Google Scholar 当前适配器需要自己的 SerpApi 凭据；无凭据时可按 `providers.json` 中的手动链接检索并导出同格式快照。

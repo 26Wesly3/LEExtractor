@@ -16,6 +16,7 @@ was actually asked of which provider.
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import platform
 import sys
@@ -30,11 +31,54 @@ from litsearch.benchmark import (  # noqa: E402
     BenchmarkDataset,
     CaseResult,
     compare_systems,
+    unique_ids,
 )
 from litsearch.stop_reasons import http_budget_snapshot, reset_http_budget  # noqa: E402
 
 #: Recorded rankings look like: {"case_id": {"lexical": ["10.1/a", ...]}}
 SNAPSHOT_NAME = "systems.json"
+
+
+def apply_identity_aliases(dataset, snapshot, aliases):
+    """Apply reviewer-confirmed cross-provider identities to labels AND rankings."""
+    if not isinstance(aliases, dict) or any(not isinstance(k, str) or not isinstance(v, str) or not k or not v for k, v in aliases.items()):
+        raise ValueError("aliases must map nonempty paper IDs to canonical IDs")
+    aliases = {unique_ids([key])[0]: unique_ids([value])[0] for key, value in aliases.items()}
+
+    def resolve(pid):
+        pid = unique_ids([pid])[0]
+        seen = set()
+        while pid in aliases and aliases[pid] != pid:
+            if pid in seen:
+                raise ValueError("cycle in identity aliases")
+            seen.add(pid)
+            pid = aliases[pid]
+        return pid
+
+    # Validate unused aliases too; a cycle must not pass only because a given
+    # snapshot happens not to contain the affected records.
+    for pid in aliases:
+        resolve(pid)
+    data, recorded = copy.deepcopy(dataset), copy.deepcopy(snapshot)
+    for case in data.cases:
+        labels = {}
+        for paper in case.papers:
+            paper.paper_id = resolve(paper.paper_id)
+            if paper.paper_id in labels and labels[paper.paper_id].label != paper.label:
+                raise ValueError("conflicting labels for the same confirmed paper identity")
+            labels[paper.paper_id] = paper
+        case.papers = list(labels.values())
+    if "candidate_ids" in recorded:
+        recorded["candidate_ids"] = unique_ids([resolve(pid) for pid in recorded["candidate_ids"]])
+    for systems in recorded.get("cases", {}).values():
+        for name, row in systems.items():
+            if isinstance(row, dict):
+                row["ranked_ids"] = unique_ids([resolve(pid) for pid in row.get("ranked_ids", [])])
+                if "candidate_ids" in row:
+                    row["candidate_ids"] = unique_ids([resolve(pid) for pid in row["candidate_ids"]])
+            else:
+                systems[name] = unique_ids([resolve(pid) for pid in row])
+    return data, recorded
 
 
 def environment_record() -> dict:
@@ -193,6 +237,7 @@ def main(argv=None) -> int:
     parser.add_argument("--limit", type=int, default=200)
     parser.add_argument("--live", action="store_true",
                         help="query the real providers (network, API keys required)")
+    parser.add_argument("--aliases", default="", help="JSON mapping of human-confirmed cross-source paper identities; snapshot scoring only")
     args = parser.parse_args(argv)
 
     dataset_path = Path(args.dataset)
@@ -207,6 +252,10 @@ def main(argv=None) -> int:
 
     dataset = BenchmarkDataset.load(dataset_path)
     snapshot = load_snapshot(Path(args.snapshot) if args.snapshot else dataset_path.parent / SNAPSHOT_NAME)
+    if args.aliases:
+        if args.live:
+            parser.error("--aliases applies to frozen snapshots; capture live results first")
+        dataset, snapshot = apply_identity_aliases(dataset, snapshot, json.loads(Path(args.aliases).read_text(encoding="utf-8")))
     results = build_results(dataset, snapshot, args.live, args.limit)
 
     if not results:
@@ -218,6 +267,8 @@ def main(argv=None) -> int:
         return 3
 
     payload = report_payload(dataset, results, args.live)
+    if args.aliases:
+        payload["identity_aliases"] = json.loads(Path(args.aliases).read_text(encoding="utf-8"))
     text = json.dumps(payload, ensure_ascii=False, indent=2)
     if args.out:
         from litsearch.benchmark_reports import write_exports
