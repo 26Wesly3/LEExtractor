@@ -15,6 +15,8 @@ from pathlib import Path
 import numpy as np
 import requests
 
+from litsearch.config import embedding_batch, embedding_threads
+
 EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 EMBEDDING_REPOSITORY = "qdrant/paraphrase-multilingual-MiniLM-L12-v2-onnx-Q"
 EMBEDDING_REVISION = "faf4aa4225822f3bc6376869cb1164e8e3feedd0"
@@ -274,7 +276,7 @@ class LocalTranslator:
         self.source = spm.SentencePieceProcessor(model_proto=(root / "source.spm").read_bytes())
         self.target = spm.SentencePieceProcessor(model_proto=(root / "target.spm").read_bytes())
         options = ort.SessionOptions()
-        options.intra_op_num_threads = 4
+        options.intra_op_num_threads = embedding_threads()
         self.encoder = ort.InferenceSession(str(root / "onnx/encoder_model_quantized.onnx"), options, providers=["CPUExecutionProvider"])
         self.decoder = ort.InferenceSession(str(root / "onnx/decoder_model_quantized.onnx"), options, providers=["CPUExecutionProvider"])
         self.loaded = True
@@ -357,7 +359,7 @@ class LocalEmbedding:
             tokenizer.no_truncation()
             tokenizer.no_padding()
             model = TextEmbedding(model_name=EMBEDDING_MODEL, specific_model_path=path,
-                                  cache_dir=cache, threads=4, providers=["CPUExecutionProvider"])
+                                  cache_dir=cache, threads=embedding_threads(), providers=["CPUExecutionProvider"])
             self.model, self.tokenizer = model, tokenizer
 
     def ensure_ready(self):
@@ -393,7 +395,7 @@ class LocalEmbedding:
             try:
                 missing = list(dict.fromkeys(i for i, value in enumerate(saved) if value is None))
                 if missing:
-                    produced = list(self.model.embed([texts[i] for i in missing], batch_size=16))
+                    produced = list(self.model.embed([texts[i] for i in missing], batch_size=embedding_batch()))
                     for i, vector in zip(missing, produced, strict=True):
                         value = json.dumps(vector.tolist())
                         saved[i] = (value,)
