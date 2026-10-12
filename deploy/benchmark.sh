@@ -20,9 +20,10 @@ SAMPLE_EVERY=2
 STAGE_TIMEOUT=900
 #: light (default) = the conservative ladder only; full = the v0.9.14 P7 ladder.
 STAGES=${STAGES:-light}
-#: Providers used by the benchmark searches. Crossref + arXiv need no API key,
-#: so the measurement is reproducible without credentials.
-PROVIDERS=${PROVIDERS:-'["crossref","arxiv"]'}
+#: Providers for the benchmark searches. Default = the product's own default set
+#: (exactly what the UI sends), because this is a real-product load test: no
+#: API key is required, and provider 429/timeouts are part of what is measured.
+PROVIDERS=${PROVIDERS:-'["semantic_scholar","openalex","arxiv","crossref","openreview"]'}
 
 : > "$OUT"
 say() { echo "$@" | tee -a "$OUT"; }
@@ -80,14 +81,15 @@ job_status() {
 stage() {
     local label=$1 cap=$2 mode=$3 n=$4
     local timeout=${5:-$STAGE_TIMEOUT}
+    local q=${6:-"plant phenotyping roots"}
     say ""
-    say "### $label  (MAX_ACTIVE_JOBS=$cap, ranking=$mode, concurrent=$n, timeout=${timeout}s)"
+    say "### $label  (MAX_ACTIVE_JOBS=$cap, ranking=$mode, concurrent=$n, timeout=${timeout}s, query=$q)"
     set_jobs "$cap" || return
     local ids=() i p j
     for i in $(seq 1 "$n"); do
         p=$(new_project "$label-$i")
         if [ -z "$p" ]; then say "- !! 第 $i 个项目创建失败，本阶段无效"; return; fi
-        j=$(start_search "$p" "$mode" "plant phenotyping stage $label")
+        j=$(start_search "$p" "$mode" "$q")
         case "$j" in
             ""|ERR:*) say "- !! 第 $i 个 search 未拿到 job_id，本阶段无效: $j"; return;;
         esac
@@ -113,6 +115,7 @@ stage() {
     say "- 观测用时: ${elapsed}s"
     say "- 容器峰值内存: **${peak_mem} MiB** ; 容器峰值 CPU: **${peak_cpu}%**"
     say "- 宿主: $(host_mem)"
+    say "- 模型常驻: $(curl -s "$B/api/health" | python3 -c 'import sys,json;m=json.load(sys.stdin).get("models",{});print("translation=%s embedding=%s" % (m.get("translation",{}).get("ready"), m.get("embedding",{}).get("ready")))' 2>/dev/null)"
     say "- 内核 OOM 计数: $(oom_count)"
     for j in ${ids[@]+"${ids[@]}"}; do say "  - job ${j:0:8} -> $(job_status "$j")"; done
 }
@@ -162,10 +165,10 @@ say "- 梯次: $STAGES"
 
 preflight || exit 1
 
-stage "S0 idle 基线"            1 lexical  0
-stage "S1 1 × lexical"          1 lexical  1
-stage "S2 1 × semantic"         1 semantic 1
-stage "S3 2 × semantic"         2 semantic 2
+stage "S0 idle 基线"               1 lexical  0 900 "plant phenotyping roots"
+stage "S1 1 × lexical（英文）"      1 lexical  1 900 "plant phenotyping roots"
+stage "S2 1 × semantic（中文→翻译）" 1 semantic 1 900 "植物表型与根系构型"
+stage "S3 2 × semantic（中文并发）"  2 semantic 2 900 "植物表型与根系构型"
 if [ "$STAGES" = "full" ]; then
     stage "S4 5 × semantic（P7）"    5 semantic 5  420
     stage "S5 10 × semantic（P7）"  10 semantic 10 420
