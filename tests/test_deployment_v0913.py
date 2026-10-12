@@ -191,6 +191,32 @@ def test_liveness_is_minimal_and_readiness_follows_the_data_root(tmp_path, clean
     assert broken.status_code == 503 and broken.json()["status"] == "not_ready"
 
 
+def test_reverse_proxy_origin_is_accepted_but_other_origins_are_not(tmp_path, clean_deployment_env):
+    """A browser behind Caddy sends https Origin while the app sees http.
+
+    Without honouring X-Forwarded-Proto every same-origin POST is rejected with
+    403 origin_rejected and the SPA renders an empty page (found in production).
+    """
+    clean_deployment_env.setenv("LEEXTRACTOR_PUBLIC_HOSTS", "demo.duckdns.org")
+    _, client = build_client(tmp_path)
+    headers = {"Host": "demo.duckdns.org", "Origin": "https://demo.duckdns.org"}
+
+    # Without the proxy header the https Origin really is a different scheme and
+    # must stay rejected — that is the protection, not a bug.
+    assert client.get("/api/projects", headers=headers).status_code == 403
+    proxied = client.get("/api/projects", headers={**headers, "X-Forwarded-Proto": "https"})
+    assert proxied.status_code == 200, proxied.text
+    created = client.post("/api/projects", headers={**headers, "X-Forwarded-Proto": "https"},
+                          json={"name": "Origin check", "topic": "plants"})
+    assert created.status_code == 201, created.text
+
+    # A different site, or an https origin with no proxy header, stays rejected.
+    assert client.get("/api/projects", headers={"Host": "demo.duckdns.org",
+                                                "Origin": "https://evil.example"}).status_code == 403
+    assert client.get("/api/projects", headers={**headers,
+                                                "X-Forwarded-Proto": "http"}).status_code == 403
+
+
 def test_reverse_proxy_host_is_accepted_only_when_configured(tmp_path, clean_deployment_env):
     _, client = build_client(tmp_path)
     assert client.get("/api/health", headers={"Host": "evil.example"}).status_code == 403

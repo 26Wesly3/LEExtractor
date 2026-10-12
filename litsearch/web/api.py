@@ -237,7 +237,14 @@ def create_app(data_dir=None, workflow_factory=None, static_dir=None, translator
         origin = request.headers.get("origin")
         if origin:
             parsed = urlsplit(origin)
-            if parsed.scheme != request.url.scheme or parsed.netloc.lower() != host:
+            # Behind Caddy the app sees plain http while the browser sends an
+            # https Origin, so the effective scheme is the one the proxy
+            # terminated with. Trusting X-Forwarded-Proto is safe here because
+            # the app only listens on loopback (127.0.0.1:8012): nothing but the
+            # reverse proxy can reach it to forge that header.
+            forwarded = request.headers.get("x-forwarded-proto", "").split(",")[0].strip().lower()
+            scheme = forwarded or request.url.scheme
+            if parsed.scheme != scheme or parsed.netloc.lower() != host:
                 return JSONResponse({"error": {"code": "origin_rejected", "message": "仅允许同源请求", "detail": None}}, 403)
         if request.method in {"POST", "PUT", "PATCH"}:
             try:
