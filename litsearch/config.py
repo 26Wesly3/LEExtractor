@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import os
 import re
+import tempfile
 from datetime import date
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -60,7 +61,22 @@ load_env_file()
 # Cache / download defaults -------------------------------------------------
 
 def default_cache_path() -> str:
-    return os.path.join(BASE_DIR, "litsearch_cache.db")
+    """SQLite cache location.
+
+    Honours LEEXTRACTOR_CACHE_DIR (a Docker volume in the reference deployment)
+    and degrades instead of failing: a read-only or missing cache root falls
+    back to a temporary directory, because a search must not die just because
+    the cache cannot be written.
+    """
+    root = cache_dir()
+    if is_writable(root):
+        return os.path.join(root, "litsearch_cache.db")
+    fallback = os.path.join(tempfile.gettempdir(), "leextractor-cache")
+    try:
+        os.makedirs(fallback, exist_ok=True)
+    except OSError:
+        return os.path.join(BASE_DIR, "litsearch_cache.db")
+    return os.path.join(fallback, "litsearch_cache.db")
 
 
 def default_download_dir() -> str:
@@ -137,4 +153,138 @@ def max_pdf_size() -> int:
 def max_pdf_size_mib() -> float:
     """The same limit in MiB, for display."""
     return max_pdf_size() / (1024 * 1024)
+
+
+# Runtime layout and small-server deployment (v0.9.13) -----------------------
+#
+# The same code has to run on a developer laptop and on the 2 vCPU / 2 GB
+# Ubuntu host the competition uses. Every directory below is resolved from the
+# environment and probed for writability, so a wrong mount degrades in a
+# defined way instead of failing a search:
+#
+#   data  -> hard requirement (projects must persist; readiness fails without it)
+#   cache -> soft (falls back to a temporary directory)
+#   logs  -> soft (falls back to stdout)
+
+DEFAULT_API_HOST = "127.0.0.1"
+DEFAULT_API_PORT = 8012
+DEFAULT_MAX_ACTIVE_JOBS = 1
+#: Host headers the API answers to without any opt-in. The test client is
+#: handled separately in the API middleware (it sends ``testserver``).
+LOCAL_HOSTS = ("127.0.0.1", "localhost", "::1")
+
+
+def _env_text(name: str, default: str = "") -> str:
+    return os.environ.get(name, "").strip() or default
+
+
+def _env_int(name: str, default: int, *, minimum: int = 1, maximum: int = 4096) -> int:
+    raw = os.environ.get(name, "").strip()
+    if raw.isdigit() and minimum <= int(raw) <= maximum:
+        return int(raw)
+    return default
+
+
+def data_dir() -> str:
+    """Root for user projects (default: BASE_DIR/data). LEEXTRACTOR_DATA_DIR."""
+    return _env_text("LEEXTRACTOR_DATA_DIR", os.path.join(BASE_DIR, "data"))
+
+
+def model_dir() -> str:
+    """Translation/embedding models. LEEXTRACTOR_MODEL_DIR."""
+    return _env_text("LEEXTRACTOR_MODEL_DIR", os.path.join(BASE_DIR, "models"))
+
+
+def cache_dir() -> str:
+    """Cache root (default: BASE_DIR). LEEXTRACTOR_CACHE_DIR."""
+    return _env_text("LEEXTRACTOR_CACHE_DIR", BASE_DIR)
+
+
+def log_dir() -> str:
+    """Log directory, or "" for stdout only. LEEXTRACTOR_LOG_DIR."""
+    return _env_text("LEEXTRACTOR_LOG_DIR", "")
+
+
+def api_host() -> str:
+    """Bind address for the web API. LEEXTRACTOR_HOST."""
+    return _env_text("LEEXTRACTOR_HOST", DEFAULT_API_HOST)
+
+
+def api_port() -> int:
+    """Bind port for the web API. LEEXTRACTOR_PORT (default 8012)."""
+    return _env_int("LEEXTRACTOR_PORT", DEFAULT_API_PORT, minimum=1, maximum=65535)
+
+
+def public_hosts() -> tuple[str, ...]:
+    """Extra Host headers accepted behind a reverse proxy.
+
+    Empty by default: the local-only guard stays in force unless a deployment
+    opts out explicitly, e.g.
+    ``LEEXTRACTOR_PUBLIC_HOSTS=leextractor-demo.duckdns.org``.
+    """
+    raw = os.environ.get("LEEXTRACTOR_PUBLIC_HOSTS", "")
+    return tuple(part.strip().lower() for part in raw.split(",") if part.strip())
+
+
+def allowed_hosts() -> frozenset[str]:
+    """Host header values the API answers to."""
+    return frozenset({*LOCAL_HOSTS, *public_hosts()})
+
+
+def max_active_search_jobs() -> int:
+    """Concurrent retrieval jobs (default 1 — see ADR-006).
+
+    Accepts both LEEXTRACTOR_MAX_ACTIVE_JOBS (documented) and the older
+    LEEXTRACTOR_MAX_ACTIVE_SEARCH_JOBS spelling. Values are clamped to 1..8:
+    an unbounded or mistyped value must never be able to starve a 2 GB host.
+    """
+    for name in ("LEEXTRACTOR_MAX_ACTIVE_JOBS", "LEEXTRACTOR_MAX_ACTIVE_SEARCH_JOBS"):
+        raw = os.environ.get(name, "").strip()
+        if raw.isdigit() and 1 <= int(raw) <= 8:
+            return int(raw)
+    return DEFAULT_MAX_ACTIVE_JOBS
+
+
+def embedding_threads() -> int:
+    """Thread count for the embedding backend. LEEXTRACTOR_EMBEDDING_THREADS."""
+    return _env_int("LEEXTRACTOR_EMBEDDING_THREADS", 2, minimum=1, maximum=64)
+
+
+def embedding_batch() -> int:
+    """Batch size for embedding encoding. LEEXTRACTOR_EMBEDDING_BATCH."""
+    return _env_int("LEEXTRACTOR_EMBEDDING_BATCH", 8, minimum=1, maximum=256)
+
+
+def is_writable(path: str) -> bool:
+    """True when ``path`` exists (or can be created) and accepts a new file."""
+    if not path:
+        return False
+    try:
+        os.makedirs(path, exist_ok=True)
+    except OSError:
+        return False
+    probe = os.path.join(path, ".leextractor-write-probe")
+    try:
+        with open(probe, "w", encoding="utf-8") as handle:
+            handle.write("ok")
+        os.remove(probe)
+        return True
+    except OSError:
+        return False
+
+
+def storage_report() -> dict[str, str]:
+    """Writability of the persistent roots, for /api/health and readiness."""
+    logs = log_dir()
+    return {
+        "data": "writable" if is_writable(data_dir()) else "read_only",
+        "cache": "writable" if is_writable(cache_dir()) else "read_only",
+        "logs": "writable" if (logs and is_writable(logs)) else "stdout",
+        "models": "present" if os.path.isdir(model_dir()) else "auto",
+    }
+
+
+def data_ready() -> bool:
+    """Projects must be persistable: a read-only data root is a fatal error."""
+    return is_writable(data_dir())
 

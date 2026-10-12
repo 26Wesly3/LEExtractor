@@ -6,8 +6,8 @@ import os
 import re
 import threading
 import time
-from concurrent.futures import ThreadPoolExecutor
 from abc import ABC, abstractmethod
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 

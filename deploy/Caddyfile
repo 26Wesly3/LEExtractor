@@ -1,0 +1,59 @@
+# Caddy for LEExtractor behind DuckDNS (v0.9.13).
+#
+# Caddy is the recommended proxy: automatic HTTPS via Let's Encrypt, a two-line
+# configuration, and it renews certificates without cron.
+#
+#   1. put the DuckDNS name in .env:  LEEXTRACTOR_DOMAIN=your-name.duckdns.org
+#   2. make sure 80 and 443 reach this host (firewall, cloud security group)
+#   3. docker compose --profile proxy up -d
+#
+# The container form of the app is reached over the compose network name; for a
+# host-level Caddy use  reverse_proxy 127.0.0.1:8012  instead.
+
+{$LEEXTRACTOR_DOMAIN} {
+	encode zstd gzip
+
+	# Request bodies: project import can be a few MB, nothing here needs 100 MB.
+	request_body {
+		max_size 32MB
+	}
+
+	reverse_proxy leextractor:8012 {
+		# The API trusts only the Host header it is configured for, so the
+		# original host must survive the hop.
+		header_up Host {host}
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+
+		# Job APIs answer immediately with a job id; only the document endpoints
+		# ever stream. A long timeout must not be used to hide a slow backend.
+		transport http {
+			read_timeout 60s
+			write_timeout 60s
+			dial_timeout 5s
+		}
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "same-origin"
+		-Server
+	}
+
+	# Bounded access log; the app keeps its own structured log.
+	log {
+		output file /var/log/caddy/access.log {
+			roll_size 10MiB
+			roll_keep 5
+		}
+		format json
+	}
+}
+
+# Plain HTTP is answered with a redirect to HTTPS (Caddy does this by default
+# once the site above has a certificate; this block makes it explicit).
+http://{$LEEXTRACTOR_DOMAIN} {
+	redir https://{host}{uri} permanent
+}

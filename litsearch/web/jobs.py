@@ -18,7 +18,28 @@ from litsearch.web.repository import APIError, atomic_json, now
 # Existing domain HTTP accounting is process-global. Serialize all retrieval
 # jobs, including jobs from separate create_app instances, rather than mixing
 # two projects' requests/cache hits/stop reasons into one budget snapshot.
+#: Legacy single-slot lock, kept so older imports keep working. Retrieval
+#: concurrency is governed by :func:`retrieval_slots` (LEEXTRACTOR_MAX_ACTIVE_JOBS,
+#: default 1 — see docs/decisions/ADR-006-small-server-concurrency.md).
 RETRIEVAL_LOCK = threading.Lock()
+
+#: Process-wide retrieval slots. Deliberately process-wide, not per JobManager:
+#: the invariant this replaces was "one retrieval at a time per process", and a
+#: 2 GB host must not run two searches just because two FastAPI app objects
+#: exist (tests, reload, several uvicorn workers).
+_GLOBAL_SLOTS: threading.BoundedSemaphore | None = None
+_GLOBAL_SLOTS_CAPACITY = 0
+
+
+def retrieval_slots() -> threading.BoundedSemaphore:
+    """The shared retrieval semaphore, sized by LEEXTRACTOR_MAX_ACTIVE_JOBS."""
+    global _GLOBAL_SLOTS, _GLOBAL_SLOTS_CAPACITY
+    from litsearch import config
+    capacity = config.max_active_search_jobs()
+    if _GLOBAL_SLOTS is None or capacity != _GLOBAL_SLOTS_CAPACITY:
+        _GLOBAL_SLOTS = threading.BoundedSemaphore(capacity)
+        _GLOBAL_SLOTS_CAPACITY = capacity
+    return _GLOBAL_SLOTS
 TERMINAL = {"completed", "partial", "failed", "canceled"}
 PARTIAL_REASONS = {"low_yield", "max_rounds", "truncated", "budget_exhausted", "api_failure"}
 
@@ -81,6 +102,10 @@ class JobManager:
         self.repo, self.factory = repository, workflow_factory
         self.jobs: dict[str, Job] = {}
         self.lock = threading.RLock()
+        # Retrieval slots: process-wide, so two app objects cannot search at the
+        # same time on a host that can only afford one job (ADR-006). A job that
+        # cannot get a slot stays "queued" instead of starting anyway.
+        self.slots = retrieval_slots()
         for path in self.repo.jobs_dir.glob("*.json"):
             try:
                 payload = json.loads(path.read_text(encoding="utf-8"))
@@ -135,7 +160,7 @@ class JobManager:
         guard = RequestGuard(job.event, http_limit)
         try:
             while not job.event.is_set():
-                if RETRIEVAL_LOCK.acquire(timeout=0.1):
+                if self.slots.acquire(timeout=0.1):
                     acquired = True
                     break
             if job.event.is_set():
@@ -195,7 +220,7 @@ class JobManager:
             with project.lock:
                 project.active_job_id = None
             if acquired:
-                RETRIEVAL_LOCK.release()
+                self.slots.release()
 
     def cancel(self, job):
         with job.lock:
@@ -204,7 +229,22 @@ class JobManager:
                 self.update(job, cancel_requested=True)
         return self.dto(job)
 
-    def shutdown(self):
+    def shutdown(self, grace: float | None = None):
+        """Stop accepting work and never leave a job stuck on "running".
+
+        Called from the FastAPI lifespan on SIGTERM. Pending jobs are
+        cancelled, running ones get a bounded grace period to finish their
+        checkpoint, and whatever is still non-terminal is recorded as
+        ``partial`` with ``stop_reason="interrupted"`` — the same shape the
+        loader uses when a container died mid-job, so a restart resumes from a
+        truthful state instead of an eternal "running".
+        """
+        if grace is None:
+            import os
+            try:
+                grace = float(os.environ.get("LEEXTRACTOR_SHUTDOWN_GRACE", "5"))
+            except ValueError:
+                grace = 5.0
         with self.lock:
             pending = list(self.jobs.values())
         for job in pending:
@@ -212,4 +252,10 @@ class JobManager:
                 self.cancel(job)
         for job in pending:
             if job.thread and job.thread.is_alive():
-                job.thread.join(timeout=0.1)
+                job.thread.join(timeout=max(0.0, grace))
+        for job in pending:
+            if job.payload["status"] not in TERMINAL:
+                self.update(job, status="partial", stop_reason="interrupted",
+                            finished_at=now(),
+                            error={"code": "interrupted",
+                                   "message": "服务关闭，任务已中断；保留已完成检查点"})

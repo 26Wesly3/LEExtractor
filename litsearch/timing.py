@@ -12,8 +12,8 @@ from __future__ import annotations
 
 import threading
 import time
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Iterator
 
 #: Stage names written into ``search_manifest["timings"]``.
 STAGE_QUERY_PLANNING = "query_planning"

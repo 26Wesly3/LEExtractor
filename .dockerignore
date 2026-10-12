@@ -1,0 +1,45 @@
+# Build context hygiene: keep node_modules, caches, secrets and local data out
+# of the image (and out of the build cache).
+.git
+.gitignore
+.github
+.sessions
+.web-data
+.pytest_cache
+.ruff_cache
+__pycache__
+**/__pycache__
+*.pyc
+*.pyo
+
+# Local data, models and logs never belong in an image.
+data/
+models/
+cache/
+logs/
+deliverables/
+benchmarks/results/
+*.db
+*.db-wal
+*.db-shm
+*.log
+*.zip
+*.tar
+*.gz
+
+# Secrets
+.env
+.env.*
+!.env.example
+secrets.toml
+
+# Node build inputs are copied explicitly by the web stage.
+web/node_modules
+web/dist
+litsearch/web/static
+
+# Local docs/scratch that the image does not need.
+docs/devlog
+tests/_workspace_tmp
+_ui_audit
+node_modules

@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
+import platform
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -15,6 +17,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
+from litsearch import config
 from litsearch.cache import Cache
 from litsearch.config import current_year, max_pdf_size_mib, serpapi_api_key
 from litsearch.demo import DemoSource, demo_state
@@ -25,7 +28,8 @@ from litsearch.filters import RelevanceFilter, corpus_hash
 from litsearch.intent import parse_intent, plan_payload
 from litsearch.landscape import build_landscape
 from litsearch.local_models import LocalModelError, model_diagnostics
-from litsearch.timing import STAGE_EMBEDDING_LOAD, STAGE_TRANSLATION
+from litsearch.logging_setup import configure as configure_logging
+from litsearch.logging_setup import log_event
 from litsearch.persistence import state_from_dict, state_to_dict
 from litsearch.prisma import ScreeningDecision, ScreeningStage
 from litsearch.query_context import focused_plan, prepare_query
@@ -35,6 +39,7 @@ from litsearch.search import LiteratureReviewWorkflow, ReviewState, ranking_quer
 from litsearch.session_schema import SessionSchemaError, validate_session_dict
 from litsearch.sources import SourceManager
 from litsearch.stop_reasons import get_http_budget
+from litsearch.timing import STAGE_EMBEDDING_LOAD, STAGE_TRANSLATION
 from litsearch.version import __version__
 from litsearch.web.dto import (
     evidence_dto,
@@ -203,8 +208,16 @@ def create_app(data_dir=None, workflow_factory=None, static_dir=None, translator
 
     @asynccontextmanager
     async def lifespan(_app):
-        yield
-        jobs.shutdown()
+        sinks = configure_logging()
+        api_log = logging.getLogger("leextractor.api")
+        log_event(api_log, "service_start", component="api", version=__version__,
+                  sink=sinks["sink"], storage=config.storage_report(),
+                  max_active_jobs=config.max_active_search_jobs())
+        try:
+            yield
+        finally:
+            log_event(api_log, "service_stop", component="api", version=__version__)
+            jobs.shutdown()
 
     app = FastAPI(title="LEExtractor Local API", version=__version__, lifespan=lifespan,
                   docs_url="/api/docs", openapi_url="/api/openapi.json", redoc_url=None)
@@ -215,7 +228,8 @@ def create_app(data_dir=None, workflow_factory=None, static_dir=None, translator
         host = request.headers.get("host", "").lower()
         hostname = urlsplit("http://" + host).hostname
         test_client = request.client and request.client.host == "testclient"
-        if hostname not in {"127.0.0.1", "localhost", "::1"} and not (test_client and hostname == "testserver"):
+        allowed = config.allowed_hosts()
+        if hostname not in allowed and not (test_client and hostname == "testserver"):
             return JSONResponse({"error": {"code": "invalid_host", "message": "仅允许本机访问", "detail": None}}, 403)
         origin = request.headers.get("origin")
         if origin:
@@ -256,10 +270,51 @@ def create_app(data_dir=None, workflow_factory=None, static_dir=None, translator
 
     @app.get("/api/health")
     def health():
-        return {"status": "ok", "app_name": "LEExtractor", "version": __version__, "ui": "vue", "local_only": True,
-                "storage": "ready", "unreadable_projects": repository.load_errors,
-                "dependencies": {"fastapi": True, "algorithms": True},
-                "models": model_diagnostics()}
+        """Everything an operator needs, and nothing that leaks a secret.
+
+        Reports version, runtime, storage writability and model readiness.
+        Absolute paths, API keys, tokens and stack traces never appear here
+        (``litsearch.logging_setup.redact`` applies the same rule to logs).
+        """
+        return {
+            "status": "ok" if config.data_ready() else "degraded",
+            "app_name": "LEExtractor",
+            "version": __version__,
+            "ui": "vue",
+            "local_only": not config.public_hosts(),
+            "runtime": {
+                "python": platform.python_version(),
+                "host": config.api_host(),
+                "port": config.api_port(),
+                "max_active_jobs": config.max_active_search_jobs(),
+                "embedding_threads": config.embedding_threads(),
+                "embedding_batch": config.embedding_batch(),
+            },
+            "storage": config.storage_report(),
+            "unreadable_projects": repository.load_errors,
+            "dependencies": {"fastapi": True, "algorithms": True},
+            "models": model_diagnostics(),
+        }
+
+    @app.get("/api/health/live")
+    def health_live():
+        """Liveness: the process answers. Nothing else is checked."""
+        return {"status": "ok"}
+
+    @app.get("/api/health/ready")
+    def health_ready():
+        """Readiness: initialisation done and the data root writable.
+
+        External providers are deliberately excluded — Semantic Scholar or
+        Crossref being unreachable degrades a search, it does not make this
+        service unready.
+        """
+        ready = config.data_ready()
+        return JSONResponse(
+            {"status": "ready" if ready else "not_ready",
+             "storage": config.storage_report(),
+             "models": model_diagnostics()},
+            status_code=200 if ready else 503)
 
     @app.get("/api/settings")
     def settings():

@@ -271,7 +271,6 @@ def test_manifest_lists_every_file_with_its_sha256(outdir):
 
 
 def test_the_packaged_tree_contains_the_release_documents(outdir):
-    from litsearch.version import __version__
 
     summary = package_release.package(REPO, outdir)
     with zipfile.ZipFile(summary["path"]) as archive:

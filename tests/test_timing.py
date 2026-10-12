@@ -91,9 +91,8 @@ def test_timer_records_providers_separately_and_extras():
 
 def test_stage_context_manager_measures_and_survives_exceptions():
     timer = StageTimer()
-    with pytest.raises(RuntimeError):
-        with timer.stage("ranking"):
-            raise RuntimeError("boom")
+    with pytest.raises(RuntimeError), timer.stage("ranking"):
+        raise RuntimeError("boom")
     assert timer.snapshot()["ranking"] >= 0
 
 

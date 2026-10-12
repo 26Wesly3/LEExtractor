@@ -13,8 +13,6 @@ from __future__ import annotations
 import threading
 import time
 
-import pytest
-
 from litsearch.cache import Cache
 from litsearch.diagnostics import RateLimitedError
 from litsearch.models import Paper

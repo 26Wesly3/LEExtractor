@@ -1,0 +1,90 @@
+# LEExtractor 0.9.13 — reference deployment for the competition server.
+#
+#   Ubuntu 24.04 LTS · 2 vCPU · 2 GB RAM · 40 GB disk · Singapore
+#
+# Bring up:      docker compose up -d --build
+# Logs:          docker compose logs -f leextractor
+# Stop:          docker compose down            (volumes are kept)
+#
+# Everything persistent lives in ./data ./models ./cache ./logs on the host, so
+# recreating or upgrading the container never loses projects or re-downloads
+# models. The memory limit below is PROVISIONAL: ADR-006 records that it must be
+# re-measured on the real host (see docs/devlog/v0.9.13.md §Resource benchmark).
+
+services:
+  leextractor:
+    build: .
+    image: leextractor:0.9.13
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      LEEXTRACTOR_HOST: 0.0.0.0
+      LEEXTRACTOR_PORT: "8012"
+      LEEXTRACTOR_DATA_DIR: /data
+      LEEXTRACTOR_MODEL_DIR: /models
+      LEEXTRACTOR_CACHE_DIR: /cache
+      LEEXTRACTOR_LOG_DIR: /logs
+      LEEXTRACTOR_LOG_FORMAT: json
+      LEEXTRACTOR_MAX_ACTIVE_JOBS: "1"
+      LEEXTRACTOR_EMBEDDING_THREADS: "2"
+      LEEXTRACTOR_EMBEDDING_BATCH: "8"
+      # Set to the DuckDNS name once the reverse proxy is in place; empty keeps
+      # the API local-only (Host header guard).
+      # LEEXTRACTOR_PUBLIC_HOSTS: leextractor-demo.duckdns.org
+    volumes:
+      - ./data:/data
+      - ./models:/models
+      - ./cache:/cache
+      - ./logs:/logs
+    # Only the reverse proxy talks to the app: bound to loopback on the host.
+    ports:
+      - "127.0.0.1:8012:8012"
+    deploy:
+      resources:
+        limits:
+          cpus: "1.50"          # leave headroom for Caddy + the kernel
+          memory: 1024M          # provisional; see ADR-006
+        reservations:
+          memory: 384M
+    stop_grace_period: 20s       # SIGTERM: let a running job checkpoint (ADR-007)
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8012/api/health/live"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Optional reverse proxy. Host-level Caddy or Nginx is equally fine; this
+  # service exists so a single `docker compose up` yields HTTPS.
+  # Start with: docker compose --profile proxy up -d --build
+  caddy:
+    image: caddy:2.8-alpine
+    profiles: ["proxy"]
+    restart: unless-stopped
+    depends_on:
+      - leextractor
+    env_file:
+      - .env
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy/data:/data
+      - ./caddy/config:/config
+      - ./logs/caddy:/var/log/caddy
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

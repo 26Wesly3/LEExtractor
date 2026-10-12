@@ -34,17 +34,17 @@ from litsearch.prisma import (
 from litsearch.similar import SimilarPaperFinder
 from litsearch.snowball import SnowballEngine, SnowballResult
 from litsearch.sources import SourceManager
+from litsearch.stop_reasons import (
+    StopReason,
+    http_budget_snapshot,
+    reset_http_budget,
+)
 from litsearch.timing import (
     STAGE_NORMALIZATION,
     STAGE_PROVIDER_TOTAL,
     STAGE_RANKING,
     STAGE_TOTAL,
     StageTimer,
-)
-from litsearch.stop_reasons import (
-    StopReason,
-    http_budget_snapshot,
-    reset_http_budget,
 )
 
 logger = logging.getLogger(__name__)
