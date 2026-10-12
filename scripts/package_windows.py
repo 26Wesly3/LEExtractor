@@ -27,6 +27,7 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
+import subprocess
 import zipfile
 from pathlib import Path
 
@@ -60,21 +61,26 @@ set "LEEXTRACTOR_HOST=127.0.0.1"
 set "LEEXTRACTOR_PORT=8012"
 set "LEEXTRACTOR_LOG_FORMAT=text"
 set "LEEXTRACTOR_MAX_ACTIVE_JOBS=1"
+set "PYTHONPATH=%~dp0app"
 
-if not exist "data"  mkdir "data"
-if not exist "cache" mkdir "cache"
-if not exist "logs"  mkdir "logs"
+for %%D in (data cache logs models) do if not exist "%%D" mkdir "%%D"
 
 set "PYEXE="
 if exist "runtime\python.exe" set "PYEXE=runtime\python.exe"
 if not defined PYEXE if exist ".venv\Scripts\python.exe" set "PYEXE=.venv\Scripts\python.exe"
-if not defined PYEXE set "PYEXE=python"
-
-%PYEXE% -c "import fastapi, uvicorn, requests" >nul 2>&1
-if errorlevel 1 (
-    echo [1/2] 首次运行：安装依赖（需要网络，几分钟）
-    %PYEXE% -m pip install --disable-pip-version-check -e "app" -c "app\constraints.txt"
-    if errorlevel 1 goto failed
+if defined PYEXE (
+    %PYEXE% -c "import fastapi, uvicorn" >nul 2>&1
+    if errorlevel 1 set "PYEXE="
+)
+if not defined PYEXE (
+    python -c "import fastapi, uvicorn" >nul 2>&1
+    if not errorlevel 1 set "PYEXE=python"
+)
+if not defined PYEXE (
+    echo [1/2] 首次运行：创建本地环境并安装依赖（需要网络，几分钟）
+    python -m venv .venv || goto failed
+    set "PYEXE=.venv\Scripts\python.exe"
+    !PYEXE! -m pip install --disable-pip-version-check --quiet "app" -c "app\constraints.txt" || goto failed
 )
 
 echo [2/2] 启动服务并打开浏览器： http://127.0.0.1:8012
@@ -114,12 +120,63 @@ README = """LEExtractor 便携版（Windows）
 * 比赛演示优先用此本地版；云端版为 https://<子域>.duckdns.org（见 DEPLOYMENT.md）
 * 没网也能用：模型已在 models\\ 里、结果可以离线复算
 * 端口被占用时：set LEEXTRACTOR_PORT=8013 后重新双击
-* 数据不丢：升级只需替换 app\\ 目录，data\\ 与 models\\ 原样保留
+* 升级：覆盖 app\\ 目录后运行
+      runtime\\python.exe -m pip install --upgrade app
+  即可；data\\ 与 models\\ 原样保留。runtime\\ 已内置 Python 与依赖，现场无需联网。
 """
 
 
 def _ignore(_directory, names):
     return [name for name in names if name in SKIP_DIRS]
+
+
+#: Embeddable CPython: ~11 MB, no installer, no admin rights, relocatable.
+PYTHON_EMBED_VERSION = "3.12.8"
+PYTHON_EMBED_URL = "https://www.python.org/ftp/python/{v}/python-{v}-embed-amd64.zip"
+GET_PIP_URL = "https://bootstrap.pypa.io/get-pip.py"
+
+
+def fetch_runtime(target: Path) -> dict:
+    """Download an embeddable CPython into ``target`` and make it usable.
+
+    Embeddable CPython ships without pip and without ``site-packages`` on
+    ``sys.path``, so both are enabled explicitly: the two lines written into
+    ``python3xx._pth`` are what make an installation importable at all.
+    """
+    import urllib.request
+
+    target.mkdir(parents=True, exist_ok=True)
+    archive = target.parent / "python-embed.zip"
+    urllib.request.urlretrieve(PYTHON_EMBED_URL.format(v=PYTHON_EMBED_VERSION), archive)
+    with zipfile.ZipFile(archive) as zf:
+        zf.extractall(target)
+    archive.unlink()
+
+    pth = next(target.glob("python*._pth"))
+    pth.write_text(f"{pth.stem}.zip\n.\nLib\\site-packages\nimport site\n", encoding="ascii")
+    (target / "Lib" / "site-packages").mkdir(parents=True, exist_ok=True)
+
+    python = target / "python.exe"
+    get_pip = target.parent / "get-pip.py"
+    urllib.request.urlretrieve(GET_PIP_URL, get_pip)
+    subprocess.run([str(python), str(get_pip), "--no-warn-script-location"], check=True)
+    get_pip.unlink()
+    return {"python": str(python), "python_version": PYTHON_EMBED_VERSION}
+
+
+def install_app(runtime: Path, app: Path, constraints: Path | None = None) -> None:
+    """Install the app *into* the bundled runtime (non-editable, relocatable).
+
+    Non-editable on purpose: an editable install writes the absolute path of
+    ``app/`` into ``site-packages``, so the package would stop importing the
+    moment the folder moves to the demo laptop.
+    """
+    command = [str(runtime / "python.exe"), "-m", "pip", "install",
+               "--no-warn-script-location", "--disable-pip-version-check"]
+    if constraints and constraints.is_file():
+        command += ["-c", str(constraints)]
+    command.append(str(app))
+    subprocess.run(command, check=True)
 
 
 def _copy_tree(source: Path, target: Path) -> None:
@@ -129,7 +186,14 @@ def _copy_tree(source: Path, target: Path) -> None:
 def build(out_dir: Path, runtime: Path | None, models: Path | None, make_zip: bool) -> dict:
     package = out_dir / "LEExtractor-Windows"
     if package.exists():
-        shutil.rmtree(package)
+        # Keep the expensive directories across re-runs: runtime/ (bundled
+        # CPython, hundreds of MB) and models/ must survive a rebuild of app/.
+        for child in package.iterdir():
+            if child.name in {"runtime", "models"}:
+                continue
+            shutil.rmtree(child) if child.is_dir() else child.unlink()
+    else:
+        package.mkdir(parents=True)
     app = package / "app"
     app.mkdir(parents=True)
     for name in APP_DIRS:
@@ -147,7 +211,9 @@ def build(out_dir: Path, runtime: Path | None, models: Path | None, make_zip: bo
 
     if models and models.is_dir():
         _copy_tree(models, package / "models")
-    if runtime and runtime.is_dir():
+    # --fetch-runtime installs straight into package/runtime, so never copy a
+    # directory onto itself when that path is what was handed in.
+    if runtime and runtime.is_dir() and runtime.resolve() != (package / "runtime").resolve():
         _copy_tree(runtime, package / "runtime")
 
     # CRLF is mandatory for .bat: cmd.exe mis-parses LF-only labels and comments.
@@ -177,9 +243,22 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", default=str(DEFAULT_OUT))
     parser.add_argument("--runtime", default="", help="portable Python directory to bundle")
     parser.add_argument("--models", default="", help="pre-downloaded models directory to bundle")
+    parser.add_argument("--fetch-runtime", action="store_true",
+                        help="download an embeddable CPython and install the app into it")
     parser.add_argument("--zip", action="store_true", help="also write LEExtractor-Windows.zip")
     args = parser.parse_args(argv)
-    summary = build(Path(args.out), Path(args.runtime) if args.runtime else None,
+    out = Path(args.out)
+    runtime = Path(args.runtime) if args.runtime else None
+    if args.fetch_runtime:
+        package = out / "LEExtractor-Windows"
+        app = package / "app"
+        if not (app / "pyproject.toml").is_file():
+            print(json.dumps({"error": "run once without --fetch-runtime to lay out app/"}))
+            return 2
+        print(json.dumps(fetch_runtime(package / "runtime"), ensure_ascii=False))
+        install_app(package / "runtime", app, app / "constraints.txt")
+        runtime = package / "runtime"
+    summary = build(out, runtime,
                     Path(args.models) if args.models else None, args.zip)
     print(json.dumps(summary, ensure_ascii=False))
     return 0
