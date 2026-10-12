@@ -45,9 +45,11 @@ COPY scripts/ scripts/
 COPY server.py app.py ./
 
 # Editable install keeps /app/litsearch as the imported package, so the synced
-# static assets below are the ones the API serves.
+# static assets below are the ones the API serves. The [web] extra is required:
+# fastapi/uvicorn live there (plus fastembed + sentencepiece, which the semantic
+# ranking and the translation tokenizer need at run time).
 RUN python -m pip install --upgrade pip \
- && python -m pip install -e .
+ && python -m pip install -e ".[web]"
 
 # Built web bundle -> the package's static directory.
 COPY --from=web /build/web/dist/ web/dist/
