@@ -37,8 +37,11 @@ services:
       LEEXTRACTOR_VECTOR_CACHE: /cache/vectors.db
       LEEXTRACTOR_LOG_FORMAT: json
       LEEXTRACTOR_MAX_ACTIVE_JOBS: "1"
-      LEEXTRACTOR_EMBEDDING_THREADS: "2"
-      LEEXTRACTOR_EMBEDDING_BATCH: "8"
+      # Threads and batch are deliberately NOT pinned here: they come from .env
+      # (LEEXTRACTOR_EMBEDDING_THREADS / _BATCH) so an A/B measurement is an
+      # .env edit plus `up -d`, never an image rebuild or a compose edit.
+      # Measured on the reference host: ranking dominates the wall clock, so
+      # these two values decide the search time.
       # Set to the DuckDNS name once the reverse proxy is in place; empty keeps
       # the API local-only (Host header guard).
       # LEEXTRACTOR_PUBLIC_HOSTS: leextractor-demo.duckdns.org
