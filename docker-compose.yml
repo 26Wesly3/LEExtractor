@@ -30,6 +30,11 @@ services:
       LEEXTRACTOR_MODEL_DIR: /models
       LEEXTRACTOR_CACHE_DIR: /cache
       LEEXTRACTOR_LOG_DIR: /logs
+      # Persist what the model layer downloads: without these two the container
+      # re-downloads the translation/embedding models on every recreate, which
+      # both wastes the venue's bandwidth and poisons a memory benchmark.
+      LEEXTRACTOR_EMBEDDING_CACHE: /models/embedding
+      LEEXTRACTOR_VECTOR_CACHE: /cache/vectors.db
       LEEXTRACTOR_LOG_FORMAT: json
       LEEXTRACTOR_MAX_ACTIVE_JOBS: "1"
       LEEXTRACTOR_EMBEDDING_THREADS: "2"
