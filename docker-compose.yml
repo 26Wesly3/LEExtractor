@@ -54,9 +54,14 @@ services:
       resources:
         limits:
           cpus: "1.50"          # leave headroom for Caddy + the kernel
-          memory: 1024M          # provisional; see ADR-006
+          # Raised from 1024M after the first real measurement on the reference
+          # host: a single semantic search reached 975 MiB inside a 1 GiB cap
+          # while the host swapped 1.2 GB, i.e. the cap itself was the problem.
+          # 1408M leaves ~560 MB for the OS, Caddy and page cache. Keep
+          # MAX_ACTIVE_JOBS=1 at this size (ADR-006).
+          memory: 1408M
         reservations:
-          memory: 384M
+          memory: 512M
     stop_grace_period: 20s       # SIGTERM: let a running job checkpoint (ADR-007)
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8012/api/health/live"]
