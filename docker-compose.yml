@@ -13,7 +13,12 @@
 
 services:
   leextractor:
-    build: .
+    # The compose file lives in /opt/leextractor while the source lives in
+    # ./repo, so the build context is the repository, not the directory that
+    # holds this file. .dockerignore is read from that context.
+    build:
+      context: ./repo
+      dockerfile: Dockerfile
     image: leextractor:0.9.13
     restart: unless-stopped
     env_file:
