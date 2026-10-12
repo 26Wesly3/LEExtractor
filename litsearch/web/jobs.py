@@ -60,6 +60,14 @@ class RequestGuard:
             provider._transport_request = MethodType(guarded, provider)
 
 
+def _timings(state) -> dict:
+    """Stage timings copied into the job payload (observability only, never fatal)."""
+    try:
+        return dict(state.search_manifest.get("timings") or {})
+    except Exception:  # pragma: no cover - observability must never fail a job
+        return {}
+
+
 @dataclass
 class Job:
     payload: dict
@@ -161,7 +169,8 @@ class JobManager:
                 self.repo.save(project, state)
                 project.active_job_id = None
             self.update(job, status=status, stop_reason=reason, http_budget=state.http_budget,
-                        result=result, progress={"stage": "finished", "records": project.state.total_papers_tracked},
+                        result=result, timings=_timings(state),
+                        progress={"stage": "finished", "records": project.state.total_papers_tracked},
                         finished_at=now())
         except Exception as exc:
             canceled = job.event.is_set()
@@ -180,7 +189,7 @@ class JobManager:
             with project.lock:
                 project.active_job_id = None
             self.update(job, status="canceled" if canceled else "partial" if guard.exhausted else "failed",
-                        stop_reason=reason, http_budget=state.http_budget, finished_at=now(),
+                        stop_reason=reason, http_budget=state.http_budget, finished_at=now(), timings=_timings(state),
                         error={"code": reason, "message": "任务已取消" if canceled else str(exc) if isinstance(exc, LocalModelError) else "任务未完整结束；已保存当前检查点"})
         finally:
             with project.lock:

@@ -19,7 +19,7 @@ class Cache:
         self._init_db()
 
     def _init_db(self):
-        with sqlite3.connect(self._db_path) as conn:
+        with sqlite3.connect(self._db_path, timeout=15) as conn:
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS cache (
                     key TEXT PRIMARY KEY,
@@ -34,7 +34,7 @@ class Cache:
 
     def get(self, *key_parts: str):
         key = self._make_key(*key_parts)
-        with sqlite3.connect(self._db_path) as conn:
+        with sqlite3.connect(self._db_path, timeout=15) as conn:
             row = conn.execute(
                 "SELECT value, created_at FROM cache WHERE key = ?", (key,)
             ).fetchone()
@@ -49,7 +49,7 @@ class Cache:
     def set(self, value, *key_parts: str):
         key = self._make_key(*key_parts)
         value_str = json.dumps(value)
-        with sqlite3.connect(self._db_path) as conn:
+        with sqlite3.connect(self._db_path, timeout=15) as conn:
             conn.execute(
                 "INSERT OR REPLACE INTO cache (key, value, created_at) VALUES (?, ?, ?)",
                 (key, value_str, time.time()),
@@ -58,17 +58,17 @@ class Cache:
 
     def delete(self, *key_parts: str):
         key = self._make_key(*key_parts)
-        with sqlite3.connect(self._db_path) as conn:
+        with sqlite3.connect(self._db_path, timeout=15) as conn:
             conn.execute("DELETE FROM cache WHERE key = ?", (key,))
             conn.commit()
 
     def clear(self):
-        with sqlite3.connect(self._db_path) as conn:
+        with sqlite3.connect(self._db_path, timeout=15) as conn:
             conn.execute("DELETE FROM cache")
             conn.commit()
 
     def _cleanup_expired(self):
         cutoff = time.time() - self._ttl
-        with sqlite3.connect(self._db_path) as conn:
+        with sqlite3.connect(self._db_path, timeout=15) as conn:
             conn.execute("DELETE FROM cache WHERE created_at < ?", (cutoff,))
             conn.commit()

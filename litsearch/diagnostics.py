@@ -34,6 +34,7 @@ class SourceErrorKind(str, Enum):
     """Coarse bucket, used for grouping in the diagnostics report."""
 
     RATE_LIMITED = "rate_limited"
+    AUTH = "auth_error"
     TRANSIENT = "transient"
     NOT_FOUND = "not_found"
     CONTRACT = "contract"
@@ -77,6 +78,17 @@ class PermanentSourceError(SourceError):
     kind = SourceErrorKind.CONTRACT
 
 
+class AuthError(SourceError):
+    """401/403: credentials or permission, not a transient fault.
+
+    Kept apart from the generic contract error because the fix is different and
+    user-facing: add/replace an API key, or check the provider quota policy —
+    retrying or waiting changes nothing.
+    """
+
+    kind = SourceErrorKind.AUTH
+
+
 class ParseError(SourceError):
     """Response arrived but did not look like the documented payload."""
 
@@ -102,6 +114,8 @@ def classify_http_error(
         return RateLimitedError(source, detail, status)
     if status == 404:
         return NotFoundError(source, detail, status)
+    if status in {401, 403}:
+        return AuthError(source, detail, status)
     if status in _CLIENT_ERRORS:
         return PermanentSourceError(source, detail, status)
     if status >= 500:

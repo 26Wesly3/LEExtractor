@@ -32,7 +32,7 @@ function mockServer(url,options={}){
   if(path===`/api/jobs/${jid}/cancel`){job={...job,cancel_requested:true};return response(job)}
   if(path===`/api/projects/${pid}/query-plan`)return response({topic:body.topic,direction:body.research_direction,translation:{original:body.research_direction,translated:'multi-agent collaboration in computer vision',engine:'local'},queries:{openalex:{query:'multi-agent collaboration computer vision'}},warnings:[],degraded:false})
   if(path===`/api/projects/${pid}/search`){project.active_job_id=jid;return response(job,202)}
-  if(path===`/api/projects/${pid}/landscape`)return response({graph:{nodes:[{paper_key:key,canonical_id:basePaper.canonical_id,title:basePaper.title,year:2024,relevance_score:.75,score_context_id:'ctx-1'}],edges:[],edge_type_counts:{citation:0,bibliographic_coupling:0,co_citation:0,text_similarity:0},summary:{communities:[[key]]}},landscape:{paper_count:1,topics:{topics:[],usable:false,note:'Too few papers'},temporal:{timeline:{2024:1}},novelty:{rows:[]},coverage:{topics:[],gaps:[],balance:0},scope:'current corpus'},score_context_id:'ctx-1'})
+  if(path===`/api/projects/${pid}/landscape`)return response({graph:{nodes:[{paper_key:key,canonical_id:basePaper.canonical_id,title:basePaper.title,year:2024,relevance_score:.75,score_context_id:'ctx-1'},{paper_key:secondKey,canonical_id:'10.1000/second-record',title:'Second observed record',year:2023,relevance_score:.5,score_context_id:'ctx-1'}],edges:[{source:key,target:secondKey,edge_type:'text_similarity',score:.8,witness_count:0,evidence:[]}],edge_type_counts:{citation:0,bibliographic_coupling:0,co_citation:0,text_similarity:1},summary:{communities:[[key]]}},landscape:{paper_count:1,topics:{topics:[],usable:false,note:'Too few papers'},temporal:{timeline:{2024:1}},novelty:{rows:[]},coverage:{topics:[],gaps:[],balance:0},scope:'current corpus'},score_context_id:'ctx-1'})
   if(path===`/api/projects/${pid}/questions`)return response({questions:[{kind:'coverage_gap',question:'Is this topic under-retrieved?',rationale:'Current corpus coverage is thin.',status:'hypothesis',evidence_strength:'weak',supporting_papers:[{paper_key:key,paper_id:basePaper.canonical_id,title:basePaper.title,year:2024}],risks:'The corpus can be incomplete',suggested_next_search:'evidence gap'}],usable:true,counts:{coverage_gap:1},citation_coverage:{complete:false},note:'Bounded by sample'})
   if(path===`/api/projects/${pid}/review`)return response({facts:{threshold_calibrated:false,calibration:{status:'not_calibrated',threshold:null}},prisma:{},ledger:[],queue:paperRows,records:[],revision:project.revision,score_context_id:'ctx-1'})
   if(path===`/api/projects/${pid}/exports`)return response({file_id:'e'.repeat(32),filename:'evidence_pack.zip',size:512,media_type:'application/zip',download_url:'/api/files/'+('e'.repeat(32))})
@@ -62,14 +62,79 @@ describe('workspace DOM and API integration',()=>{
     expect(drawer.parentElement).toBe(scrim.parentElement)
     expect(Number(getComputedStyle(drawer).zIndex)).toBeGreaterThan(Number(getComputedStyle(scrim).zIndex))
     expect(drawer.hasAttribute('inert')).toBe(false)
+    // 详情抽屉的入场：容器 is-open，内容分段错峰推入（原型 drawer 的景深做法）
+    expect(drawer.classList.contains('is-open')).toBe(true)
+    const sections=[...drawer.querySelectorAll('.drawer-inner > *')]
+    expect(sections.length).toBeGreaterThan(3)
+    expect(getComputedStyle(sections[0]).animationName).toBe('le-drawer-in')
+    expect(parseFloat(getComputedStyle(sections[1]).animationDelay)).toBeGreaterThan(0)
     await click('设为扩展种子');expect(button('取消种子选择')).toBeTruthy()
     const link=button('打开论文页面 ↗');expect(link.href).toBe(basePaper.url);expect(link.target).toBe('_blank')
     await click('关闭 ×');expect(router.currentRoute.value.fullPath).toBe(`/projects/${pid}/results`)
+    // v0.9.10 的保证（路由立即切换、遮罩不再残留）不变；抽屉本体改为播完 260ms 退场动画后卸载。
+    expect(document.querySelector('.paper-drawer')?.classList.contains('is-closing')).toBe(true)
+    await new Promise(resolve=>setTimeout(resolve,350));await settle()
     expect(document.querySelector('.v-navigation-drawer__scrim')).toBeNull()
+    expect(document.querySelector('.paper-drawer')).toBeNull()
     await navigate(`/projects/${pid}/papers/${key}`)
     const pushes=vi.spyOn(router,'push');document.querySelector('.v-navigation-drawer__scrim').click();await pushes.mock.results.at(-1).value;await settle()
     expect(router.currentRoute.value.fullPath).toBe(`/projects/${pid}/results`)
+    await new Promise(resolve=>setTimeout(resolve,350));await settle()
     expect(document.querySelector('.paper-drawer')).toBeNull();expect(document.querySelector('.v-navigation-drawer__scrim')).toBeNull()
+  })
+  it('opens a vertical module menu with staggered entry and a real exit transition',async()=>{
+    await mount(`/projects/${pid}/search`)
+    const toggle=[...document.querySelectorAll('button')].find(el=>el.textContent.includes('导航'))
+    expect(toggle).toBeTruthy();toggle.click();await settle()
+    const panel=document.querySelector('.nav-panel')
+    expect(panel).toBeTruthy();expect(panel.classList.contains('open')).toBe(true)
+    const items=[...panel.querySelectorAll('.navmap__item')]
+    expect(items.length).toBe(9)
+    expect(items[0].textContent).toContain('01')
+    expect(items[0].querySelector('.navmap__desc').textContent.length).toBeGreaterThan(4)
+    expect(panel.querySelector('.navmap__item.current').textContent).toContain('检索')
+    expect(panel.querySelector('.navmap__item[aria-current="page"]')).toBeTruthy()
+    expect(panel.textContent).not.toContain('共十个模块')
+    expect(getComputedStyle(items[0]).animationName).toBe('le-nav-in')
+    expect(getComputedStyle(panel).transitionProperty).toContain('transform')
+    await click('×')
+    expect(document.querySelector('.nav-panel').classList.contains('is-closing')).toBe(true)
+    await new Promise(resolve=>setTimeout(resolve,320));await settle()
+    expect(document.querySelector('.nav-panel')).toBeNull()
+    // 三条退出路径之二：点遮罩
+    toggle.click();await settle()
+    const scrim=document.querySelector('.nav-scrim')
+    expect(scrim).toBeTruthy();expect(scrim.classList.contains('open')).toBe(true)
+    expect(getComputedStyle(scrim).transitionProperty).toContain('opacity')
+    scrim.click();await settle()
+    expect(document.querySelector('.nav-panel').classList.contains('is-closing')).toBe(true)
+    await new Promise(resolve=>setTimeout(resolve,320));await settle()
+    expect(document.querySelector('.nav-panel')).toBeNull();expect(document.querySelector('.nav-scrim')).toBeNull()
+    // 三条退出路径之三：Esc
+    toggle.click();await settle()
+    document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape'}));await settle()
+    expect(document.querySelector('.nav-panel').classList.contains('is-closing')).toBe(true)
+    await new Promise(resolve=>setTimeout(resolve,320));await settle()
+    expect(document.querySelector('.nav-panel')).toBeNull()
+  })
+  it('plays the cover departure and workspace arrival when the home wordmark is clicked',async()=>{
+    const animate=vi.fn(()=>({finished:Promise.resolve(),cancel(){}}))
+    Element.prototype.animate=animate
+    try{
+      await mount('/')
+      document.querySelector('.hero-button').click()
+      await settle()
+      expect(router.currentRoute.value.fullPath).toBe('/search')
+      expect(animate).toHaveBeenCalledTimes(2)
+      const [departure,departureOptions]=animate.mock.calls[0]
+      expect(departure[0].transform).toContain('scale(1)')
+      expect(departure[1].transform).toContain('scale(.97)')
+      expect(departureOptions.duration).toBe(280)
+      const [arrival,arrivalOptions]=animate.mock.calls[1]
+      expect(arrival[0].filter).toBe('blur(6px)')
+      expect(arrival[0].transform).toContain('translateZ(-150px)')
+      expect(arrivalOptions.duration).toBe(620)
+    }finally{delete Element.prototype.animate}
   })
   it('leaves unconfigured Scholar unselected and saves its key without retaining the input',async()=>{
     scholarConfigured=false;await mount(`/projects/${pid}/search`)
@@ -143,5 +208,59 @@ describe('workspace DOM and API integration',()=>{
     await navigate(`/projects/${pid}/export`);await click('生成文件')
     const operation=requests.find(r=>r.path.endsWith('/exports')&&r.method==='POST');expect(operation.body).toEqual({format:'evidence_pack',scope:'corpus',paper_keys:[]})
     expect(document.querySelector('.download-link').getAttribute('href')).toBe('/api/files/'+('e'.repeat(32)))
+  })
+  it('keeps provider identifiers in the detail drawer and draws every relation edge as a curve',async()=>{
+    await mount(`/projects/${pid}/papers/${key}`)
+    const drawer=document.querySelector('.paper-drawer')
+    expect(drawer.textContent).toContain(basePaper.doi)
+    expect(drawer.textContent).toContain('参考文献数')
+    expect(drawer.querySelectorAll('.meta-grid dd').length).toBeGreaterThanOrEqual(6)
+    expect(drawer.querySelector('.score-table').textContent).toContain('词法合计')
+    await navigate(`/projects/${pid}/landscape`)
+    const host=()=>document.querySelector('.graph-canvas')
+    expect(host()).toBeTruthy()
+    expect(host().getAttribute('data-nodes')).toBe('2')
+    const boxes=[...document.querySelectorAll('.layer-pick input[type="checkbox"]')]
+    expect(boxes.length).toBe(4)
+    const control=()=>[...document.querySelectorAll('.layer-pick .v-selection-control')].find(node=>node.textContent.includes('文本相似'))
+    expect(control()).toBeTruthy()
+    // 引文边为 0 时自动叠加可用的关系层，画布上才有连线
+    expect(control().querySelector('input[type="checkbox"]').checked).toBe(true)
+    expect(host().getAttribute('data-links')).toBe('1')
+    control().querySelector('input[type="checkbox"]').click()
+    await settle()
+    expect(host().getAttribute('data-links')).toBe('0')
+    expect(document.querySelector('.graph-legend').textContent).toContain('文本相似')
+    expect(document.querySelector('.graph-legend').textContent).toContain('直接引文')
+  })
+  it('summarises a finished search in one line and keeps the diagnostics folded',async()=>{
+    await mount(`/projects/${pid}/search`);const pushes=vi.spyOn(router,'push');await click('开始检索');await pushes.mock.results.at(-1).value;await settle()
+    project.search_manifest={selected_providers:['crossref','semantic_scholar'],provider_results:[
+      {provider:'crossref',status:'success',paper_count:24,ok:true,failed:false,cached:true,request_stats:{requests:0,cache_hits:24}},
+      {provider:'semantic_scholar',status:'rate_limited',paper_count:0,ok:false,failed:true,request_stats:{requests:1,rate_limited:1}}]}
+    project.active_job_id=null
+    job={...job,status:'partial',progress:{stage:'finished'},finished_at:null,timings:{total:12.4,provider_total:9.8,ranking:1.2,query_planning:0.4,providers:{semantic_scholar:8.2,crossref:1.6}}}
+    await new Promise(resolve=>setTimeout(resolve,1500));await settle()
+    const summary=document.querySelector('[data-job-summary]')
+    expect(summary).toBeTruthy()
+    expect(summary.textContent).toContain('12.4s')
+    expect(summary.textContent).toContain('2 个来源')
+    expect(summary.textContent).toContain('1 成功')
+    expect(summary.textContent).toContain('1 受限')
+    expect(document.body.textContent).toContain('部分文献来源暂时受限')
+    const diagnostics=document.querySelector('[data-job-diagnostics]')
+    expect(diagnostics.textContent).toContain('来源抓取合计')
+    expect(diagnostics.textContent).toContain('缓存命中')
+    expect(diagnostics.textContent).toContain('来源限流')
+  })
+  it('offers discovery-method, screening-state and non-CCF filters on the results page',async()=>{
+    await mount(`/projects/${pid}/results`)
+    expect(input('发现方式').value).toBe('全部发现方式')
+    expect(input('筛选状态').value).toBe('全部筛选状态')
+    expect(input('CCF 会议／期刊级别（2026）').value).toBe('全部级别')
+    // 截图反馈：来源与 CCF 级别两个下拉挤在一起 —— 现在统一 20px 留白
+    const railInputs=[...document.querySelectorAll('.facet-rail .v-input')]
+    expect(railInputs.length).toBeGreaterThanOrEqual(3)
+    expect(parseFloat(getComputedStyle(railInputs[1]).marginTop)).toBeGreaterThanOrEqual(20)
   })
 })

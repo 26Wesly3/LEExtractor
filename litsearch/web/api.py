@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Literal
@@ -23,7 +24,8 @@ from litsearch.export import to_bibtex, to_csv, to_ris
 from litsearch.filters import RelevanceFilter, corpus_hash
 from litsearch.intent import parse_intent, plan_payload
 from litsearch.landscape import build_landscape
-from litsearch.local_models import LocalModelError
+from litsearch.local_models import LocalModelError, model_diagnostics
+from litsearch.timing import STAGE_EMBEDDING_LOAD, STAGE_TRANSLATION
 from litsearch.persistence import state_from_dict, state_to_dict
 from litsearch.prisma import ScreeningDecision, ScreeningStage
 from litsearch.query_context import focused_plan, prepare_query
@@ -256,7 +258,8 @@ def create_app(data_dir=None, workflow_factory=None, static_dir=None, translator
     def health():
         return {"status": "ok", "app_name": "LEExtractor", "version": __version__, "ui": "vue", "local_only": True,
                 "storage": "ready", "unreadable_projects": repository.load_errors,
-                "dependencies": {"fastapi": True, "algorithms": True}}
+                "dependencies": {"fastapi": True, "algorithms": True},
+                "models": model_diagnostics()}
 
     @app.get("/api/settings")
     def settings():
@@ -355,7 +358,7 @@ def create_app(data_dir=None, workflow_factory=None, static_dir=None, translator
 
     @app.get("/api/projects/{pid}/papers")
     def papers(pid: str, page: int = Query(1, ge=1), page_size: int = Query(20, ge=1, le=100),
-               q: str = "", provider: str = "", method: str = "", status: str = "", ccf_rank: Literal["", "A", "B", "C"] = "",
+               q: str = "", provider: str = "", method: str = "", status: str = "", ccf_rank: Literal["", "A", "B", "C", "none"] = "",
                year_from: int | None = None, year_to: int | None = None,
                min_score: float = Query(0, ge=0, le=1),
                sort: Literal["relevance", "citations", "year", "title"] = "relevance"):
@@ -366,7 +369,7 @@ def create_app(data_dir=None, workflow_factory=None, static_dir=None, translator
                     and (not provider or provider in r["providers"])
                     and (not method or any(t["method"] == method for t in r["discovery_traces"]))
                     and (not status or r["screening"]["status"] == status)
-                    and (not ccf_rank or r["ccf"]["rank"] == ccf_rank)
+                    and (not ccf_rank or (r["ccf"]["rank"] == ccf_rank if ccf_rank != "none" else not r["ccf"]["rank"]))
                     and (year_from is None or r["year"] is not None and r["year"] >= year_from)
                     and (year_to is None or r["year"] is not None and r["year"] <= year_to)
                     and r["relevance_score"] >= min_score]
@@ -404,19 +407,30 @@ def create_app(data_dir=None, workflow_factory=None, static_dir=None, translator
         if not (body.query or project.state.topic).strip():
             raise APIError(422, "query_required", "请填写检索主题")
         context = None
+        translation_seconds = 0.0
         if body.translate or body.search_keywords:
+            translation_started = time.perf_counter()
             try:
                 context = prepare_query(body.query or project.state.topic,
                                         body.research_direction if body.research_direction is not None else project.state.research_direction,
                                         body.search_keywords, translator=translator)
             except (LocalModelError, ValueError) as exc:
                 raise APIError(422, "translation_failed", str(exc)) from exc
+            finally:
+                translation_seconds = time.perf_counter() - translation_started
+
+        embedding_seconds = 0.0
 
         def operation(workflow, state, guard, checkpoint):
+            nonlocal embedding_seconds
             if body.ranking_mode == "semantic":
                 from litsearch.local_models import EMBEDDER
                 checkpoint({"stage": "local_embedding"})
-                EMBEDDER.ensure_ready()
+                embedding_started = time.perf_counter()
+                try:
+                    EMBEDDER.ensure_ready()
+                finally:
+                    embedding_seconds = time.perf_counter() - embedding_started
             configure = getattr(workflow.sources, "set_search_providers", None)
             if configure:
                 configure(body.providers)
@@ -431,6 +445,16 @@ def create_app(data_dir=None, workflow_factory=None, static_dir=None, translator
             else:
                 workflow.systematic_search(state, max_papers=body.max_papers, min_citations=body.min_citations,
                                            use_query_plan=body.use_query_plan, year_from=body.year_from, year_to=body.year_to)
+            # 把 API 层的阶段耗时并进 manifest（工作流已写好 provider/normalization/ranking/total）。
+            try:
+                timings = dict(state.search_manifest.get("timings") or {})
+                if translation_seconds:
+                    timings[STAGE_TRANSLATION] = round(timings.get(STAGE_TRANSLATION, 0.0) + translation_seconds, 4)
+                if embedding_seconds:
+                    timings[STAGE_EMBEDDING_LOAD] = round(timings.get(STAGE_EMBEDDING_LOAD, 0.0) + embedding_seconds, 4)
+                state.search_manifest["timings"] = timings
+            except Exception:  # pragma: no cover - observability must never fail a search
+                pass
             return {"records": len(corpus_papers(state))}, state
 
         return jobs.dto(jobs.submit(project, "search", body.expected_revision, operation, body.http_budget))

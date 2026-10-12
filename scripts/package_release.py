@@ -61,6 +61,7 @@ WHITELIST_ROOT_FILES = (
     "README.zh-CN.md",
     "README.dev.md",
     "CHANGES.md",
+    "CHANGELOG.md",
     "ARCHITECTURE.md",
     "ROADMAP.md",
     "ONBOARDING.md",

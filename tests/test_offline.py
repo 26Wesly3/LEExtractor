@@ -542,8 +542,15 @@ def test_calibrate_threshold_degrades_with_one_sided_labels():
 
 
 def test_http_status_classification():
-    """Each status must land in the bucket that says whether retrying helps."""
+    """Each status must land in the bucket that says whether retrying helps.
+
+    v0.9.12 §5 refined 401/403 into their own bucket: they stay **non-retryable**
+    (the retry verdict this test guards is unchanged) but are no longer reported
+    as a generic contract error, because the user-side fix is different — add or
+    replace an API key instead of correcting the request.
+    """
     from litsearch.diagnostics import (
+        AuthError,
         NotFoundError,
         PermanentSourceError,
         RateLimitedError,
@@ -552,7 +559,10 @@ def test_http_status_classification():
 
     assert isinstance(classify_http_error("s2", 429), RateLimitedError)
     assert isinstance(classify_http_error("s2", 404), NotFoundError)
-    for st in (400, 401, 403, 422):
+    for st in (401, 403):
+        assert isinstance(classify_http_error("s2", st), AuthError), st
+        assert classify_http_error("s2", st).kind.value == "auth_error"
+    for st in (400, 422):
         assert isinstance(classify_http_error("s2", st), PermanentSourceError), st
     for st in (500, 502, 503):
         assert isinstance(classify_http_error("s2", st), TransientSourceError), st

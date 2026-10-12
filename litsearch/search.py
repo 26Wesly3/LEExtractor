@@ -34,6 +34,13 @@ from litsearch.prisma import (
 from litsearch.similar import SimilarPaperFinder
 from litsearch.snowball import SnowballEngine, SnowballResult
 from litsearch.sources import SourceManager
+from litsearch.timing import (
+    STAGE_NORMALIZATION,
+    STAGE_PROVIDER_TOTAL,
+    STAGE_RANKING,
+    STAGE_TOTAL,
+    StageTimer,
+)
 from litsearch.stop_reasons import (
     StopReason,
     http_budget_snapshot,
@@ -585,16 +592,35 @@ class LiteratureReviewWorkflow:
         scores relevance, and registers results in the PRISMA tracker.
         """
         self._configure_ranker(state)
+        timer = StageTimer()
+        search_started = time.perf_counter()
         year_from = year_from if year_from is not None else year_from_years_back(years_back, floor=1990)
         year_to = year_to if year_to is not None else current_year()
         if not 1990 <= year_from <= year_to <= current_year():
             raise ValueError("Invalid publication year range")
-        plan = research_plan(state, year_from, year_to) if use_query_plan else None
+        with timer.stage("query_planning"):
+            plan = research_plan(state, year_from, year_to) if use_query_plan else None
+        # 先落一次快照：即使检索/排序中途抛错，失败任务也带得上已完成的阶段耗时。
+        try:
+            state.search_manifest["timings"] = timer.snapshot()
+        except Exception:  # pragma: no cover - observability must never fail a search
+            pass
 
         reset_http_budget()
-        raw_papers, provider_results, retrieval_failure = self._retrieve(
-            state, plan, max_papers, year_from, year_to
-        )
+        try:
+            with timer.stage(STAGE_PROVIDER_TOTAL):
+                raw_papers, provider_results, retrieval_failure = self._retrieve(
+                    state, plan, max_papers, year_from, year_to
+                )
+        finally:
+            # 无论检索成功还是抛错，都把已完成的阶段耗时留给失败任务。
+            try:
+                state.search_manifest["timings"] = timer.snapshot()
+            except Exception:  # pragma: no cover - observability must never fail a search
+                pass
+        # 每个 provider 的耗时由 SourceManager 在同一次调用里量好，这里只做汇总。
+        for provider_name, provider_seconds in getattr(self.sources, "last_provider_timings", {}).items():
+            timer.add_provider(provider_name, provider_seconds)
         provider_raw = len(raw_papers)
 
         # A retrieval that did not complete must not be reported as a finished,
@@ -604,16 +630,17 @@ class LiteratureReviewWorkflow:
             state.stop_reason = StopReason.API_FAILURE.value
             logger.warning("Retrieval incomplete: %s", retrieval_failure)
 
-        papers = self.filters.deduplicate_by_doi(raw_papers)
-        unique_count = len(papers)
-        cross_source_duplicates = max(0, provider_raw - unique_count)
+        with timer.stage(STAGE_NORMALIZATION):
+            papers = self.filters.deduplicate_by_doi(raw_papers)
+            unique_count = len(papers)
+            cross_source_duplicates = max(0, provider_raw - unique_count)
 
-        # The ledger's identity is provider_raw - cross_source_duplicates ==
-        # unique_records, so the year filter has to be accounted for before the
-        # citation filter or the arithmetic would not close.
-        before_year_filter = len(papers)
-        papers = [p for p in papers if p.year is None or year_from <= p.year <= year_to]
-        filtered_year = before_year_filter - len(papers)
+            # The ledger's identity is provider_raw - cross_source_duplicates ==
+            # unique_records, so the year filter has to be accounted for before the
+            # citation filter or the arithmetic would not close.
+            before_year_filter = len(papers)
+            papers = [p for p in papers if p.year is None or year_from <= p.year <= year_to]
+            filtered_year = before_year_filter - len(papers)
 
         # Score against the whole candidate set. The scoring itself happens in
         # `rerank_corpus` below — the single implementation of the score context
@@ -631,8 +658,9 @@ class LiteratureReviewWorkflow:
 
         # Sort by a provisional score so truncation keeps the best candidates;
         # `rerank_corpus` then re-scores the retained set in one context.
-        self.filters.compute_relevance(papers, ranking_query(state))
-        papers.sort(key=lambda p: p.relevance_score, reverse=True)
+        with timer.stage(STAGE_RANKING):
+            self.filters.compute_relevance(papers, ranking_query(state))
+            papers.sort(key=lambda p: p.relevance_score, reverse=True)
         truncated = max(0, len(papers) - max_papers)
         papers = papers[:max_papers]
         # A new search is a new corpus; old screening and expansion decisions
@@ -659,13 +687,23 @@ class LiteratureReviewWorkflow:
             ]
         if retrieval_failure:
             state.search_manifest["retrieval_failure"] = retrieval_failure
+        # 阶段耗时：观测数据，写入失败绝不影响检索结果本身。
+        try:
+            state.search_manifest["timings"] = timer.snapshot()
+        except Exception:  # pragma: no cover - observability must never fail a search
+            pass
         # Anything the new candidate set dropped must leave the corpus before it
         # is scored, or the "whole corpus" ranking would include abandoned work.
         self.prune_corpus(state)
 
         # One scoring context for the retained corpus, via the same path
         # snowballing and coupling/co-citation use.
-        score_context_id = self.rerank_corpus(state, stage="systematic_search")
+        with timer.stage(STAGE_RANKING):
+            score_context_id = self.rerank_corpus(state, stage="systematic_search")
+        try:
+            state.search_manifest["timings"] = timer.snapshot(**{STAGE_TOTAL: time.perf_counter() - search_started})
+        except Exception:  # pragma: no cover - observability must never fail a search
+            pass
         state.search_manifest["score_context_id"] = score_context_id
         for p in papers:
             if not p.discovery_traces:

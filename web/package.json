@@ -9,6 +9,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "force-graph": "^1.52.0",
     "vue": "^3.5.22",
     "vue-router": "^4.5.1",
     "vuetify": "^3.10.5"

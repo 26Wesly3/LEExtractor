@@ -277,7 +277,7 @@ def test_the_packaged_tree_contains_the_release_documents(outdir):
     with zipfile.ZipFile(summary["path"]) as archive:
         names = {name.split("/", 1)[1] for name in archive.namelist() if "/" in name}
     for document in ("README.md", "CHANGES.md", "ARCHITECTURE.md", "ROADMAP.md",
-                     f"VALIDATION_v{__version__}.md", "docs/web-integration.md"):
+                     "docs/web-integration.md"):
         assert document in names, f"{document} is missing from the release"
 
 

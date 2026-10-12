@@ -2,9 +2,11 @@
 
 import hashlib
 import logging
+import os
 import re
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
@@ -54,6 +56,52 @@ MAX_COOLDOWN_SECONDS = 300.0
 SEARCH_PROVIDERS = ("semantic_scholar", "openalex", "arxiv")
 AVAILABLE_SEARCH_PROVIDERS = (*SEARCH_PROVIDERS, "crossref", "openreview", "google_scholar")
 
+#: How many providers may be fetched at the same time. Bounded hard: provider
+#: pacing/cooldown stay provider-local, and the shared HTTP budget is lock-guarded,
+#: but unbounded fan-out would still multiply upstream 429s (see ADR-003).
+DEFAULT_PROVIDER_CONCURRENCY = 5
+MAX_PROVIDER_CONCURRENCY = 16
+
+
+def provider_concurrency() -> int:
+    """Provider fan-out for one retrieval (env ``LEEXTRACTOR_PROVIDER_CONCURRENCY``)."""
+    raw = os.environ.get("LEEXTRACTOR_PROVIDER_CONCURRENCY", "").strip()
+    if not raw:
+        return DEFAULT_PROVIDER_CONCURRENCY
+    try:
+        value = int(raw)
+    except ValueError:
+        logger.warning("Ignoring invalid LEEXTRACTOR_PROVIDER_CONCURRENCY=%r", raw)
+        return DEFAULT_PROVIDER_CONCURRENCY
+    return max(1, min(value, MAX_PROVIDER_CONCURRENCY))
+
+
+#: Per-request HTTP budget, split the way ``requests`` wants it: ``(connect, read)``.
+#: v0.9.11 used a flat 30s read timeout, so one stalled host could block a whole
+#: retrieval for 30 seconds (measured: Crossref, 115s cold run). A stalled *connect*
+#: is useless to wait for; a slow *read* deserves a little more room.
+DEFAULT_CONNECT_TIMEOUT = 5.0
+DEFAULT_READ_TIMEOUT = 12.0
+
+
+def _timeout_override(name: str, fallback: float) -> float:
+    raw = os.environ.get(name, "").strip()
+    try:
+        value = float(raw)
+    except ValueError:
+        if raw:
+            logger.warning("Ignoring invalid %s=%r", name, raw)
+        return fallback
+    return value if value > 0 else fallback
+
+
+def http_timeouts() -> tuple[float, float]:
+    """``(connect, read)`` seconds for one HTTP request (env-overridable)."""
+    return (
+        _timeout_override("LEEXTRACTOR_HTTP_CONNECT_TIMEOUT", DEFAULT_CONNECT_TIMEOUT),
+        _timeout_override("LEEXTRACTOR_HTTP_READ_TIMEOUT", DEFAULT_READ_TIMEOUT),
+    )
+
 
 def reset_provider_cooldowns() -> None:
     """Clear process cooldowns, primarily for isolated offline tests."""
@@ -88,6 +136,8 @@ def retrieval_status_for_exception(exc: BaseException) -> RetrievalStatus:
         return RetrievalStatus.BUDGET_EXHAUSTED
     if isinstance(exc, SourceError) and exc.kind is SourceErrorKind.RATE_LIMITED:
         return RetrievalStatus.RATE_LIMITED
+    if isinstance(exc, SourceError) and exc.kind is SourceErrorKind.AUTH:
+        return RetrievalStatus.AUTH_ERROR
     if isinstance(exc, (requests.exceptions.Timeout, TimeoutError)):
         # Builtin TimeoutError is what a socket-level timeout surfaces as.
         return RetrievalStatus.TIMEOUT
@@ -625,7 +675,7 @@ class BaseSource(ABC):
         final answer — retrying it wastes the caller's budget and hides the
         real problem.
         """
-        kwargs.setdefault("timeout", 30)
+        kwargs.setdefault("timeout", http_timeouts())
         last_exc = None
         for attempt in range(self.MAX_HTTP_RETRIES + 1):
             if self.is_canceled():
@@ -930,7 +980,7 @@ class SemanticScholarSource(BaseSource):
             self._session.headers["x-api-key"] = api_key
         else:
             self._session.headers.pop("x-api-key", None)
-        kwargs.setdefault("timeout", 30)
+        kwargs.setdefault("timeout", http_timeouts())
         self._pace()
         if self.is_canceled():
             raise RetrievalCanceled("semantic_scholar: canceled before request")
@@ -985,7 +1035,7 @@ class SemanticScholarSource(BaseSource):
                     f"{S2_BASE}/paper/batch",
                     params={"fields": fields},
                     json={"ids": chunk},
-                    timeout=30,
+                    timeout=http_timeouts(),
                 )
                 raise_for_data(resp, "semantic_scholar")
                 chunk_results = resp.json()
@@ -1061,7 +1111,7 @@ class SemanticScholarSource(BaseSource):
                         "year": f"{year_from}-{year_to}",
                         "fields": S2_SEARCH_FIELDS,
                     },
-                    timeout=30,
+                    timeout=http_timeouts(),
                 )
                 raise_for_data(resp, "semantic_scholar")
                 payload = resp.json() or {}
@@ -1121,7 +1171,7 @@ class SemanticScholarSource(BaseSource):
             resp = self._request("GET",
                 url,
                 params={"fields": S2_PAPER_FIELDS},
-                timeout=30,
+                timeout=http_timeouts(),
             )
             if resp.status_code == 404:
                 return None
@@ -1206,7 +1256,7 @@ class SemanticScholarSource(BaseSource):
                         "offset": offset,
                         "fields": S2_CITATION_FIELDS,
                     },
-                    timeout=30,
+                    timeout=http_timeouts(),
                 )
                 raise_for_data(resp, "semantic_scholar")
                 payload = resp.json() or {}
@@ -1461,7 +1511,7 @@ class OpenAlexSource(BaseSource):
                     "GET",
                     f"{OA_BASE}/works/https://doi.org/{doi}",
                     params={"select": "id"},
-                    timeout=20,
+                    timeout=http_timeouts(),
                 )
                 if resp.status_code == 200:
                     return normalize_openalex(resp.json().get("id"))
@@ -1527,7 +1577,7 @@ class OpenAlexSource(BaseSource):
                         "per_page": min(len(chunk), OA_PAGE_SIZE_LIMIT),
                         "select": OA_SELECT_MIN,
                     },
-                    timeout=30,
+                    timeout=http_timeouts(),
                 )
                 raise_for_data(resp, "openalex")
                 for d in resp.json().get("results") or []:
@@ -1658,7 +1708,7 @@ class CrossrefSource(BaseSource):
                         "filter": f"from-pub-date:{year_from}-01-01,until-pub-date:{year_to}-12-31",
                         "select": "DOI,title,abstract,author,issued,container-title,is-referenced-by-count,references-count",
                     },
-                    timeout=30,
+                    timeout=http_timeouts(),
                 )
                 raise_for_data(resp, "crossref")
                 message = (resp.json() or {}).get("message") or {}
@@ -1706,7 +1756,7 @@ class CrossrefSource(BaseSource):
             return self._paper_from_cr(cached)
         try:
             resp = self._transport_request(
-                "GET", f"{CR_BASE}/works/{paper_id}", timeout=30
+                "GET", f"{CR_BASE}/works/{paper_id}", timeout=http_timeouts()
             )
             if resp.status_code == 404:
                 return None
@@ -1887,7 +1937,7 @@ class ArxivSource(BaseSource):
                     f"{ARXIV_BASE}/query",
                     params={"search_query": expression, "start": start, "max_results": page_size,
                             "sortBy": "relevance", "sortOrder": "descending"},
-                    timeout=30,
+                    timeout=http_timeouts(),
                 )
                 raise_for_data(resp, "arxiv", "search")
                 root = ET.fromstring(resp.text)
@@ -1943,7 +1993,7 @@ class ArxivSource(BaseSource):
         encoded_id = urllib.parse.quote(paper_id)
         url = f"{ARXIV_BASE}/query?id_list={encoded_id}&max_results=1"
         try:
-            resp = self._transport_request("GET", url, timeout=30)
+            resp = self._transport_request("GET", url, timeout=http_timeouts())
             raise_for_data(resp, "arxiv")
             root = ET.fromstring(resp.text)
             ns = {"atom": "http://www.w3.org/2005/Atom"}
@@ -2440,6 +2490,7 @@ class SourceManager:
                     status=RetrievalStatus.SUCCESS_EMPTY, complete=True,
                 ))
             self.last_retrieval_results = results
+            self.last_provider_timings = {}
             self.last_search_manifest = self._search_manifest(
                 query, year_from, year_to, limit, provider_counts, per_source_queries,
                 query_plan, 0, results=results,
@@ -2448,27 +2499,53 @@ class SourceManager:
 
         results: list[RetrievalResult] = []
         all_papers: list[Paper] = []
-        for source, size, source_query in self._provider_plan(query, limit, query_plan):
-            per_source_queries[source.name] = source_query
+        provider_timings: dict[str, float] = {}
+        plan_rows = list(self._provider_plan(query, limit, query_plan))
+
+        def fetch_one(source, size: int, source_query: str) -> tuple[RetrievalResult, float]:
+            """One provider's fetch plus its own duration.
+
+            Exceptions are converted exactly as the serial loop did — including
+            cancellation and budget signals, which keep their own status instead of
+            collapsing into PROVIDER_ERROR.
+            """
+            started = time.perf_counter()
             try:
-                result = source._search_papers_result(
+                outcome = source._search_papers_result(
                     source_query, limit=size, year_from=year_from, year_to=year_to
                 )
-            except Exception as e:
-                log_source_failure(e, source.name, "manager.search_all")
-                result = RetrievalResult(
+            except Exception as exc:
+                log_source_failure(exc, source.name, "manager.search_all")
+                outcome = RetrievalResult(
                     papers=[], provider=source.name,
-                    status=retrieval_status_for_exception(e), complete=False,
-                    error=f"{type(e).__name__}: {e}"[:200],
+                    status=retrieval_status_for_exception(exc), complete=False,
+                    error=f"{type(exc).__name__}: {exc}"[:200],
                 )
-            for paper in result.papers:
-                paper.discovery_traces.append(
+            duration = round(time.perf_counter() - started, 4)
+            for item in outcome.papers:
+                item.discovery_traces.append(
                     DiscoveryTrace(method="keyword", provider=source.name, query=source_query)
                 )
+            return outcome, duration
+
+        workers = min(provider_concurrency(), max(1, len(plan_rows)))
+        if workers <= 1 or len(plan_rows) <= 1:
+            # 单来源或显式关闭并发时保持原路径，行为与 v0.9.11 完全一致。
+            collected = [fetch_one(source, size, source_query) for source, size, source_query in plan_rows]
+        else:
+            with ThreadPoolExecutor(max_workers=workers, thread_name_prefix="provider") as pool:
+                futures = [pool.submit(fetch_one, source, size, source_query) for source, size, source_query in plan_rows]
+                # 按 provider 计划顺序取回结果：并发不改变下游读到的顺序。
+                collected = [future.result() for future in futures]
+
+        for (source, _size, source_query), (result, duration) in zip(plan_rows, collected):
+            per_source_queries[source.name] = source_query
+            provider_timings[source.name] = duration
             provider_counts[source.name] = len(result.papers)
             all_papers.extend(result.papers)
             results.append(result)
         self.last_retrieval_results = results
+        self.last_provider_timings = provider_timings
         self.last_search_manifest = self._search_manifest(
             query, year_from, year_to, limit, provider_counts, per_source_queries,
             query_plan, len(all_papers), results=results,

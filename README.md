@@ -4,7 +4,7 @@
 
 From research questions to traceable literature evidence.
 
-**v0.9.11** connects the v0.9.6 interface design to the v0.9.5 algorithms with Vue 3, Vuetify and a local FastAPI service. The existing Streamlit and MCP entries remain available.
+**v0.9.12** connects the v0.9.6 interface design to the v0.9.5 algorithms with Vue 3, Vuetify and a local FastAPI service, and adds concurrent provider fetching, per-stage search timings and a one-line result summary. The existing Streamlit and MCP entries remain available.
 
 ## Get started
 
@@ -30,7 +30,7 @@ Use **Create offline demo** to explore a separate, clearly labeled synthetic pro
 
 The Web workflow translates Chinese research directions with a local quantized Marian model and lets you edit the English query. The direction drives both retrieval and ranking. CPU FastEmbed uses `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`, encoding titles together with abstract chunks. Missing abstracts are labeled. Runtime files total about 116 MB for translation and 267 MB for embeddings including tokenizers. Pinned revisions and SHA-256 inventories are in `litsearch/translation_pins.json` and `litsearch/embedding_pins.json`.
 
-Translation normally uses `~/.cache/leextractor`; embeddings reuse `fastembed_cache` under the system temporary directory. Override them with `LEEXTRACTOR_MODEL_DIR` and `LEEXTRACTOR_EMBEDDING_CACHE`. Bundled models are selected automatically unless these variables are already set. See the [handoff](交接说明_v0.9.11.md) for contents and acceptance results.
+Translation normally uses `~/.cache/leextractor`; embeddings reuse `fastembed_cache` under the system temporary directory. Override them with `LEEXTRACTOR_MODEL_DIR` and `LEEXTRACTOR_EMBEDDING_CACHE`. Bundled models are selected automatically unless these variables are already set. See the [handoff]() for contents and acceptance results.
 
 Six selectable providers include OpenReview public submissions and Google Scholar via SerpApi. CCF 2026 venue classifications support A/B/C filtering; venue rank does not verify paper acceptance or full-paper eligibility. Google Scholar requires a SerpApi key and is selected by default only when configured. Its snippets are not full abstracts. Provider rate limits and access challenges can prevent retrieval; coverage is not guaranteed.
 
@@ -65,7 +65,7 @@ Benchmark pilot: see [public SciFact ranking comparisons, live topic snapshots a
 
 - [Setup and current capabilities](README.dev.md)
 - [Web integration and API boundaries](docs/web-integration.md)
-- [Current validation](VALIDATION_v0.9.11.md)
+- Current validation)
 - [Architecture](ARCHITECTURE.md), [changes](CHANGES.md), [roadmap](ROADMAP.md), [team handoff](ONBOARDING.md)
 
 Frontend development: `cd web`, `npm ci`, `npm run dev`; start FastAPI separately on port 8000. The Vite proxy forwards `/api`. Before releasing, run `npm run build`, then `python scripts/sync_web_assets.py` from the repository root.

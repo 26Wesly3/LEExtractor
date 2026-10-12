@@ -38,6 +38,7 @@ class RetrievalStatus(str, Enum):
     TRUNCATED = "truncated"          # 按调用方 limit 正常截断；可用但不完整
     PARTIAL = "partial"              # 因失败/超时等只拿到一部分
     RATE_LIMITED = "rate_limited"
+    AUTH_ERROR = "auth_error"        # 401/403：凭据或权限问题，重试无意义
     TIMEOUT = "timeout"
     CANCELED = "canceled"
     BUDGET_EXHAUSTED = "budget_exhausted"
@@ -69,6 +70,7 @@ STATUS_TO_STOP_REASON: dict[RetrievalStatus, StopReason] = {
     RetrievalStatus.TRUNCATED: StopReason.TRUNCATED,
     RetrievalStatus.PARTIAL: StopReason.API_FAILURE,
     RetrievalStatus.RATE_LIMITED: StopReason.API_FAILURE,
+    RetrievalStatus.AUTH_ERROR: StopReason.API_FAILURE,
     RetrievalStatus.TIMEOUT: StopReason.API_FAILURE,
     RetrievalStatus.CANCELED: StopReason.CANCELED,
     RetrievalStatus.BUDGET_EXHAUSTED: StopReason.BUDGET_EXHAUSTED,
@@ -213,6 +215,17 @@ class RetrievalResult:
         """
         return not self.ok
 
+    @property
+    def cached(self) -> bool:
+        """True when this answer was served entirely from the local cache.
+
+        Derived from the per-result request stats (cache hits with no live
+        request). It is a *modifier* on success, not a status of its own: a
+        cached answer is a successful answer whose evidence came from disk, and
+        consumers must not read it as a failure mode.
+        """
+        return self.request_stats.cache_hits > 0 and self.request_stats.requests == 0
+
     def to_dict(self) -> dict:
         """JSON-serialisable view for manifests and the PRISMA ledger."""
         return {
@@ -221,6 +234,7 @@ class RetrievalResult:
             "ok": self.ok,
             "failed": self.failed,
             "genuine_empty": self.genuine_empty,
+            "cached": self.cached,
             "complete": bool(self.complete),
             "truncated": bool(self.truncated),
             "error": self.error,

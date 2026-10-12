@@ -31,7 +31,7 @@ macOS/Linux：创建并激活 Python 虚拟环境，安装相同依赖，运行 
 
 中文方向由本地 Marian 中译英，检索和排序优先使用完整研究方向；英文检索词可手动编辑。翻译运行文件约 116 MB，Embedding 权重与词元文件合计约 267 MB，后续复用缓存，推理在本机 CPU 运行，无需翻译或推理 API Key。固定版本与 SHA-256 文件清单见 `litsearch/translation_pins.json`、`litsearch/embedding_pins.json`。
 
-默认翻译缓存为用户目录下 `.cache/leextractor`，Embedding 复用系统临时目录下 `fastembed_cache`。可设置 `LEEXTRACTOR_MODEL_DIR` 与 `LEEXTRACTOR_EMBEDDING_CACHE` 指向自己的缓存。含模型交接包自动选择项目内 `models`，已有自定义环境变量优先。具体文件、交付范围、验收与问题处理见 [交接说明](交接说明_v0.9.11.md)。
+默认翻译缓存为用户目录下 `.cache/leextractor`，Embedding 复用系统临时目录下 `fastembed_cache`。可设置 `LEEXTRACTOR_MODEL_DIR` 与 `LEEXTRACTOR_EMBEDDING_CACHE` 指向自己的缓存。含模型交接包自动选择项目内 `models`，已有自定义环境变量优先。具体文件、交付范围、验收与问题处理见 [交接说明]()。
 
 Embedding 使用 TraceRAG 中相同的多语言 MiniLM：`sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`。标题和摘要一起编码，长摘要分块，无摘要记录只编码标题。Web 支持 Semantic Scholar、OpenAlex、arXiv、Crossref、OpenReview、Google Scholar 六个来源，并按 CCF 2026 会议／期刊级别筛选。OpenReview 包含公开未录用投稿，Google Scholar 通过 SerpApi 接入，需要在设置中配置 API Key，配置后默认启用；搜索片段与完整摘要分别标注；级别不证明单篇论文已录用或属于长文。来源限流、访问校验和网络问题会逐库显示，不能承诺完整收录所有 CCF 论文。
 
@@ -66,7 +66,7 @@ Benchmark 试跑：[公开 SciFact 排序对照、真实主题快照及人工标
 
 - [安装与当前能力](README.dev.md)
 - [Web 整合说明与接口边界](docs/web-integration.md)
-- [本版验证记录](VALIDATION_v0.9.11.md)
+- 本版验证记录)
 - [架构](ARCHITECTURE.md)、[更新记录](CHANGES.md)、[后续计划](ROADMAP.md)、[团队接手](ONBOARDING.md)
 
 前端开发：进入 `web` 后运行 `npm ci`、`npm run dev`，另行在 8000 端口启动 FastAPI；Vite 将 `/api` 代理到后端。发布前运行 `npm run build`，再从仓库根目录运行 `python scripts/sync_web_assets.py`。

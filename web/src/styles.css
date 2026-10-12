@@ -15,3 +15,98 @@
 @media(max-width:599px){.actions>.v-btn,.review-controls>.v-btn,.selection-bar>.v-btn{height:auto!important;min-height:36px;padding-top:8px;padding-bottom:8px;max-width:100%}.actions>.v-btn .v-btn__content,.review-controls>.v-btn .v-btn__content,.selection-bar>.v-btn .v-btn__content{white-space:normal;max-width:100%;text-align:center}.topbar>.brand{flex-shrink:1;min-width:0}.toplinks{flex-shrink:0}.provider-pick>p{width:100%}.review-paper{padding:20px}.paper-links>a,.paper-links>button{overflow-wrap:anywhere;max-width:100%}}
 body.reduced *,body.reduced *:before,body.reduced *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+.graph-edge{fill:none}
+.network .graph-node{animation:graphFade .32s ease-out both}
+@keyframes graphFade{from{opacity:0}to{opacity:1}}
+.graph-node__ring{fill:none;stroke:#1f6feb;stroke-width:2;opacity:0;transition:opacity .12s}
+.graph-node:hover .graph-node__ring,.graph-node:focus-visible .graph-node__ring{opacity:1}
+.graph-node text{pointer-events:none}
+.graph-legend{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:12.5px;color:var(--text-2)}
+.graph-legend b{font-variant-numeric:tabular-nums}
+.graph-legend i.swatch{display:inline-block;width:16px;border-top:2px solid #aab3bf;margin-right:6px;vertical-align:middle}
+.graph-legend i.swatch.bibliographic_coupling{border-top-style:dashed;border-color:#8a6da4}
+.graph-legend i.swatch.co_citation{border-top-style:dashed;border-color:#5b8c81}
+.graph-legend i.swatch.text_similarity{border-top-style:dashed;border-color:#9a7a44}
+.meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px 24px;margin:0}
+.meta-grid dt{font-size:12px;color:var(--muted);letter-spacing:.04em}
+.meta-grid dd{margin:4px 0 0;font-size:13.5px;overflow-wrap:anywhere}
+.meta-grid dd.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px}
+.score-table{width:100%;border-collapse:collapse;font-size:13px}
+.score-table th{text-align:left;font-weight:500;color:var(--text-2);padding:8px 0;border-bottom:1px solid var(--border);width:62%}
+.score-table td{text-align:right;padding:8px 0;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums}
+#eagleCanvas{display:block;width:100%;height:auto;background:transparent}
+.eagle[role="img"]{cursor:default}
+.layer-pick{display:flex;flex-wrap:wrap;align-items:center;gap:2px 18px;max-width:640px}
+.layer-pick .field-label{width:100%;margin-bottom:2px}
+.layer-pick .v-checkbox{flex:0 0 auto;margin:0}
+.graph-edge.bibliographic_coupling,.graph-edge.co_citation,.graph-edge.text_similarity{stroke-opacity:.45}
+.network{min-height:320px}
+.graph-shell{position:relative;margin-top:20px;border:1px solid var(--border);border-radius:10px;background:#fcfcfd;overflow:hidden}
+.graph-shell.is-dark{background:#1e1e24;border-color:#2c2c36}
+.graph-shell .graph-canvas{position:relative;width:100%;aspect-ratio:3/2;min-height:380px;max-height:560px;touch-action:none}
+.graph-shell .graph-canvas canvas{display:block}
+@media(max-width:959px){.graph-shell .graph-canvas{height:360px}}
+.graph-tools{position:absolute;top:10px;right:10px;display:flex;gap:6px;z-index:2}
+.graph-tools button{min-width:30px;height:28px;padding:0 8px;font-size:12px;line-height:1;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--text-2);cursor:pointer}
+.graph-tools button:hover{border-color:#9aa2ad;color:var(--ink)}
+.is-dark .graph-tools button{background:#26262e;border-color:#3a3a46;color:#c9c9d4}
+.is-dark .graph-tools button:hover{border-color:#5b5b6b;color:#fff}
+
+/* v0.9.12：轻量性能反馈（普通用户只看一行摘要，细节折叠） */
+.job-summary { margin: 6px 0 0; font-variant-numeric: tabular-nums; }
+.diag-details { margin-top: 10px; font-size: 0.86rem; }
+.diag-details summary { cursor: pointer; color: var(--muted, #5f6472); }
+.diag-details ul { margin: 6px 0 0; padding-left: 18px; }
+.diag-details li { margin: 2px 0; }
+
+/* ==== v0.9.12 UI：纵向菜单（出入动画，参照原型 navmap / dialog） ==== */
+.nav-panel{display:block;position:fixed;top:var(--topbar-h);right:0;bottom:0;left:auto;width:min(380px,92vw);padding:20px 18px 32px;overflow-y:auto;border-left:1px solid var(--border);border-bottom:0;background:var(--surface);box-shadow:-18px 0 32px #1b1c2014;transform:translateX(100%);opacity:0;transition-property:transform,opacity;transition-duration:260ms,200ms;transition-timing-function:cubic-bezier(.16,1,.3,1),ease;z-index:101}
+.nav-panel.open{transform:translateX(0);opacity:1}
+.nav-panel.is-closing{transform:translateX(100%);opacity:0}
+.nav-panel__head{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.nav-panel__head strong{font-family:var(--font-display);font-size:17px}
+.nav-panel__close{font-size:22px;line-height:1;color:var(--muted);padding:0 6px;background:none}
+.nav-panel__close:hover{color:var(--ink)}
+.nav-panel__note{margin:8px 0 14px}
+.navmap{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+.navmap__item{display:grid;grid-template-columns:34px minmax(0,1fr);grid-template-rows:auto auto;gap:2px 10px;text-align:left;padding:11px 12px;border:1px solid var(--border);border-radius:10px;color:var(--text);background:var(--surface);transition:background .12s ease,border-color .12s ease,transform .12s ease}
+.navmap__item:hover{background:var(--surface-2);border-color:#c9ced6}
+.navmap__item:active{transform:translateY(1px)}
+.navmap__item.current{border-color:var(--ink);background:var(--surface-3)}
+.navmap__idx{grid-row:1 / span 2;align-self:center;font-family:monospace;font-size:12px;color:#8a8f99}
+.navmap__name{font-size:14px;font-weight:600}
+.navmap__desc{font-size:12px;color:var(--muted);line-height:1.35}
+.nav-panel.open .navmap__item{animation-name:le-nav-in;animation-duration:320ms;animation-timing-function:cubic-bezier(.16,1,.3,1);animation-fill-mode:both;animation-delay:calc(var(--nav-i,0) * 28ms)}
+@keyframes le-nav-in{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:translateX(0)}}
+/* ==== 封面点击进入：入场期间不接收点击（原型 body.entering 的等价做法） ==== */
+.cover.is-entering{pointer-events:none}
+/* ==== 抽屉退场：内容先淡出右移，容器卸载交给 Vuetify 过渡 ==== */
+.paper-drawer.is-closing .drawer-inner{animation:le-drawer-out 240ms cubic-bezier(.4,0,.8,1) both}
+@keyframes le-drawer-out{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(18px)}}
+@media (prefers-reduced-motion: reduce){
+  .nav-panel{transition:none}
+  .nav-panel.open .navmap__item,.paper-drawer.is-closing .drawer-inner{animation-name:none}
+}
+/* ==== 缩小范围：下拉之间统一留白（截图里"来源"与"CCF 级别"挤在一起） ==== */
+.facet-rail .v-input.mt-4{margin-top:0}
+.facet-rail .v-input + .v-input{margin-top:20px}
+/* ==== 详情抽屉：遮罩柔化 + 内容分段错峰入场（原型 overlay 的 blur 与 drawer 的景深） ==== */
+.v-navigation-drawer__scrim{backdrop-filter:blur(3px)}
+.paper-drawer .drawer-inner{transition:transform 260ms cubic-bezier(.16,1,.3,1),opacity 200ms ease}
+.paper-drawer.is-closing .drawer-inner{transform:translateX(18px)}
+.paper-drawer.is-open .drawer-inner > *{animation-name:le-drawer-in;animation-duration:320ms;animation-timing-function:cubic-bezier(.16,1,.3,1);animation-fill-mode:both}
+.paper-drawer.is-open .drawer-inner > *:nth-child(2){animation-delay:40ms}
+.paper-drawer.is-open .drawer-inner > *:nth-child(3){animation-delay:80ms}
+.paper-drawer.is-open .drawer-inner > *:nth-child(4){animation-delay:120ms}
+.paper-drawer.is-open .drawer-inner > *:nth-child(5){animation-delay:160ms}
+.paper-drawer.is-open .drawer-inner > *:nth-child(6){animation-delay:200ms}
+.paper-drawer.is-open .drawer-inner > *:nth-child(7){animation-delay:240ms}
+.paper-drawer.is-open .drawer-inner > *:nth-child(n+8){animation-delay:280ms}
+@keyframes le-drawer-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@media (prefers-reduced-motion: reduce){
+  .paper-drawer.is-open .drawer-inner > *{animation-name:none}
+  .paper-drawer .drawer-inner{transition:none}
+}
+/* ==== 菜单遮罩：点它关闭（原型 dialog::backdrop 的 rgba(35,47,62,.28) + blur(2px)） ==== */
+.nav-scrim{position:fixed;left:0;right:0;bottom:0;top:var(--topbar-h);background:rgba(35,47,62,.28);backdrop-filter:blur(2px);opacity:0;transition-property:opacity;transition-duration:200ms;z-index:100}
+.nav-scrim.open{opacity:1}
