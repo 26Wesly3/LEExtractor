@@ -5,6 +5,22 @@
 > v0.9.12 起新增三级记录体系：面向使用者的本文件、面向开发者的 [DevLog 约定](docs/devlog/README.md)（含 Before/After 数据）
 > 与记录架构决策的 [ADR](docs/decisions/ADR-004-provider-concurrency.md)。同时新增 [CHANGELOG.md](CHANGELOG.md)（结构化 Changelog）。
 
+## v0.9.14（2026-10-12）首页运行概况与项目里程碑
+
+- 首页新增「运行概况」四项指标：**项目上线日期**（按日期计算，配置持久化、重启不归零，并与"本次进程连续运行时长"分开展示）、**网页点击次数**（首页访问 PV，自统计启用起累计，非独立访客）、**搜索运行次数**、**共检索得文献**；四项均取自服务端真实数据。
+- 数字**实时更新**：首屏读取后由服务端 SSE 推送，数值变化时滚动过渡；统计不可用时显示「—」，且不影响首页渲染与进入检索。
+- 首页新增「项目里程碑」：纵向时间线，最新在上，已完成与后续计划分组显示，有真实内容的节点可展开详情。
+- 新增统计接口与持久化聚合：`GET /api/stats`、两个幂等计数端点与 `GET /api/stats/stream`；聚合值落盘为数据目录下 `stats.json`（损坏时先备份再重新计数）。
+- 工程记录与验证见 [docs/devlog/feature-home-overview.md](docs/devlog/feature-home-overview.md)。
+
+## v0.9.13（2026-10-12）Deployment Hardening
+
+- 容器化部署：Dockerfile、docker-compose、部署文档、引导脚本与 Caddy 反向代理配置；另提供 Windows 免安装便携版（内嵌运行时）。
+- 健康检查拆分为存活 / 就绪（含存储明细）；统一数据、缓存、日志目录并引入结构化日志；实现任务级并发上限。
+- 修复反向代理环境下服务不可访问的缺陷，并处理 `X-Forwarded-Proto`。
+- 已完成公网 HTTPS 部署与数据持久化验证；并发压测（1 / 5 / 10 / 20 并发用户场景）通过。
+- 工程记录见 [docs/devlog/v0.9.13.md](docs/devlog/v0.9.13.md)。
+
 ## v0.9.12（2026-10-12）Performance & Observability
 
 - 多来源改为**并发抓取**（默认最多 5 个来源同时进行，`LEEXTRACTOR_PROVIDER_CONCURRENCY` 可调，上限 16，设为 1 回到串行）：受控 A/B 实测来源阶段 10.68s → 3.73s、端到端 15.6s → 8.3s。
