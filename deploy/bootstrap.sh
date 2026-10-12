@@ -60,7 +60,9 @@ else
 fi
 
 step "5/6 start"
-docker_ compose up -d
+# Always with the proxy profile: without it compose treats caddy as an
+# unwanted service and stops the reverse proxy that serves HTTPS.
+docker_ compose --profile proxy up -d
 sleep 10
 docker_ compose ps
 
