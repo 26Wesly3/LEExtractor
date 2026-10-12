@@ -188,7 +188,10 @@ def create_app(data_dir=None, workflow_factory=None, static_dir=None, translator
     ``workflow_factory`` receives ``demo: bool`` and returns a workflow with
     independent source objects. Fake sources can be injected for offline tests.
     """
-    root = Path(data_dir or Path(__file__).resolve().parents[2] / ".web-data")
+    # LEEXTRACTOR_DATA_DIR wins, so a container persists projects on its volume;
+    # with nothing set the historical repo-local .web-data default is unchanged.
+    root = Path(data_dir or os.environ.get("LEEXTRACTOR_DATA_DIR", "").strip()
+                or Path(__file__).resolve().parents[2] / ".web-data")
     repository = ProjectRepository(root)
     settings_path = repository.root / "settings.json"
     try:
@@ -772,12 +775,20 @@ def main():
     import uvicorn
 
     parser = argparse.ArgumentParser(description="LEExtractor local web application")
-    parser.add_argument("--port", type=int, default=8000)
-    parser.add_argument("--data-dir", default=None)
+    # A container must bind 0.0.0.0 and a fixed port without extra flags; with
+    # nothing configured the historical 127.0.0.1:8000 default is unchanged.
+    default_port = 8000
+    try:
+        default_port = int(os.environ.get("LEEXTRACTOR_PORT") or 8000)
+    except ValueError:
+        default_port = 8000
+    parser.add_argument("--port", type=int, default=default_port)
+    parser.add_argument("--data-dir", default=os.environ.get("LEEXTRACTOR_DATA_DIR") or None)
     args = parser.parse_args()
     if not 1 <= args.port <= 65535:
         parser.error("port must be between 1 and 65535")
-    uvicorn.run(create_app(data_dir=args.data_dir), host="127.0.0.1", port=args.port)
+    host = os.environ.get("LEEXTRACTOR_HOST", "").strip() or "127.0.0.1"
+    uvicorn.run(create_app(data_dir=args.data_dir), host=host, port=args.port)
 
 
 if __name__ == "__main__":

@@ -247,14 +247,21 @@ class JobManager:
                 grace = 5.0
         with self.lock:
             pending = list(self.jobs.values())
+        cancelled: set[str] = set()
         for job in pending:
             if job.payload["status"] not in TERMINAL:
+                cancelled.add(job.payload["job_id"])
                 self.cancel(job)
         for job in pending:
             if job.thread and job.thread.is_alive():
                 job.thread.join(timeout=max(0.0, grace))
+        # A cancelled thread records itself as "canceled", which is
+        # indistinguishable from an operator cancelling by hand. Whatever *this*
+        # shutdown cancelled is re-labelled, so a restart resumes from a truthful
+        # state (the loader treats a stale non-terminal job the same way).
         for job in pending:
-            if job.payload["status"] not in TERMINAL:
+            if job.payload["job_id"] in cancelled and job.payload["status"] in {
+                    "canceled", "queued", "running"}:
                 self.update(job, status="partial", stop_reason="interrupted",
                             finished_at=now(),
                             error={"code": "interrupted",

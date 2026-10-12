@@ -60,3 +60,6 @@ web/.vite/
 artifacts/
 deliverables/
 .ruff_cache/
+
+# 便携包构建产物（由 scripts/package_windows.py 生成，不入库）
+/dist-windows/
