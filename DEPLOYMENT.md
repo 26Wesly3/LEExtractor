@@ -206,6 +206,45 @@ cd /opt/leextractor && docker compose build && docker compose up -d
 部署记录至少保留：`git commit`、镜像 tag（`leextractor:0.9.13`）、部署时间。
 **不允许比赛前只剩 `latest`。**
 
+### 回滚三级（都不动 `data/ models/ cache/ logs`）
+
+**第 0 级 · 只改环境变量（秒级，最常用）**
+并发、线程、批大小、内存上限都可以只调环境变量，不必回滚代码：
+
+```bash
+cd /opt/leextractor && nano .env      # 例：LEEXTRACTOR_EMBEDDING_THREADS=4
+sudo docker compose --profile proxy up -d    # 重建容器，秒级
+```
+
+**第 1 级 · 回到上一镜像（秒级，不重建）**
+升级前先给“当前能跑的镜像”打标记，出问题只改 tag：
+
+```bash
+# 升级前（记住这一刻能跑）
+sudo docker tag leextractor:0.9.13 leextractor:0.9.13-checkpoint
+sudo docker images | grep leextractor
+
+# 出问题时
+cd /opt/leextractor
+sudo sed -i 's|image: leextractor:.*|image: leextractor:0.9.13-checkpoint|' docker-compose.yml
+sudo docker compose --profile proxy up -d
+curl -s localhost:8012/api/health | head -c 200      # 版本/健康检查确认
+```
+
+**第 2 级 · 回到检查点 commit（分钟级，需要重建）**
+
+```bash
+cd /opt/leextractor/repo
+sudo git fetch --tags
+sudo git checkout v0.9.13-cloud-checkpoint        # 或具体 commit：7801ff17…
+cd /opt/leextractor
+sudo cp repo/docker-compose.yml .
+sudo docker compose --profile proxy up -d --build
+```
+
+**判定回滚是否成功**：`/api/health` 的 `version` 与 `storage` 正常、项目列表里原有项目仍在、
+`docker compose ps` 两个容器 healthy。数据库与模型都在宿主目录，**任何一级回滚都不会丢项目、不会重下模型**。
+
 ## 11. 日志与内存
 
 ```bash
