@@ -110,3 +110,35 @@ body.reduced *,body.reduced *:before,body.reduced *:after{animation:none!importa
 /* ==== 菜单遮罩：点它关闭（原型 dialog::backdrop 的 rgba(35,47,62,.28) + blur(2px)） ==== */
 .nav-scrim{position:fixed;left:0;right:0;bottom:0;top:var(--topbar-h);background:rgba(35,47,62,.28);backdrop-filter:blur(2px);opacity:0;transition-property:opacity;transition-duration:200ms;z-index:100}
 .nav-scrim.open{opacity:1}
+/* ==== 首页：运行概况（参照 OpenAlex 首页数字条：大数字 / 标签 / 细分隔线 / 灰说明 / 宽留白） ==== */
+.overview-band{margin-bottom:56px}
+.overview-heading{font-size:22px;margin-bottom:18px}
+.overview-heading--sub{margin-top:40px}
+.stat-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0 34px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.stat{padding:26px 0 22px;min-width:0}
+.stat b{display:block;font-size:44px;line-height:1.05;font-weight:700;letter-spacing:-1px;color:var(--ink);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.stat-label{display:block;margin-top:10px;font-size:15px;color:var(--text);font-weight:600}
+.stat-desc{display:block;margin-top:12px;font-size:13px;color:var(--muted);line-height:1.55}
+.stat-sub{display:block;margin-top:8px;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+/* 里程碑：纵向时间线，最新在上；已完成与后续计划分色区分 */
+.milestone-list{list-style:none;margin:0;padding:0 0 0 24px;position:relative}
+.milestone-list::before{content:"";position:absolute;left:5px;top:8px;bottom:8px;width:1px;background:var(--line)}
+.milestone{position:relative;padding-bottom:22px}
+.milestone::before{content:"";position:absolute;left:-23px;top:7px;width:9px;height:9px;border-radius:50%;background:var(--ink);border:2px solid var(--surface)}
+.milestone.planned::before{background:var(--surface);border:2px solid var(--muted)}
+.milestone-head{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+.milestone-status{font-size:11.5px;border:1px solid var(--line);border-radius:999px;padding:1px 8px}
+.milestone.done .milestone-status{color:#1f7a45;border-color:#bfe3cb;background:#eaf6ee}
+.milestone h3{margin:6px 0 5px;font-size:17px;line-height:1.4}
+.milestone p{margin:0;color:var(--text-2);font-size:14px;line-height:1.65;max-width:84ch}
+.milestone details{margin-top:8px}
+.milestone summary{cursor:pointer;color:var(--link);font-size:13.5px}
+.milestone details p{margin-top:8px;color:var(--muted);font-size:13.5px}
+@media(max-width:1023px){.stat-strip{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:599px){
+  .stat-strip{grid-template-columns:minmax(0,1fr)}
+  .stat{padding:18px 0;border-bottom:1px solid var(--line)}
+  .stat:last-child{border-bottom:0}
+  .stat b{font-size:36px}
+  .overview-band{margin-bottom:40px}
+}

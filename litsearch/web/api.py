@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import os
@@ -14,7 +15,7 @@ from urllib.parse import urlsplit
 
 from fastapi import FastAPI, Query, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from litsearch import config
@@ -54,12 +55,19 @@ from litsearch.web.dto import (
 )
 from litsearch.web.jobs import JobManager
 from litsearch.web.repository import APIError, ProjectRepository, atomic_json
+from litsearch.web.stats import METRIC_HOME_VIEWS, METRIC_SEARCH_CLICKS, StatsStore
 
 MAX_BODY = 32 * 1024 * 1024
 
 
 class Input(BaseModel):
     model_config = ConfigDict(extra="forbid")
+
+
+class StatsEventInput(Input):
+    """首页计数事件：``entry_id`` 用于同一次页面进入的幂等去重（可省略）。"""
+
+    entry_id: str = Field(default="", max_length=128)
 
 
 class CreateProject(Input):
@@ -208,6 +216,8 @@ def create_app(data_dir=None, workflow_factory=None, static_dir=None, translator
         return LiteratureReviewWorkflow(sources, downloader=PaperDownloader(str(repository.root / "downloads")))
 
     jobs = JobManager(repository, workflow_factory or default_factory)
+    # 运行概况：与实际数据目录同级持久化，重启后累计值与上线日期都不归零。
+    stats = StatsStore(root)
 
     @asynccontextmanager
     async def lifespan(_app):
@@ -225,6 +235,7 @@ def create_app(data_dir=None, workflow_factory=None, static_dir=None, translator
     app = FastAPI(title="LEExtractor Local API", version=__version__, lifespan=lifespan,
                   docs_url="/api/docs", openapi_url="/api/openapi.json", redoc_url=None)
     app.state.repository, app.state.jobs = repository, jobs
+    app.state.stats = stats
 
     @app.middleware("http")
     async def local_access(request: Request, call_next):
@@ -325,6 +336,75 @@ def create_app(data_dir=None, workflow_factory=None, static_dir=None, translator
              "storage": config.storage_report(),
              "models": model_diagnostics()},
             status_code=200 if ready else 503)
+
+    # ---------------------------------------------------------------- 运行概况
+    # 四项指标全部来自服务端真实数据：
+    #   ① 上线日期（持久化配置，重启不归零）  ② 网页点击次数（持久化计数，PV 口径）
+    #   ③ 搜索运行次数（任务记录中 kind=search 的累计）  ④ 共检索得文献（各项目语料去重后合计）
+    # 其中 ③④ 由仓库/任务记录即时汇总，不做额外埋点；任何一步失败都只影响该项，不影响接口。
+    def stats_payload():
+        payload = stats.snapshot()
+        try:
+            payload["search_runs"] = {
+                "count": sum(1 for job in jobs.jobs.values() if job.payload.get("kind") == "search"),
+            }
+        except Exception:  # noqa: BLE001 - 统计不得影响主页
+            payload["search_runs"] = {"count": None}
+        try:
+            total = 0
+            for project in repository.projects.values():
+                total += len(corpus_papers(project.state))
+            payload["records"] = {"count": total}
+        except Exception:  # noqa: BLE001
+            payload["records"] = {"count": None}
+        return payload
+
+    @app.get("/api/stats")
+    def stats_view():
+        return stats_payload()
+
+    @app.post("/api/stats/home-view")
+    def stats_home_view(body: StatsEventInput | None = None):
+        stats.record(METRIC_HOME_VIEWS, body.entry_id if body else "")
+        return stats_payload()
+
+    @app.post("/api/stats/search-entry-click")
+    def stats_search_entry_click(body: StatsEventInput | None = None):
+        stats.record(METRIC_SEARCH_CLICKS, body.entry_id if body else "")
+        return stats_payload()
+
+    # 实时流：数字全部由服务端真实回传（SSE，无新增依赖、无轮询风暴）。
+    # 断开或出错都不会影响首页——浏览器 EventSource 自带重连，前端也会退回一次性读取。
+    stats_streams = {"active": 0}
+    MAX_STATS_STREAMS = 16
+    STATS_STREAM_INTERVAL = 2.0
+
+    @app.get("/api/stats/stream")
+    async def stats_stream(request: Request, limit: int = Query(0, ge=0, le=600)):
+        """SSE 实时流。``limit``>0 时只推送该帧数后正常结束（便于自动化验证与受限客户端）。"""
+        if stats_streams["active"] >= MAX_STATS_STREAMS:
+            return JSONResponse({"error": {"code": "too_many_streams",
+                                           "message": "统计流连接数已达上限，请稍后重试", "detail": None}}, 503)
+        stats_streams["active"] += 1
+
+        async def events():
+            sent = 0
+            try:
+                while True:
+                    payload = json.dumps(stats_payload(), ensure_ascii=False)
+                    yield f"event: stats\ndata: {payload}\n\n"
+                    sent += 1
+                    if limit and sent >= limit:
+                        break
+                    await asyncio.sleep(STATS_STREAM_INTERVAL)
+                    if await request.is_disconnected():
+                        break
+            finally:
+                stats_streams["active"] = max(0, stats_streams["active"] - 1)
+
+        return StreamingResponse(events(), media_type="text/event-stream",
+                                 headers={"Cache-Control": "no-cache", "Connection": "keep-alive",
+                                          "X-Accel-Buffering": "no"})
 
     @app.get("/api/settings")
     def settings():

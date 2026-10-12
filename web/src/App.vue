@@ -4,6 +4,8 @@ import { useDisplay } from 'vuetify'
 import { useRoute,useRouter } from 'vue-router'
 import { request,post,queryString,isActiveJob,paperKey,safeUrl,acceptsJobSnapshot } from './api.js'
 import { EAGLE_GRID } from './eagle-grid.js'
+import HomeOverview from './HomeOverview.vue'
+import { pageEntryId, recordSearchEntryClick } from './stats.js'
 import ForceGraph from 'force-graph'
 const route=useRoute(),router=useRouter()
 const {width:viewportWidth}=useDisplay()
@@ -193,6 +195,8 @@ function rotorMove(event){const el=document.getElementById('rotor');if(!el||page
   const r=el.getBoundingClientRect();rotorTarget=Math.atan2(event.clientY-r.top-r.height/2,event.clientX-r.left-r.width/2)*180/Math.PI;rotorWake()}
 function rotorReset(){rotorTarget=0;rotorWake()}
 async function enterWorkspace(){
+  // 首页主视觉入口也是一次"检索入口点击"；统计失败不影响进入检索。
+  recordSearchEntryClick(pageEntryId()).catch(()=>null)
   if(motionReduced()||typeof document==='undefined'||typeof Element==='undefined'||!Element.prototype.animate){await router.push('/search');return}
   if(entering.value)return
   entering.value=true
@@ -258,8 +262,9 @@ onBeforeUnmount(()=>{clearTimeout(timer);stopEagle();stopGraph()})
     <template v-else-if="page==='home'">
       <section class="cover" :class="{'is-entering':entering}" @pointermove="rotorMove" @pointerleave="rotorReset"><button class="hero-button" @click="enterWorkspace()" :aria-label="t('开始探索','Start exploring')"><span class="wordmark"><span>LEE</span><span class="x-slot"><span id="rotor" class="rotor"/></span><span>tractor</span></span><span class="invitation">{{t('惟学无际，际于天地 · 点击开始探索','Knowledge without limits · Begin exploring')}}</span></button><div id="eagle" class="eagle" role="img" :aria-label="t('动态字符版求是鹰','Animated Qiushi eagle character art')"><canvas id="eagleCanvas" width="640" height="400" aria-hidden="true"/></div></section>
       <section class="home-band"><div class="logo-band"><span>{{t('参赛单位','Affiliation')}}</span><img src="/assets/zju-wordmark.png" :alt="t('浙江大学','Zhejiang University')"/><span class="home-tag">{{t('可追溯的文献探索','Traceable literature exploration')}}</span></div></section>
-      <section class="home-band"><p class="eyebrow">LITERATURE · EVIDENCE · EXPLORATION</p><h2>{{t('让每一次探索，留下依据。','Keep the evidence behind every discovery.')}}</h2><p class="home-copy">{{t('从多来源检索走向引文扩展，在证据版图中比较方向，由你完成筛选与判断。记录与发现轨迹一起保存，研究过程可以复核。','Search across sources, expand citation networks and compare directions in an evidence landscape. Make your own screening decisions. Records and discovery trails remain available for review.')}}</p><div class="actions"><v-btn size="large" color="primary" to="/search">{{t('开始检索','Start a search')}}</v-btn><v-btn size="large" variant="outlined" @click="loadDemo" :loading="busy">{{t('创建离线演示项目','Create offline demo')}}</v-btn><v-btn size="large" variant="text" to="/projects">{{t('恢复已有项目','Resume a project')}}</v-btn></div></section>
+      <section class="home-band"><p class="eyebrow">LITERATURE · EVIDENCE · EXPLORATION</p><h2>{{t('让每一次探索，留下依据。','Keep the evidence behind every discovery.')}}</h2><p class="home-copy">{{t('从多来源检索走向引文扩展，在证据版图中比较方向，由你完成筛选与判断。记录与发现轨迹一起保存，研究过程可以复核。','Search across sources, expand citation networks and compare directions in an evidence landscape. Make your own screening decisions. Records and discovery trails remain available for review.')}}</p><div class="actions"><v-btn size="large" color="primary" to="/search" @click="recordSearchEntryClick(pageEntryId()).catch(()=>null)">{{t('开始检索','Start a search')}}</v-btn><v-btn size="large" variant="outlined" @click="loadDemo" :loading="busy">{{t('创建离线演示项目','Create offline demo')}}</v-btn><v-btn size="large" variant="text" to="/projects">{{t('恢复已有项目','Resume a project')}}</v-btn></div></section>
       <section class="home-band"><div class="cols-3"><article class="feature"><span>01 / DISCOVERY</span><h3>{{t('查找与扩展','Search and expand')}}</h3><p>{{t('检索来源独立计数，强标识去重，使用真实引文和参考文献继续探索。','Provider counts remain separate. Strong identifiers deduplicate records. Expand with observed citations and references.')}}</p></article><article class="feature"><span>02 / UNDERSTANDING</span><h3>{{t('关系与证据','Relationships and evidence')}}</h3><p>{{t('查看来源、评分上下文、发现轨迹和当前语料的研究版图。','Inspect sources, score contexts, discovery trails and the corpus landscape.')}}</p></article><article class="feature"><span>03 / HANDOFF</span><h3>{{t('判断与交接','Decide and hand off')}}</h3><p>{{t('人工筛选、标定与全文获取各自保留事实，导出可复核的证据包。','Screening, calibration and full-text retrieval preserve distinct facts. Export a reviewable evidence pack.')}}</p></article></div></section>
+      <HomeOverview :lang="lang"/>
       <section class="home-band"><div class="row-between"><h2>{{t('最近项目','Recent projects')}}</h2><router-link to="/projects">{{t('查看全部 →','View all →')}}</router-link></div><div v-if="projects.length" class="cols-3"><router-link v-for="p in projects.slice(0,3)" :key="p.project_id" :to="`/projects/${p.project_id}/results`" class="project-card"><h3>{{p.name||p.topic}}</h3><p>{{p.topic}}</p><span>{{p.demo?t('模拟项目','Demo project'):t('研究项目','Research project')}} · {{display(p.updated_at)}}</span></router-link></div><p v-else class="muted">{{t('暂无项目。开始检索或创建隔离演示项目。','No projects yet. Start a search or create an isolated demo.')}}</p></section>
     </template>
 
