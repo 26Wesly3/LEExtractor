@@ -18,6 +18,11 @@ OUT=$ROOT/benchmark-result.md
 CONTAINER=leextractor-leextractor-1
 SAMPLE_EVERY=2
 STAGE_TIMEOUT=900
+#: light (default) = the conservative ladder only; full = the v0.9.14 P7 ladder.
+STAGES=${STAGES:-light}
+#: Providers used by the benchmark searches. Crossref + arXiv need no API key,
+#: so the measurement is reproducible without credentials.
+PROVIDERS=${PROVIDERS:-'["crossref","arxiv"]'}
 
 : > "$OUT"
 say() { echo "$@" | tee -a "$OUT"; }
@@ -41,10 +46,30 @@ new_demo_project() {
         | python3 -c 'import sys,json;print(json.load(sys.stdin)["project_id"])'
 }
 
+# A demo project refuses real searches (409 demo_search_disabled) by design, so
+# the load must run against a real project.
+new_project() {
+    curl -s -X POST "$B/api/projects" -H 'Content-Type: application/json' \
+        -d "{\"name\":\"bench-$1\",\"topic\":\"plant phenotyping benchmark\"}" \
+        | python3 -c 'import sys,json;print(json.load(sys.stdin).get("project_id",""))'
+}
+
 start_search() {
     curl -s -X POST "$B/api/projects/$1/search" -H 'Content-Type: application/json' \
-        -d "{\"expected_revision\":1,\"query\":\"$3\",\"ranking_mode\":\"$2\",\"max_papers\":60,\"year_from\":2015,\"year_to\":2026}" \
-        | python3 -c 'import sys,json;print(json.load(sys.stdin).get("job_id",""))'
+        -d "{\"expected_revision\":1,\"query\":\"$3\",\"ranking_mode\":\"$2\",\"max_papers\":60,\"year_from\":2015,\"year_to\":2026,\"providers\":$PROVIDERS}" \
+        | python3 -c 'import sys,json;d=json.load(sys.stdin);print(d.get("job_id","") or ("ERR:"+json.dumps(d.get("error",d),ensure_ascii=False)))'
+}
+
+preflight() {
+    local p j
+    p=$(new_project preflight)
+    [ -n "$p" ] || { say "!! 无法创建真实项目，压测中止"; return 1; }
+    j=$(start_search "$p" lexical "plant phenotyping preflight")
+    case "$j" in
+        ""|ERR:*) say "!! 预检失败：search 未返回 job_id -> $j"; return 1;;
+    esac
+    say "- 预检通过：project=${p:0:8} job=${j:0:8}"
+    return 0
 }
 
 job_status() {
@@ -58,10 +83,15 @@ stage() {
     say ""
     say "### $label  (MAX_ACTIVE_JOBS=$cap, ranking=$mode, concurrent=$n, timeout=${timeout}s)"
     set_jobs "$cap" || return
-    local ids=() i p
+    local ids=() i p j
     for i in $(seq 1 "$n"); do
-        p=$(new_demo_project)
-        ids+=("$(start_search "$p" "$mode" "plant phenotyping roots")")
+        p=$(new_project "$label-$i")
+        if [ -z "$p" ]; then say "- !! 第 $i 个项目创建失败，本阶段无效"; return; fi
+        j=$(start_search "$p" "$mode" "plant phenotyping stage $label")
+        case "$j" in
+            ""|ERR:*) say "- !! 第 $i 个 search 未拿到 job_id，本阶段无效: $j"; return;;
+        esac
+        ids+=("$j")
     done
 
     local peak_mem=0 peak_cpu=0 elapsed=0 active=0 c m cpu mb s j
@@ -97,8 +127,12 @@ soak() {
     set_jobs 1 || return
     before=$(cont)
     for i in $(seq 1 "$count"); do
-        p=$(new_demo_project)
+        p=$(new_project "soak-$i")
+        if [ -z "$p" ]; then say "- !! soak 第 $i 个项目创建失败"; failed=$((failed + 1)); continue; fi
         j=$(start_search "$p" lexical "plant phenotyping soak $i")
+        case "$j" in
+            ""|ERR:*) say "- !! soak 第 $i 次 search 未拿到 job_id: $j"; failed=$((failed + 1)); continue;;
+        esac
         for _ in $(seq 1 60); do
             status=$(job_status "$j")
             case "$status" in running*|queued*|"") sleep 2;; *) break;; esac
@@ -121,17 +155,26 @@ say ""
 say "- 时间: $(date -Is)"
 say "- 机器: $(nproc) vCPU / $(free -m | awk '/^Mem:/{print $2}') MB RAM / $(df -h / | awk 'NR==2{print $2}') disk / $(free -m | awk '/^Swap:/{print $2}') MB swap"
 say "- 方法: 保守起点 MAX_ACTIVE_JOBS=1，向两边扩展；每 ${SAMPLE_EVERY}s 采样容器与宿主状态"
-say "- 口径: 按 v0.9.14 DevLog 的 P7（并发 1/5/10/20 + CPU/RAM 峰值）与 P6（soak，缩减为 20 次）"
+say "- 口径: 轻量梯 = S0..S3；v0.9.14 的 P7 全梯（1/5/10/20）+ P6 soak 用 STAGES=full 触发，脚本逻辑不变"
 say "- 说明: semantic 首次会下载嵌入模型，因此 S2 同时是一次冷启动下载测量"
+say "- providers: $PROVIDERS"
+say "- 梯次: $STAGES"
+
+preflight || exit 1
 
 stage "S0 idle 基线"            1 lexical  0
 stage "S1 1 × lexical"          1 lexical  1
 stage "S2 1 × semantic"         1 semantic 1
 stage "S3 2 × semantic"         2 semantic 2
-stage "S4 5 × semantic（P7）"    5 semantic 5  420
-stage "S5 10 × semantic（P7）"  10 semantic 10 420
-stage "S5b 20 × semantic（P7）" 20 semantic 20 420
-soak 20
+if [ "$STAGES" = "full" ]; then
+    stage "S4 5 × semantic（P7）"    5 semantic 5  420
+    stage "S5 10 × semantic（P7）"  10 semantic 10 420
+    stage "S5b 20 × semantic（P7）" 20 semantic 20 420
+    soak 20
+else
+    say ""
+    say "（轻量模式：已跳过 5/10/20 与 soak；要跑全梯执行 STAGES=full bash deploy/benchmark.sh）"
+fi
 
 set_jobs 1
 say ""
