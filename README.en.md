@@ -29,7 +29,7 @@ Search literature. Trace evidence. Build understanding.
 
 <br>
 
-**Real recording · running locally**
+**Real recording · running locally (unlike the early concept art below, this is a real result)**
 
 ![LEExtractor in real use: enter a Chinese research intent, review the translation and per-database queries, run the multi-provider search, then browse results, the evidence landscape, candidate questions, human screening and export](docs/demo/leextractor-demo.gif)
 
@@ -47,15 +47,17 @@ LEExtractor is built for the early exploration stage of research: it turns one f
 
 ## Start with a concept
 
+> **The early concept images below are for illustration only — they are not screenshots of current results.** They record the original product idea; the interface, publications and results shown are illustrative. For what the product actually does, use the real recording above or the live demo.
+
 ![LEExtractor product concept: a literature search on embodied AI and robot generalization, with key findings, evidence and source links](docs/assets/leextractor-hero-4k.png)
 
-*Concept 1 · product concept preview — an early interface design; the publications and results shown are illustrative, **not a screenshot of the app***
+*Concept 1 · product concept preview — early concept art; the publications and results shown are illustrative, **not a screenshot of current results***
 
 **Concept 2 · four-step workflow**
 
 ![Four-step concept workflow: ask a research question, search for relevant studies, read key findings, and verify evidence against the original source](docs/assets/leextractor-workflow-4k.png)
 
-*Concept 2 · exploration flow illustration — **not a screenshot of the app***
+*Concept 2 · early exploration-flow illustration — **not a screenshot of current results***
 
 | Step | What you do | What the system leaves behind |
 | --- | --- | --- |
