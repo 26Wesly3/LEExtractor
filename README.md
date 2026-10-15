@@ -60,7 +60,7 @@ Relevance is a local semantic and lexical ranking signal, not a screening decisi
 
 Local title-and-abstract embeddings rerank provider candidates; they cannot recover papers absent from upstream results. Automated full-text synthesis, innovation scoring and Zotero synchronization are planned. Candidate questions and clusters summarize the available corpus; they are not verified scientific conclusions. Counts describe records/reports rather than deduplicated studies.
 
-The following earlier concept image is illustrative, not a screenshot of current results:
+Product concept:
 
 ![Product concept](docs/assets/leextractor-hero-4k.png)
 

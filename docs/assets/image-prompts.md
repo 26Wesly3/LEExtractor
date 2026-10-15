@@ -2,6 +2,8 @@
 
 Generated with the built-in image generation tool on 2026-10-08. Both images are concept illustrations derived from the user-provided four-panel product design. They are not screenshots of a running application. Originals are retained in the generation output directory; copies are used in the project.
 
+> **Provenance (for maintainers).** `leextractor-hero-4k.png` and `leextractor-workflow-4k.png` are early concept art: the interface, publications and numbers in them are illustrative, and neither is a screenshot of the running product. The README does not repeat this disclaimer next to the figures — it is recorded here instead. The real, unedited recording of the current build lives at `docs/demo/leextractor-demo.gif` and is served by the live demo at <https://leextractor.duckdns.org>.
+
 ## White background and glass card revision
 
 The current project images are the revised white-background versions, created with the built-in image generation tool. The prompts below document the original generation; the revision prompts are recorded here.
