@@ -11,7 +11,6 @@ Search literature. Trace evidence. Build understanding.
 <p>
   <img src="https://img.shields.io/badge/status-public%20beta-64748B?style=flat&labelColor=18181B" alt="Status: public beta">
   <img src="https://img.shields.io/badge/focus-literature%20%26%20evidence-334155?style=flat&labelColor=18181B" alt="Focus: literature and evidence">
-  <img src="https://img.shields.io/badge/license-MIT-3DA639?style=flat&labelColor=18181B" alt="License: MIT">
   <img src="https://img.shields.io/badge/version-v0.9.14-0B4FA1?style=flat&labelColor=18181B" alt="Version: v0.9.14">
 </p>
 
@@ -29,12 +28,11 @@ Search literature. Trace evidence. Build understanding.
 
 <br>
 
-<p align="center">
-  <b>实拍 · 本机真实运行</b><br>
-  <img src="docs/demo/leextractor-demo.gif" alt="LEExtractor 实际操作录屏：输入中文研究意图，查看译文与分库检索式，执行多源检索，浏览结果、证据版图、候选问题、人工筛选与导出。" width="100%">
-</p>
+**实拍 · 本机真实运行**
 
-<p align="center"><sub>实际操作录屏 · 热门样例「大语言模型幻觉」· 40 篇真实结果 · 3 个来源 8.0 秒（2 成功 / 1 受限）<br>体积较大时可看 <a href="docs/demo/leextractor-demo-small.gif">轻量版</a></sub></p>
+![LEExtractor 实际操作录屏：输入中文研究意图，查看译文与分库检索式，执行多源检索，浏览文献结果、证据版图、候选问题、人工筛选与导出](docs/demo/leextractor-demo.gif)
+
+*热门样例「大语言模型幻觉」· 40 篇真实结果 · 3 个来源 8.0 秒（2 成功 / 1 受限）· [轻量版 GIF](docs/demo/leextractor-demo-small.gif)*
 
 ---
 
@@ -42,26 +40,21 @@ LEExtractor 面向科研前期探索：把一句模糊的研究意图，变成�
 
 **让每一次探索，都留下可回看的依据。**
 
-> 当前版本已在公网运行（<https://leextractor.duckdns.org>），Windows 便携版可直接下载使用；未完成项与能力边界见 [ROADMAP.md](ROADMAP.md) 与下文「能力边界」。
+> 当前版本已在公网运行（<https://leextractor.duckdns.org>），Windows 便携版可直接下载使用；未完成项见 [ROADMAP.md](ROADMAP.md) 与下文「能力边界」。
 
 <a id="preview"></a>
 
 ## 从一张概念图开始
 
-<p align="center">
-  <img src="docs/assets/leextractor-hero-4k.png" alt="LEExtractor 产品概念：围绕具身智能与机器人泛化检索文献，阅读关键发现、证据与来源。" width="100%">
-</p>
+![LEExtractor 产品概念：围绕具身智能与机器人泛化检索文献，阅读关键发现、证据与来源](docs/assets/leextractor-hero-4k.png)
 
-<p align="center"><sub>概念图 1 · 产品概念预览 —— 早期界面设计示意，图中文献与结果为界面示意，<b>非运行截图</b></sub></p>
+*概念图 1 · 产品概念预览 —— 早期界面设计示意，图中文献与结果为界面示意，**非运行截图***
 
-<br>
+**概念图 2 · 四步工作流**
 
-<p align="center">
-  <b>概念图 2 · 四步工作流</b><br>
-  <img src="docs/assets/leextractor-workflow-4k.png" alt="四步概念工作流：提出问题、检索文献、阅读关键发现、回到原文核对证据。" width="100%">
-</p>
+![四步概念工作流：提出问题、检索文献、阅读关键发现、回到原文核对证据](docs/assets/leextractor-workflow-4k.png)
 
-<p align="center"><sub>概念图 2 · 探索流程示意 —— <b>非运行截图</b></sub></p>
+*概念图 2 · 探索流程示意 —— **非运行截图***
 
 | 步骤 | 你要做的事 | 系统的落地产物 |
 | --- | --- | --- |

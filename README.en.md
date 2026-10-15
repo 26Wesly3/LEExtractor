@@ -29,12 +29,11 @@ Search literature. Trace evidence. Build understanding.
 
 <br>
 
-<p align="center">
-  <b>Real recording · running locally</b><br>
-  <img src="docs/demo/leextractor-demo.gif" alt="LEExtractor in real use: enter a Chinese research intent, review the translation and per-database queries, run the multi-provider search, then browse results, the evidence landscape, candidate questions, human screening and export." width="100%">
-</p>
+**Real recording · running locally**
 
-<p align="center"><sub>Real screen recording · hot sample "LLM hallucination" · 40 real records · 3 providers in 8.0 s (2 succeeded / 1 rate-limited)<br>A <a href="docs/demo/leextractor-demo-small.gif">lighter GIF</a> is available for slow connections</sub></p>
+![LEExtractor in real use: enter a Chinese research intent, review the translation and per-database queries, run the multi-provider search, then browse results, the evidence landscape, candidate questions, human screening and export](docs/demo/leextractor-demo.gif)
+
+*Hot sample "LLM hallucination" · 40 real records · 3 providers in 8.0 s (2 succeeded / 1 rate-limited) · [lighter GIF](docs/demo/leextractor-demo-small.gif)*
 
 ---
 
@@ -48,20 +47,15 @@ LEExtractor is built for the early exploration stage of research: it turns one f
 
 ## Start with a concept
 
-<p align="center">
-  <img src="docs/assets/leextractor-hero-4k.png" alt="LEExtractor product concept: a literature search on embodied AI and robot generalization, with key findings, evidence and source links." width="100%">
-</p>
+![LEExtractor product concept: a literature search on embodied AI and robot generalization, with key findings, evidence and source links](docs/assets/leextractor-hero-4k.png)
 
-<p align="center"><sub>Concept 1 · product concept preview — an early interface design; the publications and results shown are illustrative, <b>not a screenshot of the app</b></sub></p>
+*Concept 1 · product concept preview — an early interface design; the publications and results shown are illustrative, **not a screenshot of the app***
 
-<br>
+**Concept 2 · four-step workflow**
 
-<p align="center">
-  <b>Concept 2 · four-step workflow</b><br>
-  <img src="docs/assets/leextractor-workflow-4k.png" alt="Four-step concept workflow: ask a research question, search for relevant studies, read key findings, and verify evidence against the original source." width="100%">
-</p>
+![Four-step concept workflow: ask a research question, search for relevant studies, read key findings, and verify evidence against the original source](docs/assets/leextractor-workflow-4k.png)
 
-<p align="center"><sub>Concept 2 · exploration flow illustration — <b>not a screenshot of the app</b></sub></p>
+*Concept 2 · exploration flow illustration — **not a screenshot of the app***
 
 | Step | What you do | What the system leaves behind |
 | --- | --- | --- |
