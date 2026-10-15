@@ -1,80 +1,157 @@
 # LEExtractor
 
-**简体中文** · [English](README.md)
+**简体中文** · [English](README.en.md)
 
-从研究问题，走向可追溯的文献证据。
+> **从模糊的研究意图，到一条能复核的证据链。**
+> From a fuzzy research intent to a reviewable evidence chain.
 
-**v0.9.11** 将 v0.9.6 界面设计与 v0.9.5 算法连接为 Vue 3 / Vuetify + 本机 FastAPI 工作台，保留 Streamlit 和 MCP 入口。
+| | |
+|---|---|
+| **线上体验** | <https://leextractor.duckdns.org> |
+| **当前版本** | v0.9.14（Vue 3 工作台 + 本机 FastAPI + MCP） |
+| **Windows 便携版** | [下载](download/LEExtractor_v0.9.14_Windows_portable.zip) · [Releases](https://github.com/26Wesly3/LEExtractor/releases) |
+| **Benchmark** | BEIR SciFact · 5,183 篇候选 · 30 题 · 150 次真实排序 |
 
-## 开始使用
+## 界面：概念图 与 实拍
 
-1. 安装 **Python 3.10+（推荐 3.12，64 位）**，安装时勾选 Add Python to PATH。
-2. 从 GitHub 选择 [`feature/web-backend-integration` 分支](https://github.com/26Wesly3/LEExtractor/tree/feature/web-backend-integration)，使用 Code → Download ZIP 下载并完整解压。本版尚未合入 master；默认分支的旧版不包含这些功能。
-3. 在解压目录双击 **启动LEExtractor.bat**（或 **启动Web版.bat**）。脚本创建 `.venv`、安装 Python 依赖，检查并自动下载本地翻译与 Embedding 模型，准备好后打开 http://127.0.0.1:8000。首次启动请保持联网和窗口打开，下载耗时取决于网络；后续复用缓存。
-4. 界面打开后创建项目，输入研究方向，先查看译文和检索计划，再检索。点击「创建离线演示项目」可先检查界面是否正常。
+| 前期概念图（界面设计示意） | 实际操作录屏（本机真实运行） |
+|---|---|
+| [![产品概念图](docs/assets/leextractor-hero.png)](docs/assets/leextractor-hero-4k.png) | ![LEExtractor 实际操作演示](docs/demo/leextractor-demo.gif) |
+| 《概念图》—— 早期界面设计示意，**非运行截图** | 《实拍》—— 大语言模型幻觉样例，来源 OpenAlex / arXiv / Crossref |
 
-GitHub 源码与发布包已包含构建后的界面，**运行不需要 Node.js、显卡或推理 API Key**。普通源码包不包含模型权重；另提供「交接包_含模型」，完整解压后启动器自动使用其中的 `models`，无需重新下载模型。首次安装 Python 依赖和真实数据库检索仍需联网。
+<details>
+<summary>查看完整工作流概念图（点击展开）</summary>
 
-手动启动（Windows PowerShell，在项目根目录）：
+[![工作流概念图](docs/assets/leextractor-workflow.png)](docs/assets/leextractor-workflow-4k.png)
+
+《概念图》—— 探索流程示意，**非运行截图**
+</details>
+
+> 实拍动画为 **40 篇真实检索结果**，8.0 秒完成 3 个来源（2 成功 / 1 受限），界面如实显示「部分完成 · 部分文献来源暂时受限」。
+> GIF 体积较大时可用 [轻量版](docs/demo/leextractor-demo-small.gif)。
+
+---
+
+## 这是什么
+
+LEExtractor 面向**科研前期探索**：把你一句模糊的研究意图，变成一次**有路径、有身份、有依据**的文献检索，并把整条链路留给下一个人复核。
+
+它不做三件事的假装：
+
+- **不假装找全了**。每个来源的限流、超时、鉴权失败逐源可见，不会塌成「0 篇」。
+- **不假装有把握**。未标定就不显示「相关率」；候选研究问题一律标注为待验证假设。
+- **不假装是结论**。引文边与推导／语义边严格分开；版图数字只描述「已检索到的文献」。
+
+## 能做什么
+
+**01 / 检索与扩展**
+一句话研究意图拆成 object / method / task / scenario，再翻译成各数据库自己的检索式（S2 / OpenAlex 关键词串、arXiv 字段限定、Crossref 元数据）。六源并发抓取，跨库按规范标识去重，引文边继续用真实 references 与 citations 扩展。
+
+**02 / 关系与证据**
+引文证据图（PageRank / 社群 / 有向证据路径）、书目耦合、共被引、文本相似各自独立计数。研究版图给出主题、时序、新颖度与覆盖度，每条都附带边界说明。
+
+**03 / 判断与交接**
+排序是排序信号，不是筛选结论：人工筛选、标定、全文获取各自保留事实。导出 CSV / RIS / BibTeX / 会话 JSON / 完整证据包（含 `AGENT_HANDOFF.md`、`discovery_trace.jsonl`、`evidence_graph.json`、`landscape.json`、`questions.json`），可导入 Zotero，或交给 Codex / Qoder / WorkBuddy 等工具继续做。
+
+## 快速开始
+
+### 方式一：Windows 便携版（推荐）
+
+1. 下载并**完整解压** [`LEExtractor_v0.9.14_Windows_portable.zip`](download/LEExtractor_v0.9.14_Windows_portable.zip)（或从 [Releases](https://github.com/26Wesly3/LEExtractor/releases) 下载）。
+2. 双击 **`Start_LEExtractor.bat`**。
+3. 浏览器自动打开 <http://127.0.0.1:8012>，控制台保持打开即运行中。
+
+便携版自带启动逻辑：优先使用包内 `runtime\`，其次 `.venv`，再退到系统 Python；缺依赖会自动创建本地环境安装。**运行不需要 Node.js、显卡或推理 API Key。**
+
+> 模型说明：最小包不含模型权重。没有模型时**词法检索、来源筛选、证据链、导出全部可用**，只有「中文翻译」与「语义排序」会在首次使用时下载（翻译约 116 MB、嵌入约 267 MB，之后复用缓存）。端口被占用时可在启动前 `set LEEXTRACTOR_PORT=8013`。
+
+### 方式二：源码运行
 
 ```powershell
+git clone https://github.com/26Wesly3/LEExtractor.git
+cd LEExtractor
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e ".[web]" -c constraints.txt
 .\.venv\Scripts\python.exe scripts\launch_web.py --port 8000
 ```
 
-macOS/Linux：创建并激活 Python 虚拟环境，安装相同依赖，运行 `python scripts/launch_web.py --port 8000`。只需界面或手动英文关键词时，可加 `--skip-models`；模型下载失败会明确提示，界面继续启动。首次启动无浏览器弹出时，手动访问上面的地址；端口占用可运行 `启动Web版.bat --port 8001`。关闭启动窗口或按 Ctrl+C 停止服务。
+macOS / Linux 同上，改用 `python scripts/launch_web.py --port 8000`。加 `--skip-models` 可以只开界面不准备模型。
 
-点击「创建离线演示项目」可体验明确标记的合成数据。真实研究请创建普通项目，在设置页或本机环境文件中配置数据源凭据。接口可用性与限流会影响检索覆盖范围。
+### 配置数据源
 
-## 翻译、语义排序与会议覆盖
+S2 / OpenAlex / SerpApi / Unpaywall 凭据可在界面「设置」页填写，或复制 `.env.example` 为 `.env`。**不要把 `.env` 提交到版本库。** 未配置密钥时，限流可能让结果不完整——诊断面板会告诉你原因。
 
-中文方向由本地 Marian 中译英，检索和排序优先使用完整研究方向；英文检索词可手动编辑。翻译运行文件约 116 MB，Embedding 权重与词元文件合计约 267 MB，后续复用缓存，推理在本机 CPU 运行，无需翻译或推理 API Key。固定版本与 SHA-256 文件清单见 `litsearch/translation_pins.json`、`litsearch/embedding_pins.json`。
+## 实测数据
 
-默认翻译缓存为用户目录下 `.cache/leextractor`，Embedding 复用系统临时目录下 `fastembed_cache`。可设置 `LEEXTRACTOR_MODEL_DIR` 与 `LEEXTRACTOR_EMBEDDING_CACHE` 指向自己的缓存。含模型交接包自动选择项目内 `models`，已有自定义环境变量优先。具体文件、交付范围、验收与问题处理见 [交接说明]()。
+BEIR SciFact test，全部 5,183 篇候选，从 300 个问题中用 seed 42 固定抽取 30 题，共 150 次真实排序；标签直接使用公开 qrels，未生成标签、未训练模型、未按成绩调参。
 
-Embedding 使用 TraceRAG 中相同的多语言 MiniLM：`sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`。标题和摘要一起编码，长摘要分块，无摘要记录只编码标题。Web 支持 Semantic Scholar、OpenAlex、arXiv、Crossref、OpenReview、Google Scholar 六个来源，并按 CCF 2026 会议／期刊级别筛选。OpenReview 包含公开未录用投稿，Google Scholar 通过 SerpApi 接入，需要在设置中配置 API Key，配置后默认启用；搜索片段与完整摘要分别标注；级别不证明单篇论文已录用或属于长文。来源限流、访问校验和网络问题会逐库显示，不能承诺完整收录所有 CCF 论文。
+| 方法 | nDCG@20 ↑ | Recall@50 ↑ | P@20 ↑ | MRR@50 ↑ |
+|---|---:|---:|---:|---:|
+| **当前混合排序** | **0.6800** | **0.8767** | **0.0467** | **0.6379** |
+| BM25 关键词参照 | 0.6631 | 0.8433 | 0.0450 | 0.6367 |
+| 现有关键词排序 | 0.5941 | 0.8100 | 0.0450 | 0.5339 |
+| 本地向量：仅标题 | 0.5438 | 0.7300 | 0.0350 | 0.5040 |
+| 本地向量：标题＋摘要 | 0.4856 | 0.7367 | 0.0383 | 0.4268 |
 
-## 当前工作流程
+**口径**：相对项目原有关键词排序 nDCG@20 **+0.0859**，配对 bootstrap 95% 区间 `[0.0080, 0.1773]`（不跨零）；相对 **BM25** 仅 +0.0169，区间 `[-0.0612, 0.1015]` **跨过零，不宣称稳定优于 BM25**。完整逐题结果与复算方法见 [`benchmarks/results/scifact-pilot-2026-10-10/`](benchmarks/results/scifact-pilot-2026-10-10/SUMMARY.zh-CN.md)。
 
-1. 输入课题、研究方向和年份范围，点击「翻译并查看检索计划」，核对或编辑英文译文，再发起检索。Web 默认使用标题＋摘要的本地语义排序。
-2. 筛选项目中的真实记录，查看文献详情、发现轨迹和相关性评分上下文。
-3. 选择种子进行引文扩展或 BC/CC 相似检索，后台任务显示真实阶段、计数、请求预算及取消状态。
-4. 查看当前语料的研究版图、关系路径和附带依据的候选研究问题。
-5. 人工筛选、添加标定标签，获取可访问的开放全文。
-6. 导出 CSV、RIS、BibTeX、会话 JSON、PRISMA 流程数据或证据包；导入会话时创建独立项目。
-
-项目、任务检查点和导出文件保存在本机 `.web-data`。多个浏览器标签通过 revision 检测过期写入。服务默认只监听本机，没有面向公网多人部署的认证和账号隔离。
-
-检索主题及文献标识会发送给文献数据源，全文请求发送给开放获取来源。凭据查询只返回是否已配置。本版本不调用大模型服务。停止服务后移除本机数据目录，即可移除 Web 项目与导出记录。
+```powershell
+python -m scripts.run_public_benchmark --queries 30 --seed 42   # --queries 0 可扩到全部 300 题
+```
 
 ## 能力边界
 
-相关性分数用于本地语义与关键词混合排序，不能替代筛选判断或研究质量评价。真实引文边与派生相似关系分别计数。失败、取消、预算耗尽与正常数量截断分别记录；全文纳入需要人工确认已经阅读。
+- 相关性是**排序信号**，不是筛选判断或研究质量评价。
+- 语义重排只重排上游已返回的候选，**无法找回上游没返回的论文**。
+- 计数单位是 record / report，同一研究的多个报告尚未归并到研究层面。
+- 自动全文综述、创新性评分、Zotero 双向同步、机构访问、多用户隔离均**尚未实现**。
+- 当前为单用户本机（或单实例云）工作流，不是多租户服务。
 
-本版对数据库返回的候选文献做语义重排；无法找回上游未返回的论文。自动全文综述、创新性评分和 Zotero 同步属于后续计划。聚类和候选问题描述现有语料，不等同于已验证的科研结论。流程计数采用 record/report，尚未归并到独立研究层面。
+## 目录结构
 
-下图是早期产品概念示意，并非当前真实结果截图：
+```text
+app.py                  Streamlit 入口（保留）
+litsearch/              领域算法与数据源
+  sources.py            六源抓取与统一传输
+  retrieval.py          RetrievalResult 状态语义
+  filters.py            词法与语义融合排序
+  intent.py             研究意图解析与分库检索式
+  prisma.py             两阶段筛选与流程计数
+  landscape.py          研究版图
+  questions.py          候选研究问题
+  web/                  FastAPI 服务与任务管理
+web/                    Vue 3 + Vuetify 工作台源码
+scripts/                启动、打包、Benchmark
+benchmarks/             评测数据、指南与实测结果
+docs/                   DevLog、ADR、图片素材
+download/               Windows 便携版下载件
+```
 
-![产品概念](docs/assets/leextractor-hero-4k.png)
+## 开发
 
-## 开发与验证
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q          # 离线测试
+.\.venv\Scripts\ruff.exe check .                 # 静态检查
+python -m scripts.launch_web --port 8000         # Web 工作台
+python server.py                                 # MCP（12 工具）
+```
 
-Benchmark 试跑：[公开 SciFact 排序对照、真实主题快照及人工标注步骤](benchmarks/PILOT_GUIDE.md)。运行 `python -m scripts.run_public_benchmark --queries 30` 会输出按系统分组的 JSON、CSV 和 Markdown 分数；使用真实公开 qrels，不使用合成样例作为比赛成绩。
+前端：`cd web && npm ci && npm run dev`，发布前 `npm run build` 再 `python scripts/sync_web_assets.py`。
 
-[2026-10-10 首次实跑结果与交接说明](benchmarks/results/scifact-pilot-2026-10-10/SUMMARY.zh-CN.md)：5,183 篇候选、30 个固定抽样问题，完整排名和逐题分数已保存，支持离线复算。
+## 文档
 
-- [安装与当前能力](README.dev.md)
-- [Web 整合说明与接口边界](docs/web-integration.md)
-- 本版验证记录)
-- [架构](ARCHITECTURE.md)、[更新记录](CHANGES.md)、[后续计划](ROADMAP.md)、[团队接手](ONBOARDING.md)
-
-前端开发：进入 `web` 后运行 `npm ci`、`npm run dev`，另行在 8000 端口启动 FastAPI；Vite 将 `/api` 代理到后端。发布前运行 `npm run build`，再从仓库根目录运行 `python scripts/sync_web_assets.py`。
-
-反馈问题请附版本、复现步骤、预期和实际结果，分享日志及会话前移除密钥。
+| 文档 | 内容 |
+|---|---|
+| [CHANGES.md](CHANGES.md) | v0.3.0 → 当前版本全部改动 |
+| [CHANGELOG.md](CHANGELOG.md) | 使用者视角版本级变化 |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | 模块与不变量 |
+| [ROADMAP.md](ROADMAP.md) | 未完成项（planned / pending_external / deferred） |
+| [DEPLOYMENT.md](DEPLOYMENT.md) | 服务器部署、回滚与健康检查 |
+| [ONBOARDING.md](ONBOARDING.md) | 团队接手 |
+| [docs/devlog/](docs/devlog/) | 逐版本工程记录（Before / After） |
 
 ## 贡献者与许可
 
 [GlueGPT](https://github.com/GlueGPT) · [jvligyh](https://github.com/jvligyh)
 
-文献内容与第三方数据遵循各自使用条件。仓库代码许可证尚未确定。
+文献内容与第三方数据遵循各自使用条件。**仓库代码许可证尚未确定（License: not yet selected）**，请勿在未沟通的情况下商用或再分发。

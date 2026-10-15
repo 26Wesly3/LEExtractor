@@ -4,7 +4,14 @@
 
 From research questions to traceable literature evidence.
 
-**v0.9.12** connects the v0.9.6 interface design to the v0.9.5 algorithms with Vue 3, Vuetify and a local FastAPI service, and adds concurrent provider fetching, per-stage search timings and a one-line result summary. The existing Streamlit and MCP entries remain available.
+**v0.9.14** connects the v0.9.6 interface design to the v0.9.5 algorithms with Vue 3, Vuetify and a local FastAPI service, and adds concurrent provider fetching, per-stage search timings, a one-line result summary and a live home operating overview. The existing Streamlit and MCP entries remain available.
+
+| | |
+|---|---|
+| **Live demo** | <https://leextractor.duckdns.org> |
+| **Windows portable** | [LEExtractor_v0.9.14_Windows_portable.zip](download/LEExtractor_v0.9.14_Windows_portable.zip) · [Releases](https://github.com/26Wesly3/LEExtractor/releases) |
+| **Demo recording** | [real local run, 40 records](docs/demo/leextractor-demo.gif) |
+| **Benchmark** | BEIR SciFact · 5,183 candidates · 30 queries · 150 real rankings |
 
 ## Get started
 
