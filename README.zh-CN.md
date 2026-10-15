@@ -230,4 +230,4 @@ python server.py                                 # MCP（12 工具）
 
 [GlueGPT](https://github.com/GlueGPT) · [jvligyh](https://github.com/jvligyh)
 
-本项目以 **MIT License** 开源，见 [LICENSE](LICENSE)。文献内容与第三方数据（各数据库元数据、翻译与嵌入模型权重）不适用本许可，遵循各自使用条件。
+本项目以 **MIT License** 开源，见 [LICENSE](LICENSE)；第三方数据与模型权重不适用本许可，见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。

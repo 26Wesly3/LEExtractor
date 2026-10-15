@@ -229,4 +229,4 @@ Issues and pull requests are welcome. When reporting a problem, include the **ve
 
 [GlueGPT](https://github.com/GlueGPT) · [jvligyh](https://github.com/jvligyh)
 
-Released under the **MIT License** — see [LICENSE](LICENSE). Publication content and third-party data (provider metadata, translation and embedding model weights) are not covered by this licence and remain subject to their own terms.
+Released under the **MIT License** — see [LICENSE](LICENSE). Third-party data and model weights are not covered by it — see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
