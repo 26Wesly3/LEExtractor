@@ -2,6 +2,12 @@
 
 # LEExtractor
 
+<a id="preview"></a>
+
+![LEExtractor product concept: a literature search on embodied AI and robot generalization, with key findings, evidence and source links](docs/assets/leextractor-hero-4k.png)
+
+*Product concept*
+
 [简体中文](README.zh-CN.md) · **English**
 
 **From a fuzzy research intent to a traceable evidence chain.**
@@ -39,14 +45,6 @@ LEExtractor is built for the early exploration stage of research: it turns one f
 **Give every exploration a basis you can revisit.**
 
 > The current build is live at <https://leextractor.duckdns.org>, and the Windows portable package can be downloaded and run directly. Remaining work and limits are listed in [ROADMAP.md](ROADMAP.md) and under "Scope and limits" below.
-
-<a id="preview"></a>
-
-## Product preview
-
-![LEExtractor product concept: a literature search on embodied AI and robot generalization, with key findings, evidence and source links](docs/assets/leextractor-hero-4k.png)
-
-*Product concept*
 
 **Four-step workflow**
 

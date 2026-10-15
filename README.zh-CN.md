@@ -2,6 +2,12 @@
 
 # LEExtractor
 
+<a id="preview"></a>
+
+![LEExtractor 产品概念：围绕具身智能与机器人泛化检索文献，阅读关键发现、证据与来源](docs/assets/leextractor-hero-4k.png)
+
+*产品概念*
+
 **简体中文** · [English](README.en.md)
 
 **从模糊的研究意图，走向可追溯的文献证据。**
@@ -39,14 +45,6 @@ LEExtractor 面向科研前期探索：把一句模糊的研究意图，变成�
 **让每一次探索，都留下可回看的依据。**
 
 > 当前版本已在公网运行（<https://leextractor.duckdns.org>），Windows 便携版可直接下载使用；未完成项见 [ROADMAP.md](ROADMAP.md) 与下文「能力边界」。
-
-<a id="preview"></a>
-
-## 产品预览
-
-![LEExtractor 产品概念：围绕具身智能与机器人泛化检索文献，阅读关键发现、证据与来源](docs/assets/leextractor-hero-4k.png)
-
-*产品概念*
 
 **四步工作流**
 
