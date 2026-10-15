@@ -19,8 +19,8 @@ Search literature. Trace evidence. Build understanding.
   <img src="https://img.shields.io/github/v/release/26Wesly3/LEExtractor?style=flat&labelColor=18181B&color=0B4FA1&label=latest%20release" alt="Latest release">
   <img src="https://img.shields.io/github/downloads/26Wesly3/LEExtractor/total?style=flat&labelColor=18181B&color=0B4FA1&label=total%20downloads" alt="Total downloads">
   <img src="https://img.shields.io/github/stars/26Wesly3/LEExtractor?style=flat&labelColor=18181B&color=334155&label=stars" alt="GitHub stars">
-  <img src="https://img.shields.io/github/license/26Wesly3/LEExtractor?style=flat&labelColor=18181B&color=3DA639" alt="License">
-  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-334155?style=flat&labelColor=18181B" alt="Supported platforms">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-3DA639?style=flat&labelColor=18181B" alt="License: MIT"></a>
+  <a href="#start"><img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-334155?style=flat&labelColor=18181B" alt="Supported platforms"></a>
 </p>
 
 [在线体验](https://leextractor.duckdns.org) · [产品预览](#preview) · [核心体验](#experience) · [开始使用](#start) · [实测数据](#benchmark) · [路线图](#roadmap) · [参与贡献](#contributing)
