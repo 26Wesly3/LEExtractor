@@ -4,8 +4,6 @@
 
 [简体中文](README.zh-CN.md) · **English**
 
-> This file is also served as the repository's default `README.md`, so the GitHub home page shows exactly this English readme.
-
 **From a fuzzy research intent to a traceable evidence chain.**
 
 Search literature. Trace evidence. Build understanding.
