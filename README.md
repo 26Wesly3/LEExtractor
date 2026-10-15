@@ -1,113 +1,226 @@
+<div align="center">
+
 # LEExtractor
 
 [简体中文](README.zh-CN.md) · **English**
 
-From research questions to traceable literature evidence.
+> This file is also served as the repository's default `README.md`, so the GitHub home page shows exactly this English readme.
 
-**v0.9.14** connects the v0.9.6 interface design to the v0.9.5 algorithms with Vue 3, Vuetify and a local FastAPI service, and adds concurrent provider fetching, per-stage search timings, a one-line result summary and a live home operating overview. The existing Streamlit and MCP entries remain available.
+**From a fuzzy research intent to a traceable evidence chain.**
+
+Search literature. Trace evidence. Build understanding.
+
+<p>
+  <img src="https://img.shields.io/badge/status-public%20beta-64748B?style=flat&labelColor=18181B" alt="Status: public beta">
+  <img src="https://img.shields.io/badge/focus-literature%20%26%20evidence-334155?style=flat&labelColor=18181B" alt="Focus: literature and evidence">
+  <img src="https://img.shields.io/badge/license-MIT-3DA639?style=flat&labelColor=18181B" alt="License: MIT">
+  <img src="https://img.shields.io/badge/version-v0.9.14-0B4FA1?style=flat&labelColor=18181B" alt="Version: v0.9.14">
+</p>
 
 <p>
   <img src="https://img.shields.io/github/v/release/26Wesly3/LEExtractor?style=flat&labelColor=18181B&color=0B4FA1&label=latest%20release" alt="Latest release">
   <img src="https://img.shields.io/github/downloads/26Wesly3/LEExtractor/total?style=flat&labelColor=18181B&color=0B4FA1&label=total%20downloads" alt="Total downloads">
   <img src="https://img.shields.io/github/stars/26Wesly3/LEExtractor?style=flat&labelColor=18181B&color=334155&label=stars" alt="GitHub stars">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-3DA639?style=flat&labelColor=18181B" alt="License: MIT"></a>
+  <a href="#start"><img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-334155?style=flat&labelColor=18181B" alt="Supported platforms"></a>
 </p>
 
-| | |
-|---|---|
-| **Live demo** | <https://leextractor.duckdns.org> |
-| **Windows portable** | [LEExtractor_v0.9.14_Windows_portable.zip](download/LEExtractor_v0.9.14_Windows_portable.zip) · [Releases](https://github.com/26Wesly3/LEExtractor/releases) |
-| **Demo recording** | [real local run, 40 records](docs/demo/leextractor-demo.gif) |
-| **Benchmark** | BEIR SciFact · 5,183 candidates · 30 queries · 150 real rankings |
+[Live demo](https://leextractor.duckdns.org) · [Preview](#preview) · [Core experience](#experience) · [Get started](#start) · [Benchmark](#benchmark) · [Roadmap](#roadmap) · [Contributing](#contributing)
+
+</div>
+
+<br>
 
 ![LEExtractor in real use: enter a Chinese research intent, review the translation and per-database queries, run the multi-provider search, then browse results, the evidence landscape, candidate questions, human screening and export](docs/demo/leextractor-demo.gif)
 
 *Real screen recording · hot sample "LLM hallucination" · 40 real records · 3 providers in 8.0 s (2 succeeded / 1 rate-limited) · [lighter GIF](docs/demo/leextractor-demo-small.gif)*
 
+---
+
+LEExtractor is built for the early exploration stage of research: it turns one fuzzy research intent into a literature search that has a **path, an identity and a basis**, and leaves the whole trail reviewable by the next person.
+
+**Give every exploration a basis you can revisit.**
+
+> The current build is live at <https://leextractor.duckdns.org>, and the Windows portable package can be downloaded and run directly. Remaining work and limits are listed in [ROADMAP.md](ROADMAP.md) and under "Scope and limits" below.
+
+<a id="preview"></a>
+
+## Product preview
+
 ![LEExtractor product concept: a literature search on embodied AI and robot generalization, with key findings, evidence and source links](docs/assets/leextractor-hero-4k.png)
 
 *Product concept*
+
+**Four-step workflow**
 
 ![Four-step concept workflow: ask a research question, search for relevant studies, read key findings, and verify evidence against the original source](docs/assets/leextractor-workflow-4k.png)
 
 *Exploration flow*
 
-> **The complete readme is bilingual:** [README.en.md](README.en.md) (English) and [README.zh-CN.md](README.zh-CN.md) (简体中文). This page is the short English entry point — the full versions add the badge header, the four-step table, the per-provider notes and the roadmap.
+| Step | What you do | What the system leaves behind |
+| --- | --- | --- |
+| **01 · Ask** | Enter a research topic or a specific question | Intent split into object / method / task / scenario; Chinese directions translated locally, translation editable |
+| **02 · Search** | Run a multi-provider search | Per-database queries are shown first; six providers fetched concurrently, deduplicated on canonical identifiers, per-provider status visible |
+| **03 · Read** | Browse records and their discovery basis | Each record shows provider, score context and discovery route (search / citation / coupling / co-citation) |
+| **04 · Verify** | Return to the source and the evidence | Citation evidence graph, directed evidence paths, external links, and exports that import into Zotero |
+
+<a id="experience"></a>
+
+## Core experience
+
+The capabilities below are **already implemented**, not planned; each one states its own limits.
+
+### Search around a research question
+
+Start from one natural-language description and see which words the system placed in which slots, and what each database will receive. Unrecognised slots are shown as "unrecognised" instead of inventing a plausible word; when a Chinese question is paired with English keywords, the queries keep the keywords and the parse is recorded only.
+
+### Give failure a voice
+
+Rate limits, timeouts and auth failures are marked per provider, cache hits keep their native identity, and nothing collapses into "0 papers". `TRUNCATED` (caller-side limit, results usable) and `PARTIAL` (interrupted, must not be used as coverage proof) stay distinct. The diagnostics panel expands into per-stage timings and per-provider status.
+
+### Keep the discovery trail
+
+Every record carries a discovery trace: which provider, which round, which query, which score, which evidence. Citation edges are stored separately from derived and semantic edges, and PageRank / evidence paths run on citation edges only.
+
+### Derive candidate questions from evidence
+
+Three generators — combination gap, coverage gap, unfollowed result — each producing rationale, supporting papers, nearest existing work, risks and a suggested next query, and **always labelled as a hypothesis to verify**. Below six records, no question is produced at all.
+
+### Hand the judgement and the artefacts back to you
+
+Ranking is a ranking signal, not a screening decision: human screening, threshold calibration and full-text retrieval each keep their own facts. The evidence pack contains `AGENT_HANDOFF.md`, `discovery_trace.jsonl`, `evidence_graph.json`, `landscape.json` and `questions.json`, ready for Zotero or for Codex / Qoder / WorkBuddy.
+
+<a id="start"></a>
 
 ## Get started
 
-**Windows portable (recommended).** [Download the ZIP](download/LEExtractor_v0.9.14_Windows_portable.zip), extract it fully and double-click `Start_LEExtractor.bat`. It creates a local environment if needed, prepares both local models (downloading missing files), and opens <http://127.0.0.1:8012>. Keep the window open during the first download; later launches reuse the cache. The GitHub source and releases include the built interface, so **running needs no Node.js, no GPU and no inference API key**.
+### Live demo
 
-**From source.** Install 64-bit Python 3.10+ (3.12 recommended) with Python on PATH, then clone or download this repository via Code → Download ZIP:
+<https://leextractor.duckdns.org>
+
+### Windows portable (recommended)
+
+1. Download and **fully extract** [`LEExtractor_v0.9.14_Windows_portable.zip`](download/LEExtractor_v0.9.14_Windows_portable.zip) (or grab it from [Releases](https://github.com/26Wesly3/LEExtractor/releases)).
+2. Double-click **`Start_LEExtractor.bat`**.
+3. The browser opens <http://127.0.0.1:8012>. Keep the console window open while using it.
+
+The launcher prefers the bundled `runtime\`, then `.venv`, then the system Python, and installs missing dependencies locally. **No Node.js, no GPU and no inference API key are needed to run it.**
+
+The minimal package ships without model weights: without them **lexical retrieval, provider filtering, evidence trails and exports all work**; only Chinese translation (≈116 MB) and semantic ranking (≈267 MB) download on first use and are cached afterwards. If port 8012 is taken, `set LEEXTRACTOR_PORT=8013` first.
+
+### From source
 
 ```powershell
+git clone https://github.com/26Wesly3/LEExtractor.git
+cd LEExtractor
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e ".[web]" -c constraints.txt
 .\.venv\Scripts\python.exe scripts\launch_web.py --port 8000
 ```
 
-On macOS/Linux, create and activate a Python virtual environment, install the same dependencies, and run `python scripts/launch_web.py --port 8000`. Add `--skip-models` to open the UI without preparing models. Preparation failures are reported and leave the UI available for manual English queries and lexical ranking. If the browser does not open, visit the URL manually. Use `启动Web版.bat --port 8001` for an occupied port; Ctrl+C stops the service.
+macOS / Linux: same, with `python scripts/launch_web.py --port 8000`. Add `--skip-models` to open the UI only.
 
-The standard source ZIP excludes weights. The separate model-inclusive handoff ZIP contains all runtime weights and tokenizers; the launcher automatically selects its `models` directory. Initial Python dependency installation and actual literature retrieval still require internet access.
+### Configure providers
 
-Use **Create offline demo** to explore a separate, clearly labeled synthetic project. For research, create a regular project and configure provider credentials in Settings or a local environment file. Provider availability and rate limits affect coverage.
+S2 / OpenAlex / SerpApi / Unpaywall credentials go in the in-app **Settings** page, or copy `.env.example` to `.env`. **Never commit `.env`.** Without keys, rate limits can make results incomplete — the diagnostics panel tells you why.
 
-## Local research translation and semantic ranking
+### An example question
 
-The Web workflow translates Chinese research directions with a local quantized Marian model and lets you edit the English query. The direction drives both retrieval and ranking. CPU FastEmbed uses `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`, encoding titles together with abstract chunks. Missing abstracts are labeled. Runtime files total about 116 MB for translation and 267 MB for embeddings including tokenizers. Pinned revisions and SHA-256 inventories are in `litsearch/translation_pins.json` and `litsearch/embedding_pins.json`.
+```text
+Hallucination and retrieval-augmented generation in large language models
+```
 
-Translation normally uses `~/.cache/leextractor`; embeddings reuse `fastembed_cache` under the system temporary directory. Override them with `LEEXTRACTOR_MODEL_DIR` and `LEEXTRACTOR_EMBEDDING_CACHE`. Bundled models are selected automatically unless these variables are already set.
+→ Translated and expanded into per-database queries: an OpenAlex keyword string, an arXiv field-qualified expression, and Crossref metadata completion — each counted and deduplicated separately.
 
-Six selectable providers include OpenReview public submissions and Google Scholar via SerpApi. CCF 2026 venue classifications support A/B/C filtering; venue rank does not verify paper acceptance or full-paper eligibility. Google Scholar requires a SerpApi key and is selected by default only when configured. Its snippets are not full abstracts. Provider rate limits and access challenges can prevent retrieval; coverage is not guaranteed.
-
-## Current workflow
-
-1. Enter a topic, research direction and year range. Inspect the backend query plan before starting a search.
-2. Browse and filter actual project records, inspect metadata, discovery trails and the context of relevance scores.
-3. Select seeds for citation expansion or BC/CC similarity. Background tasks expose real stage/count progress, request budgets and cancellation.
-4. Inspect the corpus landscape and graph paths; review evidence-linked candidate questions.
-5. Make human screening decisions, label calibration examples and obtain available open full texts.
-6. Export CSV, RIS, BibTeX, session JSON, PRISMA flow data or an evidence pack. Restore sessions as separate projects.
-
-Project state, task checkpoints and generated files are stored locally in `.web-data`. Browser tabs use revision checks to prevent stale overwrites. The service binds to loopback and does not provide accounts or authentication for a public multiuser deployment.
-
-Search queries and publication identifiers are sent to the selected literature providers. Full-text requests go to open-access sources. Credential responses contain configured flags only. This version does not call an LLM service. Removing the local data directory after stopping the service removes saved Web projects and exports.
+<a id="benchmark"></a>
 
 ## Benchmark
+
+BEIR SciFact test, all 5,183 candidates, 30 queries sampled with seed 42 out of 300, 150 real rankings; labels come straight from the public qrels — no generated labels, no trained model, no tuning against the score.
 
 | System | nDCG@20 ↑ | Recall@50 ↑ | P@20 ↑ | MRR@50 ↑ |
 | --- | ---: | ---: | ---: | ---: |
 | **Current hybrid ranking** | **0.6800** | **0.8767** | **0.0467** | **0.6379** |
 | BM25 keyword reference | 0.6631 | 0.8433 | 0.0450 | 0.6367 |
 | Previous keyword ranking | 0.5941 | 0.8100 | 0.0450 | 0.5339 |
+| Local vectors, titles only | 0.5438 | 0.7300 | 0.0350 | 0.5040 |
+| Local vectors, title + abstract | 0.4856 | 0.7367 | 0.0383 | 0.4268 |
 
-BEIR SciFact test, all 5,183 candidates, 30 queries sampled with seed 42 out of 300, 150 real rankings, labels from the public qrels — no generated labels, no trained model, no tuning against the score. Against the project's own previous keyword ranking nDCG@20 improves by **+0.0859** (paired bootstrap 95% interval `[0.0080, 0.1773]`, does not cross zero); against **BM25** the gain is only +0.0169 with interval `[-0.0612, 0.1015]`, which crosses zero, so **we do not claim a stable win over BM25**.
+**How to read it (we do not overclaim)**: against the project's own previous keyword ranking, nDCG@20 improves by **+0.0859**, paired bootstrap 95% interval `[0.0080, 0.1773]` (does not cross zero). Against **BM25** the gain is only +0.0169 with interval `[-0.0612, 0.1015]` — **it crosses zero, so we do not claim a stable win over BM25.** Full per-query results and the replay procedure are in [`benchmarks/results/scifact-pilot-2026-10-10/`](benchmarks/results/scifact-pilot-2026-10-10/SUMMARY.zh-CN.md).
 
 ```powershell
 python -m scripts.run_public_benchmark --queries 30 --seed 42   # --queries 0 for all 300
 ```
 
-## Scope and evidence
+## Scope and limits
 
-Relevance is a local semantic and lexical ranking signal, not a screening decision or proof of research quality. Citation edges and derived similarity relations are counted separately. Failed, canceled, budget-limited and truncated retrievals remain distinguishable. Full-text inclusion requires a human reading confirmation.
+- Relevance is a **ranking signal**, not a screening decision or a quality judgement.
+- Semantic reranking only reorders what upstream already returned; it **cannot recover papers the providers never returned**.
+- Counts are records/reports; multiple reports of one study are not merged to study level.
+- Automated full-text synthesis, novelty scoring, Zotero two-way sync, institutional access and multi-user isolation are **not implemented**.
+- This is a single-user local (or single-instance cloud) workflow, not a multi-tenant service.
 
-Local title-and-abstract embeddings rerank provider candidates; they cannot recover papers absent from upstream results. Automated full-text synthesis, innovation scoring and Zotero synchronization are planned. Candidate questions and clusters summarize the available corpus; they are not verified scientific conclusions. Counts describe records/reports rather than deduplicated studies.
+<a id="roadmap"></a>
+
+## Roadmap
+
+| Status | Content |
+| --- | --- |
+| **In progress** | Real-scenario user testing and data collection; semantic enhancement under comparable conditions (RRF / weighted sum ablation) |
+| `pending_external` | Frozen 3–5 case datasets with human gold labels; real provider smoke with credentials |
+| `planned` | Five retrieval baselines; Graph Benchmark; full-corpus vector recall |
+| `deferred` | Zotero two-way sync; institutional access; GROBID full-text structuring; decoupling screening from PRISMA; multi-user isolation |
+
+The full three-state list is in [ROADMAP.md](ROADMAP.md); per-version changes are in [CHANGES.md](CHANGES.md).
+
+## Layout
+
+```text
+app.py                  Streamlit entry point (kept)
+litsearch/              domain algorithms and providers
+  sources.py            six-provider fetching and unified transport
+  retrieval.py          RetrievalResult status semantics
+  filters.py            lexical + semantic fused ranking
+  intent.py             research intent parsing and per-database queries
+  prisma.py             two-stage screening and flow counts
+  landscape.py          research landscape
+  questions.py          candidate research questions
+  web/                  FastAPI service and job management
+web/                    Vue 3 + Vuetify workspace source
+scripts/                launch, packaging, benchmark
+benchmarks/             evaluation data, guides and measured results
+docs/                   DevLog, ADRs, image assets, demo recording
+download/               Windows portable download
+```
 
 ## Development and validation
 
-- [Setup and current capabilities](README.dev.md)
-- [Web integration and API boundaries](docs/web-integration.md)
-- [Architecture](ARCHITECTURE.md) · [changes](CHANGES.md) · [roadmap](ROADMAP.md) · [team handoff](ONBOARDING.md) · [deployment](DEPLOYMENT.md)
-- [Per-version engineering records](docs/devlog/)
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q          # offline tests
+.\.venv\Scripts\ruff.exe check .                 # lint
+python -m scripts.launch_web --port 8000         # web workspace
+python server.py                                 # MCP (12 tools)
+```
 
-Benchmark pilot: see [public SciFact ranking comparisons, live topic snapshots and human annotation](benchmarks/PILOT_GUIDE.md). [First pilot results and handoff, 2026-10-10](benchmarks/results/scifact-pilot-2026-10-10/SUMMARY.zh-CN.md): 5,183 candidates and 30 seeded test questions, with frozen rankings and per-query metrics for offline rescoring.
+Frontend: `cd web && npm ci && npm run dev`; before releasing run `npm run build` then `python scripts/sync_web_assets.py`.
 
-Frontend development: `cd web`, `npm ci`, `npm run dev`; start FastAPI separately on port 8000. The Vite proxy forwards `/api`. Before releasing, run `npm run build`, then `python scripts/sync_web_assets.py` from the repository root.
+| Document | Contents |
+| --- | --- |
+| [CHANGES.md](CHANGES.md) | Every change from v0.3.0 to the current release |
+| [CHANGELOG.md](CHANGELOG.md) | User-facing version-level changes |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Modules and invariants |
+| [DEPLOYMENT.md](DEPLOYMENT.md) | Server deployment, rollback and health checks |
+| [ONBOARDING.md](ONBOARDING.md) | Team handoff |
+| [docs/devlog/](docs/devlog/) | Per-version engineering records (Before / After) |
 
-Report issues with the version, reproduction steps, expected result and actual result. Remove secrets from shared logs and sessions.
+<a id="contributing"></a>
+
+## Contributing
+
+Issues and pull requests are welcome. When reporting a problem, include the **version, reproduction steps, expected result and actual result**; remove secrets (`.env`, API keys, institutional credentials) before sharing logs or sessions.
 
 ## Contributors and licence
 
 [GlueGPT](https://github.com/GlueGPT) · [jvligyh](https://github.com/jvligyh)
 
-Publication content and third-party data remain subject to their respective terms. Released under the [MIT License](LICENSE); third-party notices are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+Released under the **MIT License** — see [LICENSE](LICENSE). Third-party data and model weights are not covered by it — see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
