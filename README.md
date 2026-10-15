@@ -83,4 +83,4 @@ Report issues with the version, reproduction steps, expected result and actual r
 
 [GlueGPT](https://github.com/GlueGPT) · [jvligyh](https://github.com/jvligyh)
 
-Publication content and third-party data remain subject to their respective terms. A repository code license has not yet been selected.
+Publication content and third-party data remain subject to their respective terms. Released under the [MIT License](LICENSE).
