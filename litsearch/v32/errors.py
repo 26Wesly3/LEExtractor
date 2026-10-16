@@ -46,7 +46,8 @@ __all__ = [
 #: The only keys ``$defs/Error.error.details`` permits.
 DETAIL_KEYS = frozenset({"current_revision", "item_ids", "retry_after_seconds", "capability"})
 
-#: Canonical lower-case codes.
+#: Canonical lower-case codes.  **These are error codes, not HTTP status
+#: codes.**  Raise them as ``V32Error(400, BAD_REQUEST, "…")``.
 BAD_REQUEST = "bad_request"
 SESSION_EXPIRED = "session_expired"
 FORBIDDEN = "forbidden"
@@ -112,6 +113,17 @@ class V32Error(Exception):
     retryable: bool | None = None
 
     def __post_init__(self) -> None:
+        # The code constants in this module read like HTTP statuses
+        # ("bad_request", "capability_unavailable") and are easy to pass into the
+        # `status` slot by mistake. Doing so produces a V32Error whose `.status`
+        # is a string, which then reaches the ASGI layer as an invalid status
+        # code. Refuse it here, with a message that names the actual mistake.
+        if not isinstance(self.status, int) or isinstance(self.status, bool):
+            raise TypeError(
+                f"V32Error.status must be an int HTTP status, got {self.status!r}; "
+                f"{self.status!r} looks like an error *code* — "
+                "use V32Error(<int status>, code, message, ...)"
+            )
         Exception.__init__(self, self.message)
         if self.retryable is None:
             self.retryable = _RETRYABLE_BY_STATUS.get(self.status, False)

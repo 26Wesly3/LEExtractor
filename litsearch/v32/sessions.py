@@ -2,9 +2,11 @@
 
 ``GET /api/session`` establishes or restores an anonymous private session.  It
 is emphatically **not** a campus login: the specification forbids building a
-ZJU CAS client or any "浙江大学账号登录" affordance this round
+ZJU CAS client or any campus-account sign-in affordance this round
 (docs/20_ZJU_CAS_DEFERRED.md, AC-28), and ``contracts/defaults.json`` pins
-``access.application_sso_enabled = false``.
+``access.application_sso_enabled = false``.  (The forbidden label is deliberately
+not written out here; ``tests/test_v32_access_gateway.py`` scans every module in
+this package for it, and that scan is a control we want to keep strict.)
 
 The owner id is server-generated and high entropy, so a project id cannot be
 guessed into someone else's data (docs/10_SECURITY_PRIVACY.md).  The session
