@@ -5,6 +5,8 @@ import { useRoute,useRouter } from 'vue-router'
 import { request,post,queryString,isActiveJob,paperKey,safeUrl,acceptsJobSnapshot } from './api.js'
 import { EAGLE_GRID } from './eagle-grid.js'
 import HomeOverview from './HomeOverview.vue'
+import EntryChoice from './v32/EntryChoice.vue'
+import { createV32Client,errorLine } from './v32/client.js'
 import { pageEntryId, recordSearchEntryClick } from './stats.js'
 import ForceGraph from 'force-graph'
 const route=useRoute(),router=useRouter()
@@ -29,6 +31,8 @@ const reviewStage=ref('title_abstract'),decisionReason=ref(''),readConfirmed=ref
 const exportFormat=ref('evidence_pack'),exportScope=ref('corpus'),saveName=ref(''),uploadInput=ref(null)
 const keyInputs=ref({s2_api_key:'',openalex_api_key:'',serpapi_api_key:'',unpaywall_email:''}),credentialsMessage=ref('')
 const drawerOpen=ref(false),graphLayers=ref({citation:true,bibliographic_coupling:false,co_citation:false,text_similarity:false}),pathStart=ref(''),pathEnd=ref(''),pathResult=ref(null),questionSelection=ref(null)
+// 首屏两个 v3.2 主入口的状态（创建项目本身即一次请求）。
+const v32Busy=ref(false),v32Error=ref('')
 let timer=null,loadGeneration=0
 const activeJob=computed(()=>isActiveJob(job.value))
 const currentProjectPath=computed(()=>projectId.value?`/projects/${projectId.value}`:'')
