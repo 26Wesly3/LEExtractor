@@ -1,0 +1,87 @@
+{
+  "topic": "synthetic topic alpha",
+  "research_direction": "synthetic direction alpha",
+  "phase": "systematic_search",
+  "saved_at": 1700000000.0,
+  "start_time": 1699999000.0,
+  "scoping_papers": [
+    {
+      "id": "10.0000/synthetic.scope1",
+      "title": "Synthetic scoping record on topic alpha",
+      "abstract": "Synthetic abstract used only as a migration fixture.",
+      "authors": [
+        {"name": "Author A", "author_id": null}
+      ],
+      "year": 2019,
+      "venue": "Journal of Synthetic Studies",
+      "doi": "10.0000/synthetic.scope1",
+      "citation_count": 12,
+      "reference_count": 20,
+      "citation_ids": [],
+      "reference_ids": [],
+      "source": "synthetic_openalex",
+      "url": null,
+      "relevance_score": 0.71,
+      "topics": [],
+      "canonical_id": "10.0000/synthetic.scope1"
+    }
+  ],
+  "search_papers": [
+    {
+      "id": "10.0000/synthetic.a1",
+      "title": "Synthetic search record A on topic alpha",
+      "abstract": "Synthetic abstract A.",
+      "authors": [
+        {"name": "Author A", "author_id": null},
+        {"name": "Author B", "author_id": null}
+      ],
+      "year": 2021,
+      "venue": "Journal of Synthetic Studies",
+      "doi": "10.0000/synthetic.a1",
+      "citation_count": 40,
+      "reference_count": 33,
+      "citation_ids": [],
+      "reference_ids": [],
+      "source": "synthetic_openalex",
+      "url": null,
+      "relevance_score": 0.88,
+      "topics": [],
+      "canonical_id": "10.0000/synthetic.a1"
+    }
+  ],
+  "similar_papers": [
+    {
+      "paper": {
+        "id": "10.0000/synthetic.sim1",
+        "title": "Synthetic similar record on topic alpha",
+        "abstract": null,
+        "authors": [{"name": "Author C", "author_id": null}],
+        "year": 2020,
+        "venue": "Synthetic Venue",
+        "doi": "10.0000/synthetic.sim1",
+        "citation_count": 5,
+        "reference_count": 8,
+        "citation_ids": [],
+        "reference_ids": [],
+        "source": "synthetic_semantic_scholar",
+        "url": null,
+        "relevance_score": 0.4,
+        "topics": [],
+        "canonical_id": "10.0000/synthetic.sim1"
+      },
+      "score": 0.4,
+      "method": "tfidf"
+    }
+  ],
+  "key_journals": [
+    {"name": "Journal of Synthetic Studies", "count": 3}
+  ],
+  "key_authors": [
+    {"name": "Author A", "count": 2}
+  ],
+  "year_distribution": {
+    "2019": 1,
+    "2020": 1,
+    "2021": 1
+  }
+}

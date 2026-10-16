@@ -23,23 +23,46 @@ from litsearch.web.repository import APIError, atomic_json, now
 #: default 1 — see docs/decisions/ADR-006-small-server-concurrency.md).
 RETRIEVAL_LOCK = threading.Lock()
 
-#: Process-wide retrieval slots. Deliberately process-wide, not per JobManager:
-#: the invariant this replaces was "one retrieval at a time per process", and a
-#: 2 GB host must not run two searches just because two FastAPI app objects
-#: exist (tests, reload, several uvicorn workers).
-_GLOBAL_SLOTS: threading.BoundedSemaphore | None = None
-_GLOBAL_SLOTS_CAPACITY = 0
+#: Process-wide retrieval slots, **keyed by capacity**.  Deliberately process-wide
+#: rather than per JobManager: the invariant is "one retrieval at a time per
+#: process", and a 2 GB host must not run two searches just because two FastAPI
+#: app objects exist (tests, reload, several uvicorn workers).
+#:
+#: Keyed rather than replaced, because a JobManager captures the semaphore once at
+#: construction.  Replacing the module global whenever
+#: ``LEEXTRACTOR_MAX_ACTIVE_JOBS`` changed meant an app built before the change
+#: held one semaphore and an app built after it held another (with the first
+#: orphaned but still held by whoever had acquired it): three live semaphores, and
+#: the documented cap enforced only within whichever app you happened to hold.
+#: Caching per capacity keeps ``retrieval_slots() is retrieval_slots()`` true for a
+#: fixed environment and never invalidates a semaphore somebody already holds, so
+#: the limit an app obeys no longer depends on test or start-up order.
+_GLOBAL_SLOTS: dict[int, threading.BoundedSemaphore] = {}
+_GLOBAL_SLOTS_LOCK = threading.Lock()
 
 
 def retrieval_slots() -> threading.BoundedSemaphore:
-    """The shared retrieval semaphore, sized by LEEXTRACTOR_MAX_ACTIVE_JOBS."""
-    global _GLOBAL_SLOTS, _GLOBAL_SLOTS_CAPACITY
+    """The shared retrieval semaphore for the current capacity setting."""
     from litsearch import config
     capacity = config.max_active_search_jobs()
-    if _GLOBAL_SLOTS is None or capacity != _GLOBAL_SLOTS_CAPACITY:
-        _GLOBAL_SLOTS = threading.BoundedSemaphore(capacity)
-        _GLOBAL_SLOTS_CAPACITY = capacity
-    return _GLOBAL_SLOTS
+    with _GLOBAL_SLOTS_LOCK:
+        slots = _GLOBAL_SLOTS.get(capacity)
+        if slots is None:
+            slots = threading.BoundedSemaphore(capacity)
+            _GLOBAL_SLOTS[capacity] = slots
+        return slots
+
+
+def reset_retrieval_slots() -> None:
+    """Drop the cached semaphores.  For tests that must start from a clean slate.
+
+    Not needed to keep an env-var change order-independent — the per-capacity
+    cache already makes restoring the old value return the original semaphore —
+    but useful when a test wants to observe construction from scratch.
+    """
+    with _GLOBAL_SLOTS_LOCK:
+        _GLOBAL_SLOTS.clear()
+
 TERMINAL = {"completed", "partial", "failed", "canceled"}
 PARTIAL_REASONS = {"low_yield", "max_rounds", "truncated", "budget_exhausted", "api_failure"}
 

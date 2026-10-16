@@ -5,6 +5,8 @@ import { useRoute,useRouter } from 'vue-router'
 import { request,post,queryString,isActiveJob,paperKey,safeUrl,acceptsJobSnapshot } from './api.js'
 import { EAGLE_GRID } from './eagle-grid.js'
 import HomeOverview from './HomeOverview.vue'
+import EntryChoice from './v32/EntryChoice.vue'
+import { createV32Client,errorLine } from './v32/client.js'
 import { pageEntryId, recordSearchEntryClick } from './stats.js'
 import ForceGraph from 'force-graph'
 const route=useRoute(),router=useRouter()
@@ -29,6 +31,8 @@ const reviewStage=ref('title_abstract'),decisionReason=ref(''),readConfirmed=ref
 const exportFormat=ref('evidence_pack'),exportScope=ref('corpus'),saveName=ref(''),uploadInput=ref(null)
 const keyInputs=ref({s2_api_key:'',openalex_api_key:'',serpapi_api_key:'',unpaywall_email:''}),credentialsMessage=ref('')
 const drawerOpen=ref(false),graphLayers=ref({citation:true,bibliographic_coupling:false,co_citation:false,text_similarity:false}),pathStart=ref(''),pathEnd=ref(''),pathResult=ref(null),questionSelection=ref(null)
+// 首屏两个 v3.2 主入口的状态（创建项目本身即一次请求）。
+const v32Busy=ref(false),v32Error=ref('')
 let timer=null,loadGeneration=0
 const activeJob=computed(()=>isActiveJob(job.value))
 const currentProjectPath=computed(()=>projectId.value?`/projects/${projectId.value}`:'')
@@ -208,6 +212,22 @@ async function enterWorkspace(){
     if(main){const arrival=main.animate([{opacity:0,transform:'perspective(1000px) translateZ(-150px) translateY(24px)',filter:'blur(6px)'},{opacity:1,transform:'perspective(1000px) translateZ(0) translateY(0)',filter:'blur(0px)'}],{duration:620,easing:'cubic-bezier(.16,1,.3,1)',fill:'both'});await arrival.finished;arrival.cancel()}
   }catch(e){/* 动画失败不阻断导航 */}
   entering.value=false}
+// 首屏两个主入口直接进入 v3.2 流程：先创建项目，再进入对应阶段
+// （研究方向 → 研究起点并在其中发起 /discover；已有文献 → 研究起点中的上传面板）。
+async function startV32Entry({mode}={}){
+  if(v32Busy.value)return
+  v32Busy.value=true;v32Error.value=''
+  try{
+    const entryMode=mode==='pdf'?'pdf':'topic'
+    const client=createV32Client()
+    await client.session()
+    const created=await client.createProject({name:entryMode==='pdf'?t('已有文献项目','Existing literature project'):t('研究方向项目','Research direction project'),entry_mode:entryMode})
+    if(entryMode==='topic')recordSearchEntryClick(pageEntryId()).catch(()=>null)
+    await router.push(`/v32/projects/${encodeURIComponent(created.project_id)}/anchors`)
+  }catch(error){
+    // 失败只显示一行状态，不阻断首页其余内容。
+    v32Error.value=errorLine(error,t('未能创建项目，请确认本地服务仍在运行。','The project could not be created; check that the local service is running.'))
+  }finally{v32Busy.value=false}}
 function providerNames(paper){const list=(paper?.providers||[]).map(sourceLabel).filter(Boolean);return (list.length?list:[sourceLabel(paper?.source)]).filter(Boolean).join(' · ')||'—'}
 function identifierText(paper){const ids=paper?.identifiers||{};const rows=[['OpenAlex',ids.openalex_id],['arXiv',ids.arxiv_id],['S2',ids.semantic_scholar_id],['PMID',ids.pmid],['OpenReview',ids.openreview_id],['DBLP',ids.dblp_key]].filter(([,value])=>value);return rows.length?rows.map(([name,value])=>`${name} ${value}`).join(' · '):(paper?.canonical_id||'—')}
 function historyLine(row){if(!row||typeof row!=='object')return String(row);const parts=[row.at,row.stage?label(row.stage):'',row.decision?label(row.decision):'',row.reason].filter(Boolean);return parts.length?parts.join(' · '):JSON.stringify(row)}
@@ -261,11 +281,15 @@ onBeforeUnmount(()=>{clearTimeout(timer);stopEagle();stopGraph()})
 
     <template v-else-if="page==='home'">
       <section class="cover" :class="{'is-entering':entering}" @pointermove="rotorMove" @pointerleave="rotorReset"><button class="hero-button" @click="enterWorkspace()" :aria-label="t('开始探索','Start exploring')"><span class="wordmark"><span>LEE</span><span class="x-slot"><span id="rotor" class="rotor"/></span><span>tractor</span></span><span class="invitation">{{t('惟学无际，际于天地 · 点击开始探索','Knowledge without limits · Begin exploring')}}</span></button><div id="eagle" class="eagle" role="img" :aria-label="t('动态字符版求是鹰','Animated Qiushi eagle character art')"><canvas id="eagleCanvas" width="640" height="400" aria-hidden="true"/></div></section>
-      <section class="home-band"><div class="logo-band"><span>{{t('参赛单位','Affiliation')}}</span><img src="/assets/zju-wordmark.png" :alt="t('浙江大学','Zhejiang University')"/><span class="home-tag">{{t('可追溯的文献探索','Traceable literature exploration')}}</span></div></section>
-      <section class="home-band"><p class="eyebrow">LITERATURE · EVIDENCE · EXPLORATION</p><h2>{{t('让每一次探索，留下依据。','Keep the evidence behind every discovery.')}}</h2><p class="home-copy">{{t('从多来源检索走向引文扩展，在证据版图中比较方向，由你完成筛选与判断。记录与发现轨迹一起保存，研究过程可以复核。','Search across sources, expand citation networks and compare directions in an evidence landscape. Make your own screening decisions. Records and discovery trails remain available for review.')}}</p><div class="actions"><v-btn size="large" color="primary" to="/search" @click="recordSearchEntryClick(pageEntryId()).catch(()=>null)">{{t('开始检索','Start a search')}}</v-btn><v-btn size="large" variant="outlined" @click="loadDemo" :loading="busy">{{t('创建离线演示项目','Create offline demo')}}</v-btn><v-btn size="large" variant="text" to="/projects">{{t('恢复已有项目','Resume a project')}}</v-btn></div></section>
-      <section class="home-band"><div class="cols-3"><article class="feature"><span>01 / DISCOVERY</span><h3>{{t('查找与扩展','Search and expand')}}</h3><p>{{t('检索来源独立计数，强标识去重，使用真实引文和参考文献继续探索。','Provider counts remain separate. Strong identifiers deduplicate records. Expand with observed citations and references.')}}</p></article><article class="feature"><span>02 / UNDERSTANDING</span><h3>{{t('关系与证据','Relationships and evidence')}}</h3><p>{{t('查看来源、评分上下文、发现轨迹和当前语料的研究版图。','Inspect sources, score contexts, discovery trails and the corpus landscape.')}}</p></article><article class="feature"><span>03 / HANDOFF</span><h3>{{t('判断与交接','Decide and hand off')}}</h3><p>{{t('人工筛选、标定与全文获取各自保留事实，导出可复核的证据包。','Screening, calibration and full-text retrieval preserve distinct facts. Export a reviewable evidence pack.')}}</p></article></div></section>
-      <HomeOverview :lang="lang"/>
+      <EntryChoice :lang="lang" :busy="v32Busy" :error="v32Error" @select="startV32Entry"/>
       <section class="home-band"><div class="row-between"><h2>{{t('最近项目','Recent projects')}}</h2><router-link to="/projects">{{t('查看全部 →','View all →')}}</router-link></div><div v-if="projects.length" class="cols-3"><router-link v-for="p in projects.slice(0,3)" :key="p.project_id" :to="`/projects/${p.project_id}/results`" class="project-card"><h3>{{p.name||p.topic}}</h3><p>{{p.topic}}</p><span>{{p.demo?t('模拟项目','Demo project'):t('研究项目','Research project')}} · {{display(p.updated_at)}}</span></router-link></div><p v-else class="muted">{{t('暂无项目。开始检索或创建隔离演示项目。','No projects yet. Start a search or create an isolated demo.')}}</p></section>
+      <section class="home-band"><div class="logo-band"><span>{{t('参赛单位','Affiliation')}}</span><img src="/assets/zju-wordmark.png" :alt="t('浙江大学','Zhejiang University')"/><span class="home-tag">{{t('可追溯的文献探索','Traceable literature exploration')}}</span></div></section>
+      <section class="home-band"><p class="eyebrow">LITERATURE · EVIDENCE · EXPLORATION</p><h2>{{t('让每一次探索，留下依据。','Keep the evidence behind every discovery.')}}</h2><p class="home-copy">{{t('从多来源检索走向引文扩展，在证据版图中比较方向，由你完成筛选与判断。记录与发现轨迹一起保存，研究过程可以复核。','Search across sources, expand citation networks and compare directions in an evidence landscape. Make your own screening decisions. Records and discovery trails remain available for review.')}}</p><div class="actions"><span class="muted">{{t('旧版入口（保留兼容）：','Legacy entries (kept for compatibility):')}}</span><v-btn variant="text" to="/search" @click="recordSearchEntryClick(pageEntryId()).catch(()=>null)">{{t('开始检索','Start a search')}}</v-btn><v-btn variant="text" @click="loadDemo" :loading="busy">{{t('创建离线演示项目','Create offline demo')}}</v-btn><v-btn variant="text" to="/projects">{{t('恢复已有项目','Resume a project')}}</v-btn></div></section>
+      <section class="home-band"><div class="cols-3"><article class="feature"><span>01 / DISCOVERY</span><h3>{{t('查找与扩展','Search and expand')}}</h3><p>{{t('检索来源独立计数，强标识去重，使用真实引文和参考文献继续探索。','Provider counts remain separate. Strong identifiers deduplicate records. Expand with observed citations and references.')}}</p></article><article class="feature"><span>02 / UNDERSTANDING</span><h3>{{t('关系与证据','Relationships and evidence')}}</h3><p>{{t('查看来源、评分上下文、发现轨迹和当前语料的研究版图。','Inspect sources, score contexts, discovery trails and the corpus landscape.')}}</p></article><article class="feature"><span>03 / HANDOFF</span><h3>{{t('判断与交接','Decide and hand off')}}</h3><p>{{t('人工筛选、标定与全文获取各自保留事实，导出可复核的证据包。','Screening, calibration and full-text retrieval preserve distinct facts. Export a reviewable evidence pack.')}}</p></article></div></section>
+      <div data-home-secondary>
+        <p class="home-band muted">{{t('以下为运行概况与项目里程碑，属于次要信息，不占据上方的研究入口。','The operating overview and milestones below are secondary information and do not occupy the research entries above.')}}</p>
+        <HomeOverview :lang="lang"/>
+      </div>
     </template>
 
     <div v-else-if="!projectError" class="container container-wide">

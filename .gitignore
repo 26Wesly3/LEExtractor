@@ -36,6 +36,10 @@ tests/_workspace_tmp/
 _pip_tmp/
 pytest-cache-files-*/
 
+# Ad-hoc scratch files. An untracked working tree is shared by every agent in
+# this session, so a throwaway probe file must never be able to reach a commit.
+.tmp_*
+
 # IDE
 .vscode/
 .idea/

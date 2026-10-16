@@ -1,0 +1,40 @@
+{
+  "document_version": "3.2",
+  "checked_at": "2026-10-16",
+  "verification_scope": "official_public_documentation_not_authenticated_entitlement",
+  "links": [
+    {
+      "id": "carsi",
+      "label": "通过学校访问 CARSI",
+      "url": "https://ds.carsi.edu.cn/",
+      "kind": "institution_link",
+      "granularity": "portal",
+      "auth_required": true,
+      "availability": "entry_only",
+      "verified": true,
+      "source_url": "https://libweb.zju.edu.cn/2022/0408/c39478a2515130/page.htm"
+    },
+    {
+      "id": "zju_library",
+      "label": "图书馆数据库导航",
+      "url": "https://libdb.zju.edu.cn/s/lib/libtb/",
+      "kind": "institution_link",
+      "granularity": "portal",
+      "auth_required": false,
+      "availability": "entry_only",
+      "verified": true,
+      "source_url": "https://libweb.zju.edu.cn/2022/0408/c39478a2515130/page.htm"
+    },
+    {
+      "id": "zju_sciencedirect",
+      "label": "ScienceDirect 学校访问说明",
+      "url": "https://libdb.zju.edu.cn/s/lib/libtb/show/401",
+      "kind": "institution_link",
+      "granularity": "database_guide",
+      "auth_required": false,
+      "availability": "entry_only",
+      "verified": true,
+      "source_url": "https://libdb.zju.edu.cn/s/lib/libtb/show/401"
+    }
+  ]
+}

@@ -1,0 +1,3240 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "LEExtractor incremental API",
+    "version": "3.2",
+    "description": "New contracts; preserve existing baseline routes via adapters. No campus CAS routes in this release."
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "security": [
+    {
+      "sessionCookie": []
+    }
+  ],
+  "paths": {
+    "/api/session": {
+      "get": {
+        "operationId": "getOrCreatePrivateSession",
+        "description": "Creates a private anonymous session if absent. CSRF token returned; no school authentication. Set-Cookie is HttpOnly/Secure/SameSite=Lax.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/SessionStatus"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Budget or queue exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Capability not configured or temporarily unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/capabilities": {
+      "get": {
+        "operationId": "getCapabilities",
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Capabilities"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Budget or queue exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Capability not configured or temporarily unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects": {
+      "post": {
+        "operationId": "createProject",
+        "description": "",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Project"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Budget or queue exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Capability not configured or temporarily unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./domain.schema.json#/$defs/ProjectCreate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{pid}": {
+      "get": {
+        "operationId": "getProject",
+        "description": "",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Project"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Budget or queue exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Capability not configured or temporarily unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{pid}/discover": {
+      "post": {
+        "operationId": "discover",
+        "description": "Nonempty research_text or nonempty seed_paper_ids required. Budgeted discovery continues without user judgements.",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/JobAccepted"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Budget or queue exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Capability not configured or temporarily unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./domain.schema.json#/$defs/DiscoverRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{pid}/papers/import": {
+      "post": {
+        "operationId": "importPdfs",
+        "description": "",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/ImportBatch"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Budget or queue exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Capability not configured or temporarily unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Upload size limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported media type",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "expected_revision": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "files": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 10,
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    }
+                  }
+                },
+                "required": [
+                  "expected_revision",
+                  "files"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{pid}/imports/{import_id}": {
+      "get": {
+        "operationId": "getImport",
+        "description": "",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "import_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/ImportBatch"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Budget or queue exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Capability not configured or temporarily unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{pid}/imports/{import_id}/resolve": {
+      "post": {
+        "operationId": "resolveImport",
+        "description": "candidate_id is required for match; must be null for keep_local. Only a candidate of this item can be selected.",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "import_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/ImportBatch"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Budget or queue exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Capability not configured or temporarily unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./domain.schema.json#/$defs/ResolveRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{pid}/imports/{import_id}/retry": {
+      "post": {
+        "operationId": "retryImport",
+        "description": "",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "import_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/ImportBatch"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Budget or queue exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Capability not configured or temporarily unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./domain.schema.json#/$defs/RetryRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{pid}/judgements": {
+      "post": {
+        "operationId": "setJudgement",
+        "description": "Defaults exclusion_reason=unspecified and reason empty. Nonexcluded values require unspecified exclusion_reason. Revoking updates from full latest state.",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/JudgementSaved"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Budget or queue exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Capability not configured or temporarily unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./domain.schema.json#/$defs/JudgementRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{pid}/rerank": {
+      "post": {
+        "operationId": "rerank",
+        "description": "",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/JobAccepted"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Budget or queue exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Capability not configured or temporarily unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./domain.schema.json#/$defs/RevisionRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{pid}/expand": {
+      "post": {
+        "operationId": "expand",
+        "description": "",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/JobAccepted"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Budget or queue exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Capability not configured or temporarily unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./domain.schema.json#/$defs/RevisionRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{pid}/papers": {
+      "get": {
+        "operationId": "listPapers",
+        "description": "",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "snapshot_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "view",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "recommended",
+                "exploration",
+                "excluded",
+                "all"
+              ],
+              "default": "recommended"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/PaperList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Budget or queue exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Capability not configured or temporarily unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{pid}/jobs/{job_id}": {
+      "get": {
+        "operationId": "getJob",
+        "description": "",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Job"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Budget or queue exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Capability not configured or temporarily unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{pid}/jobs/{job_id}/cancel": {
+      "post": {
+        "operationId": "cancelJob",
+        "description": "Idempotent cancellation request; already terminal jobs return existing terminal state.",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Job"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Budget or queue exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Capability not configured or temporarily unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{pid}/overview": {
+      "get": {
+        "operationId": "getOverview",
+        "description": "",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Overview"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Budget or queue exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Capability not configured or temporarily unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{pid}/papers/{paper_id}/access-options": {
+      "get": {
+        "operationId": "getAccessOptions",
+        "description": "",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "paper_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/AccessOptions"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Budget or queue exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Capability not configured or temporarily unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{pid}/papers/{paper_id}/venue-metrics": {
+      "get": {
+        "operationId": "getVenueMetrics",
+        "description": "",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "paper_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/VenueMetrics"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Budget or queue exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Capability not configured or temporarily unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/settings/credentials/{provider_id}": {
+      "put": {
+        "operationId": "writeCredential",
+        "description": "Provider must belong to server allowlist. Raw secret never returned. Session-only in public mode.",
+        "parameters": [
+          {
+            "name": "provider_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/CredentialStatus"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Budget or queue exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Capability not configured or temporarily unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./domain.schema.json#/$defs/CredentialWrite"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteCredential",
+        "description": "",
+        "parameters": [
+          {
+            "name": "provider_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          },
+          "400": {
+            "description": "Malformed request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Budget or queue exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Capability not configured or temporarily unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/settings/credentials": {
+      "get": {
+        "operationId": "listCredentialStatuses",
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/CredentialStatuses"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Budget or queue exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Capability not configured or temporarily unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{pid}/zotero/import": {
+      "post": {
+        "operationId": "importZotero",
+        "description": "",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/JobAccepted"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Budget or queue exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Capability not configured or temporarily unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./domain.schema.json#/$defs/ZoteroImportRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{pid}/zotero/export-preview": {
+      "post": {
+        "operationId": "previewZoteroExport",
+        "description": "",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/ExportPreview"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Budget or queue exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Capability not configured or temporarily unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./domain.schema.json#/$defs/ExportPreviewRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{pid}/zotero/export": {
+      "post": {
+        "operationId": "exportZotero",
+        "description": "",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/JobAccepted"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Budget or queue exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Capability not configured or temporarily unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./domain.schema.json#/$defs/ExportRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{pid}/jobs/{job_id}/zotero-results": {
+      "get": {
+        "operationId": "getZoteroResults",
+        "description": "",
+        "parameters": [
+          {
+            "name": "pid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          },
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/ZoteroResults"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Budget or queue exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Capability not configured or temporarily unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./domain.schema.json#/$defs/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "sessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "lee_session"
+      }
+    }
+  }
+}

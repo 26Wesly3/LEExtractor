@@ -1,0 +1,406 @@
+{
+  "version": 4,
+  "saved_at": 1700001000.0,
+  "topic": "synthetic topic gamma",
+  "research_direction": "synthetic direction gamma",
+  "phase": "screening",
+  "start_time": 1699999900.0,
+  "scoping_papers": [
+    {
+      "id": "10.0000/synthetic.g0",
+      "title": "Synthetic scoping record on topic gamma",
+      "abstract": "Synthetic scoping abstract.",
+      "authors": [{"name": "Author E", "author_id": null}],
+      "year": 2018,
+      "venue": "Synthetic Venue",
+      "doi": "10.0000/synthetic.g0",
+      "citation_count": 60,
+      "reference_count": 41,
+      "citation_ids": [],
+      "reference_ids": [],
+      "source": "synthetic_openalex",
+      "url": null,
+      "relevance_score": 0.81,
+      "score_context_id": "ctx-gamma-0",
+      "topics": ["synthetic-topic"],
+      "canonical_id": "10.0000/synthetic.g0",
+      "identifiers": {"doi": "10.0000/synthetic.g0", "openalex_id": "W0000000001"},
+      "discovery_traces": [
+        {
+          "method": "database_search",
+          "provider": "synthetic_openalex",
+          "query": "synthetic topic gamma",
+          "seed_id": "",
+          "round_no": null,
+          "score": 0.81,
+          "evidence_ids": [],
+          "timestamp": "2026-10-15T00:00:00+00:00"
+        }
+      ],
+      "score_breakdown": {"lexical": 0.62, "semantic": 0.81},
+      "publication_status": "published_metadata",
+      "search_snippet": "Synthetic snippet for topic gamma."
+    }
+  ],
+  "topic_clusters": {"0": ["10.0000/synthetic.g1", "10.0000/synthetic.g2"]},
+  "key_journals": [["Synthetic Venue", 3]],
+  "key_authors": [["Author E", 2], ["Author F", 1]],
+  "year_distribution": {"2018": 1, "2023": 1, "2024": 1},
+  "search_papers": [
+    {
+      "id": "10.0000/synthetic.g1",
+      "title": "Synthetic search record G1 on topic gamma",
+      "abstract": "Synthetic abstract G1 for the migration fixture.",
+      "authors": [
+        {"name": "Author E", "author_id": null},
+        {"name": "Author F", "author_id": null}
+      ],
+      "year": 2023,
+      "venue": "Synthetic Venue",
+      "doi": "10.0000/synthetic.g1",
+      "citation_count": 21,
+      "reference_count": 30,
+      "citation_ids": ["10.0000/synthetic.g2"],
+      "reference_ids": ["10.0000/synthetic.g0"],
+      "source": "synthetic_openalex",
+      "url": "https://example.invalid/synthetic/g1",
+      "relevance_score": 0.93,
+      "score_context_id": "ctx-gamma-1",
+      "topics": ["synthetic-topic"],
+      "canonical_id": "10.0000/synthetic.g1",
+      "identifiers": {"doi": "10.0000/synthetic.g1", "openalex_id": "W0000000002"},
+      "discovery_traces": [
+        {
+          "method": "database_search",
+          "provider": "synthetic_openalex",
+          "query": "synthetic topic gamma",
+          "seed_id": "",
+          "round_no": null,
+          "score": 0.93,
+          "evidence_ids": [],
+          "timestamp": "2026-10-15T00:00:00+00:00"
+        }
+      ],
+      "score_breakdown": {"lexical": 0.7, "semantic": 0.93, "concept_coverage": 1.0},
+      "publication_status": "published_metadata",
+      "search_snippet": "Synthetic snippet G1."
+    },
+    {
+      "id": "10.0000/synthetic.g2",
+      "title": "Synthetic search record G2 on topic gamma",
+      "abstract": "Synthetic abstract G2 for the migration fixture.",
+      "authors": [{"name": "Author F", "author_id": null}],
+      "year": 2024,
+      "venue": "Synthetic Venue",
+      "doi": "10.0000/synthetic.g2",
+      "citation_count": 2,
+      "reference_count": 14,
+      "citation_ids": [],
+      "reference_ids": ["10.0000/synthetic.g1"],
+      "source": "synthetic_crossref",
+      "url": null,
+      "relevance_score": 0.44,
+      "score_context_id": "ctx-gamma-1",
+      "topics": [],
+      "canonical_id": "10.0000/synthetic.g2",
+      "identifiers": {"doi": "10.0000/synthetic.g2"},
+      "discovery_traces": [
+        {
+          "method": "backward_citation",
+          "provider": "synthetic_crossref",
+          "query": "",
+          "seed_id": "10.0000/synthetic.g1",
+          "round_no": 1,
+          "score": 0.44,
+          "evidence_ids": ["10.0000/synthetic.g1"],
+          "timestamp": "2026-10-15T00:05:00+00:00"
+        }
+      ],
+      "score_breakdown": {"lexical": 0.31, "semantic": 0.44},
+      "publication_status": "unknown",
+      "search_snippet": ""
+    }
+  ],
+  "similar_papers": [
+    [
+      {
+        "id": "10.0000/synthetic.g3",
+        "title": "Synthetic similar record on topic gamma",
+        "abstract": null,
+        "authors": [{"name": "Author G", "author_id": null}],
+        "year": 2022,
+        "venue": "Synthetic Venue",
+        "doi": "10.0000/synthetic.g3",
+        "citation_count": 9,
+        "reference_count": 12,
+        "citation_ids": [],
+        "reference_ids": [],
+        "source": "synthetic_semantic_scholar",
+        "url": null,
+        "relevance_score": 0.58,
+        "score_context_id": "ctx-gamma-1",
+        "topics": [],
+        "canonical_id": "10.0000/synthetic.g3"
+      },
+      0.58,
+      "bibliographic_coupling"
+    ]
+  ],
+  "snowball_result": {
+    "saturated": true,
+    "saturation_reason": "no_new_results",
+    "initial_ids": ["10.0000/synthetic.g1"],
+    "next_seed_ids": [],
+    "parameters": {"max_rounds": 2, "direction": "both"},
+    "completed": true,
+    "stop_reason": "saturated",
+    "seed_ids": ["10.0000/synthetic.g1"],
+    "all_papers": {
+      "10.0000/synthetic.g2": {
+        "id": "10.0000/synthetic.g2",
+        "title": "Synthetic search record G2 on topic gamma",
+        "abstract": "Synthetic abstract G2 for the migration fixture.",
+        "authors": [{"name": "Author F", "author_id": null}],
+        "year": 2024,
+        "venue": "Synthetic Venue",
+        "doi": "10.0000/synthetic.g2",
+        "citation_count": 2,
+        "reference_count": 14,
+        "citation_ids": [],
+        "reference_ids": ["10.0000/synthetic.g1"],
+        "source": "synthetic_crossref",
+        "url": null,
+        "relevance_score": 0.44,
+        "score_context_id": "ctx-gamma-1",
+        "topics": [],
+        "canonical_id": "10.0000/synthetic.g2"
+      }
+    },
+    "rounds": [
+      {
+        "round_number": 1,
+        "source_papers": ["10.0000/synthetic.g1"],
+        "direction": "both",
+        "new_papers": [
+          {
+            "id": "10.0000/synthetic.g2",
+            "title": "Synthetic search record G2 on topic gamma",
+            "abstract": "Synthetic abstract G2 for the migration fixture.",
+            "authors": [{"name": "Author F", "author_id": null}],
+            "year": 2024,
+            "venue": "Synthetic Venue",
+            "doi": "10.0000/synthetic.g2",
+            "citation_count": 2,
+            "reference_count": 14,
+            "citation_ids": [],
+            "reference_ids": ["10.0000/synthetic.g1"],
+            "source": "synthetic_crossref",
+            "url": null,
+            "relevance_score": 0.44,
+            "score_context_id": "ctx-gamma-1",
+            "topics": [],
+            "canonical_id": "10.0000/synthetic.g2"
+          }
+        ],
+        "raw_count": 4,
+        "unique_count": 1,
+        "relevant_count": 0,
+        "cumulative_unique": 1,
+        "failed_seeds": 0,
+        "seed_ids": ["10.0000/synthetic.g1"],
+        "pending_seeds": [],
+        "canceled": false
+      }
+    ]
+  },
+  "prisma": {
+    "full_text_stage_enabled": true,
+    "duplicates_seen": 1,
+    "identification_counts": {"synthetic_openalex": 2, "synthetic_crossref": 1},
+    "ledger": {
+      "provider_raw": 3,
+      "cross_source_duplicates": 1,
+      "unique_records": 2,
+      "filtered_year": 0,
+      "filtered_citations": 0,
+      "truncated": false,
+      "records_screened": 2,
+      "preliminary_included": 1,
+      "final_included": 0,
+      "units": {"synthetic_openalex": 2, "synthetic_crossref": 1},
+      "truncation": {},
+      "entries": [
+        {"stage": "title_abstract", "unit": "synthetic_openalex", "count": 2}
+      ]
+    },
+    "records": [
+      {
+        "key": "10.0000/synthetic.g1",
+        "source": "database_search",
+        "screening_decision": "accept",
+        "screening_reason": "",
+        "full_text_retrieved": true,
+        "full_text_decision": "pending",
+        "full_text_reason": "",
+        "retrieval_attempted": true,
+        "retrieval_failure_reason": "",
+        "relevance_score": 0.93,
+        "score_context_id": "ctx-gamma-1",
+        "requires_manual_review": false,
+        "conflicts": [],
+        "history": [
+          {"at": "2026-10-15T00:10:00+00:00", "stage": "title_abstract", "decision": "accept", "reason": "synthetic"}
+        ]
+      },
+      {
+        "key": "10.0000/synthetic.g2",
+        "source": "citation_expansion",
+        "screening_decision": "pending",
+        "screening_reason": "",
+        "full_text_retrieved": false,
+        "full_text_decision": "pending",
+        "full_text_reason": "",
+        "retrieval_attempted": false,
+        "retrieval_failure_reason": "",
+        "relevance_score": 0.44,
+        "score_context_id": "ctx-gamma-1",
+        "requires_manual_review": true,
+        "conflicts": [{"field": "year", "sources": ["synthetic_openalex", "synthetic_crossref"]}],
+        "history": []
+      }
+    ],
+    "papers": {
+      "10.0000/synthetic.g1": {
+        "id": "10.0000/synthetic.g1",
+        "title": "Synthetic search record G1 on topic gamma",
+        "abstract": "Synthetic abstract G1 for the migration fixture.",
+        "authors": [
+          {"name": "Author E", "author_id": null},
+          {"name": "Author F", "author_id": null}
+        ],
+        "year": 2023,
+        "venue": "Synthetic Venue",
+        "doi": "10.0000/synthetic.g1",
+        "citation_count": 21,
+        "reference_count": 30,
+        "citation_ids": ["10.0000/synthetic.g2"],
+        "reference_ids": ["10.0000/synthetic.g0"],
+        "source": "synthetic_openalex",
+        "url": "https://example.invalid/synthetic/g1",
+        "relevance_score": 0.93,
+        "score_context_id": "ctx-gamma-1",
+        "topics": ["synthetic-topic"],
+        "canonical_id": "10.0000/synthetic.g1",
+        "identifiers": {"doi": "10.0000/synthetic.g1", "openalex_id": "W0000000002"},
+        "discovery_traces": [],
+        "score_breakdown": {"lexical": 0.7, "semantic": 0.93, "concept_coverage": 1.0},
+        "publication_status": "published_metadata",
+        "search_snippet": "Synthetic snippet G1."
+      },
+      "10.0000/synthetic.g2": {
+        "id": "10.0000/synthetic.g2",
+        "title": "Synthetic search record G2 on topic gamma",
+        "abstract": "Synthetic abstract G2 for the migration fixture.",
+        "authors": [{"name": "Author F", "author_id": null}],
+        "year": 2024,
+        "venue": "Synthetic Venue",
+        "doi": "10.0000/synthetic.g2",
+        "citation_count": 2,
+        "reference_count": 14,
+        "citation_ids": [],
+        "reference_ids": ["10.0000/synthetic.g1"],
+        "source": "synthetic_crossref",
+        "url": null,
+        "relevance_score": 0.44,
+        "score_context_id": "ctx-gamma-1",
+        "topics": [],
+        "canonical_id": "10.0000/synthetic.g2",
+        "identifiers": {"doi": "10.0000/synthetic.g2"},
+        "discovery_traces": [],
+        "score_breakdown": {"lexical": 0.31, "semantic": 0.44},
+        "publication_status": "unknown",
+        "search_snippet": ""
+      }
+    }
+  },
+  "search_manifest": {
+    "ranking_mode": "semantic",
+    "selected_providers": ["synthetic_openalex", "synthetic_crossref"],
+    "provider_counts": {"synthetic_openalex": 2, "synthetic_crossref": 1},
+    "timings": {"total": 12.5},
+    "query_context": {
+      "original": "synthetic topic gamma",
+      "translated": "synthetic topic gamma",
+      "topic": "synthetic topic gamma",
+      "direction": "synthetic direction gamma",
+      "engine": "synthetic_local_translator",
+      "revision": "fixture-1"
+    }
+  },
+  "stop_reason": "saturated",
+  "http_budget": {
+    "requests": 7,
+    "retries": 1,
+    "cache_hits": 2,
+    "rate_limited": 0,
+    "errors": 0,
+    "canceled": false,
+    "elapsed_seconds": 12.5,
+    "by_source": {
+      "synthetic_openalex": {"requests": 4, "errors": 0},
+      "synthetic_crossref": {"requests": 3, "errors": 0}
+    }
+  },
+  "run_history": [
+    {
+      "stage": "systematic_search",
+      "at": "2026-10-15T00:00:00+00:00",
+      "stop_reason": "saturated",
+      "provider_raw": 3,
+      "returned": 2,
+      "unique_records": 2,
+      "http": {
+        "requests": 7,
+        "retries": 1,
+        "cache_hits": 2,
+        "rate_limited": 0,
+        "errors": 0,
+        "canceled": false,
+        "elapsed_seconds": 12.5
+      },
+      "incomplete": false
+    }
+  ],
+  "score_context_id": "ctx-gamma-1",
+  "score_context_stage": "systematic_search",
+  "score_context_history": [
+    {
+      "stage": "systematic_search",
+      "context_id": "ctx-gamma-1",
+      "previous_context_id": "",
+      "previous_stage": "",
+      "papers": 3,
+      "at": "2026-10-15T00:00:00+00:00"
+    }
+  ],
+  "calibration_context_id": "ctx-gamma-1",
+  "calibration": {
+    "labels": {"relevant": 1, "irrelevant": 1},
+    "positive_count": 1,
+    "negative_count": 1,
+    "query": "synthetic topic gamma",
+    "corpus_hash": "",
+    "algorithm_version": "lexical_v3_word_char_coverage",
+    "score_version": "hybrid_lexical_v1",
+    "threshold": 0.5,
+    "created_at": "2026-10-15T00:20:00+00:00",
+    "evaluation": {
+      "separation": false,
+      "margin": 1.0,
+      "validated_on": 2,
+      "score_context_id": "ctx-gamma-1",
+      "note": "synthetic fixture calibration"
+    },
+    "status": "calibrated"
+  }
+}

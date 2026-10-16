@@ -1,0 +1,196 @@
+{
+  "name": "LEExtractor Development Documentation Pack",
+  "version": "3.2",
+  "date": "2026-10-16",
+  "timezone": "Asia/Shanghai",
+  "entrypoint": "START_HERE.md",
+  "source_conversation": "https://chatgpt.com/share/6ad24667-6b6c-83e9-ab51-f4d2effb9db2",
+  "scope": "documentation and executable contract fixtures; application implementation not included",
+  "files": [
+    {
+      "path": "CHANGELOG.md",
+      "bytes": 1207,
+      "sha256": "ede40c1073c8a2206a85653eb1f760b9ca185deec6e13a3454d0b27ddd22b556"
+    },
+    {
+      "path": "START_HERE.md",
+      "bytes": 3889,
+      "sha256": "ccd5a2a4800b15985bd016810edb5e52e3867bafc116c211cc75909208058641"
+    },
+    {
+      "path": "contracts/access_links.json",
+      "bytes": 1284,
+      "sha256": "6e2cfed06667886172d4f74e73c9cccb3cf758be84678c791795316744703616"
+    },
+    {
+      "path": "contracts/ai_rerank.schema.json",
+      "bytes": 2320,
+      "sha256": "7a5ea82153252e1a1fdc9f596cb31b31477aa5db2b13a0ab432078165b6b8edb"
+    },
+    {
+      "path": "contracts/defaults.json",
+      "bytes": 3609,
+      "sha256": "a52ba34b334dfa097b7bc254da763b09024bebfd1db83f816b0155b7faec3436"
+    },
+    {
+      "path": "contracts/domain.schema.json",
+      "bytes": 59162,
+      "sha256": "80f47ce7a487fbcb8465342041079cb83ef59eeffc7c121688c803491782b540"
+    },
+    {
+      "path": "contracts/job_states.json",
+      "bytes": 614,
+      "sha256": "80123e520141574e4ef017b13979ec2f8aee3ade6a8715454f02c4eac63dce4b"
+    },
+    {
+      "path": "contracts/openapi.json",
+      "bytes": 87632,
+      "sha256": "1f7de78f1185be00086da96259cbfe08b19aec016621fe50738d5cdff07527eb"
+    },
+    {
+      "path": "docs/00_README.md",
+      "bytes": 2561,
+      "sha256": "3a41e193058b460dda922190d8d100fae69b49ccf4d2674c402fa3507633cd27"
+    },
+    {
+      "path": "docs/01_PRODUCT_VISION.md",
+      "bytes": 2562,
+      "sha256": "1b7b3df9d9940f7efd3dad862c33943d8eb1a4d5ded2c0b2f511d3020647668c"
+    },
+    {
+      "path": "docs/02_USER_WORKFLOW.md",
+      "bytes": 3257,
+      "sha256": "26cc1b429ae180d284e68deba29c7e5c3335bbd914c194d910516b7721f33326"
+    },
+    {
+      "path": "docs/03_SYSTEM_ARCHITECTURE.md",
+      "bytes": 2797,
+      "sha256": "3d037dc60ab88f343f603f67958a5592a859f1c6947ffa679a184ffa3ca8aa4d"
+    },
+    {
+      "path": "docs/04_ALGORITHM_DESIGN.md",
+      "bytes": 6331,
+      "sha256": "acb6bab4d0f7c672cc65677d89e81e9cd237591dd42b367863eb8a4ffd3a7c2d"
+    },
+    {
+      "path": "docs/05_UX_UI_SPEC.md",
+      "bytes": 3162,
+      "sha256": "b8ee23149660e5fc64749d504441d8a4e32077b57ff0ce9b1b21aa90c7b17c3f"
+    },
+    {
+      "path": "docs/06_REUSE_CHANGE_MAP.md",
+      "bytes": 2684,
+      "sha256": "4993e23128b3cef0081338bdd9e8ac25778449407987eb1498be546670a8e5f0"
+    },
+    {
+      "path": "docs/07_DEVELOPMENT_ROADMAP.md",
+      "bytes": 2590,
+      "sha256": "24c210a69a4bfe8b3f45cc0c0b7c9ffbe7d0d6216428f8423f882b89c67493e8"
+    },
+    {
+      "path": "docs/08_API_DATA_MODEL_SPEC.md",
+      "bytes": 6077,
+      "sha256": "fbaad2ee6d1376d41f1b3083742193a39e1abad3db9ebbc547955474ba042031"
+    },
+    {
+      "path": "docs/09_ACCEPTANCE_BENCHMARK.md",
+      "bytes": 5669,
+      "sha256": "b39362485f82616e01ca5c16938b005ca1f84ed3f147bc16e1a1dd678c09550c"
+    },
+    {
+      "path": "docs/10_SECURITY_PRIVACY.md",
+      "bytes": 2857,
+      "sha256": "e00f16973abaff64a45ce3a6ca77e47259c7d6a4d987bb7a8f94391344fadc68"
+    },
+    {
+      "path": "docs/11_CHINA_ACADEMIC_ACCESS.md",
+      "bytes": 2356,
+      "sha256": "eee04b18ab98a2b44c0d6739e4ceeaf8ee63a602c172f3faf6174e49b78727dd"
+    },
+    {
+      "path": "docs/12_OPEN_SOURCE_ASSET_POLICY.md",
+      "bytes": 1824,
+      "sha256": "574fc50cad3f5303143a98f6d751ff8f610e5f03330cb7f514bdcd40cd296645"
+    },
+    {
+      "path": "docs/13_VENUE_INTELLIGENCE.md",
+      "bytes": 1525,
+      "sha256": "1a108c410bdf584a91687306fb8b0b72696fc9bb0ff1dc36ad3bbf7b0b1d5448"
+    },
+    {
+      "path": "docs/14_JOBS_IDENTITY_MIGRATION.md",
+      "bytes": 4378,
+      "sha256": "fe24f45a9ebd3c241b0b3b9e1460733cc15e8241aee5769060d832593faa6d4b"
+    },
+    {
+      "path": "docs/15_PERFORMANCE_DEPLOYMENT.md",
+      "bytes": 3795,
+      "sha256": "a9141ab5cdd5a318c400d3e6069328e242af7b99e43d28813f5d56f429d29729"
+    },
+    {
+      "path": "docs/16_PDF_ZOTERO_INTEGRATIONS.md",
+      "bytes": 4449,
+      "sha256": "4bb4c1619f152ccd756b11169834bb6fe28718b5ce1bed174d1b8badfdaa3ad3"
+    },
+    {
+      "path": "docs/17_AI_RERANK_FIELD_INSIGHTS.md",
+      "bytes": 5187,
+      "sha256": "006623717d3c269464fce0b614e1c6e90acd921461fe3fd04e905cc8239ab279"
+    },
+    {
+      "path": "docs/18_REQUIREMENTS_TRACEABILITY.md",
+      "bytes": 2436,
+      "sha256": "e56292b458fa3872df8aec7b288d3d4a8734dda0092e60ee5e2ad05f3678e2d8"
+    },
+    {
+      "path": "docs/19_SOURCES_DECISIONS.md",
+      "bytes": 3943,
+      "sha256": "3091aa41c6cfa2302a947f6f407e6f7193a9230cc8fc9fa63a5657ff5ff76af4"
+    },
+    {
+      "path": "docs/20_ZJU_CAS_DEFERRED.md",
+      "bytes": 3435,
+      "sha256": "b4259d7f30674bd49953b5a8f7558b70025b1ec031c0dd7d58632ad10cf373f3"
+    },
+    {
+      "path": "docs/LEExtractor_Development_Spec_v3.2.md",
+      "bytes": 74050,
+      "sha256": "1e7d5251483359a7dca0609b24166b01194b24c0c8545fa6ad70b52cf7f2d03f"
+    },
+    {
+      "path": "fixtures/acceptance_cases.json",
+      "bytes": 8335,
+      "sha256": "24dd05e84b98f0b1fc0e844d00ced3de96b3d5ef0428f5031d3a330194434aef"
+    },
+    {
+      "path": "fixtures/ai_semantic_cases.json",
+      "bytes": 408,
+      "sha256": "14536abb17efb3ae6e03f8865688c0c5a9b3aae3eba46118996f0ff4eaef971a"
+    },
+    {
+      "path": "fixtures/ai_valid.json",
+      "bytes": 622,
+      "sha256": "9ce8ed25d51352cf556c8a6b9c32b2a0fa95b4ccce5c158ac79515b98c994f9e"
+    },
+    {
+      "path": "fixtures/job_event_cases.json",
+      "bytes": 609,
+      "sha256": "045f1480b61191572313cb39b9350f36341a9bd949163bea5549b88747c28ffe"
+    },
+    {
+      "path": "fixtures/ranking_cases.json",
+      "bytes": 2089,
+      "sha256": "fde63d3c9f23ca6f6612a9a78f5e7ac20afaf0ba614e27349b5d0cac0025b9bb"
+    },
+    {
+      "path": "handoff/IMPLEMENTATION_STATUS.md",
+      "bytes": 1419,
+      "sha256": "5e6c754e5107e3a086aad9b895b10c6cbc2928b0dc127b770d71c558914b92af"
+    },
+    {
+      "path": "scripts/validate_pack.py",
+      "bytes": 8210,
+      "sha256": "c4fe032c174022624cc1f06309813bfeae8ddbaa169f6b643d464c5b1e5235e0"
+    }
+  ]
+}

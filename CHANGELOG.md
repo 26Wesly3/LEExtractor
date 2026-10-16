@@ -9,6 +9,47 @@
 
 ---
 
+## v0.9.19（2026-10-17）M5：LEExtractor v3.2 分阶段实施
+
+- Zotero：官方版本前置条件、逐项结果、预览绑定 owner+revision+item hash 且 600 s 过期（AC-21/22）
+- 外部访问入口仅取自 contracts/access_links.json；无 CAS 客户端、无票据校验、无校园登录入口（AC-23/28）
+- 官方期刊指标无许可来源时返回 unavailable，引用代理指标标注「内部引用代理指标」（AC-24）
+- 项目隔离与凭据：越权一律 404，DTO/日志/导出无秘密（AC-16/25）
+- R22：规范包校验在仓库路径映射下 status: pass，35 个 manifest 校验和通过
+- 性能：固定 300 篇语料 20 次重复，五项预算全部 met；参考 2 vCPU/2 GB 未实测，已如实标注
+
+本阶段按 `docs/v3.2/` 规范实施；验收状态见 `handoff/IMPLEMENTATION_STATUS.md`。
+## v0.9.18（2026-10-17）M4：LEExtractor v3.2 分阶段实施
+
+- 证据化概览：每条 statement 带 text/type/paper_ids/evidence_ids/scope/limitations；无 Key 时仍生成模板概览（AC-01/20）
+- 领域地图：Louvain 固定种子 42、resolution 1.0；节点/边/孤立率不足时降级并标注关系数据不足（AC-19/31）
+- 时间线与趋势：仅比较完整年份、平滑增长率；citation velocity 无历史数据时不给结论（AC-20）
+- 潜在切入点源自至少两个有证据的分支，证据不足返回空数组，不固定生成 3 个创新点（AC-20）
+- 四阶段工作区界面：两入口、文献卡片、逐文件上传状态、三类凭据设置（AC-18/23/24）
+
+本阶段按 `docs/v3.2/` 规范实施；验收状态见 `handoff/IMPLEMENTATION_STATUS.md`。
+## v0.9.17（2026-10-17）M3：LEExtractor v3.2 分阶段实施
+
+- AI 局部重排窗口：N=min(30,合格候选数)、摘要 2000 字符上限、12000 token 预算（AC-14/17）
+- 契约 Schema + 语义双重校验，整批拒绝未知/重复/遗漏 ID 与伪造证据（AC-15）
+- 会话级凭据：provider_id+session 作用域、仅内存、日志与 DTO 无秘密（AC-16）
+
+本阶段按 `docs/v3.2/` 规范实施；验收状态见 `handoff/IMPLEMENTATION_STATUS.md`。
+## v0.9.16（2026-10-17）M2：LEExtractor v3.2 分阶段实施
+
+- CoreRank 确定性 RRF：固定算例 ranking_cases.json 五个用例全部复现（AC-06）
+- 主题门槛 ceil(0.60*N)、缺失值为中性名次、单一取值信号整项停用、无 NaN（AC-07）
+- 可撤销判断、排除不复活、300 ms 去抖重排、最新上下文胜出（AC-08/09/12/13）
+
+本阶段按 `docs/v3.2/` 规范实施；验收状态见 `handoff/IMPLEMENTATION_STATUS.md`。
+## v0.9.15（2026-10-17）M1：LEExtractor v3.2 分阶段实施
+
+- 两个入口：从研究方向开始、从已有文献开始；PDF 逐文件解析与状态（AC-02/03/05/27）
+- 内容哈希去重与规范身份合并，重复上传不新建身份（AC-04/13）
+- 快速列表、有限自动扩展（最多 1 轮）与无人工标记的初始概览（AC-01/18/32）
+- v3.2 增量 API 的 25 个操作，挂载于 /api/v3 并保留四个旧路由行为
+
+本阶段按 `docs/v3.2/` 规范实施；验收状态见 `handoff/IMPLEMENTATION_STATUS.md`。
 ## v0.9.14（2026-10-12）首页「运行概况 + 项目里程碑」
 
 ### Added

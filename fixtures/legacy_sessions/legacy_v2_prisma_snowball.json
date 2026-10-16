@@ -1,0 +1,160 @@
+{
+  "version": 2,
+  "saved_at": 1700000500.0,
+  "topic": "synthetic topic beta",
+  "research_direction": "synthetic direction beta",
+  "phase": "snowballing",
+  "start_time": 1699999500.0,
+  "scoping_papers": [],
+  "topic_clusters": {"0": ["10.0000/synthetic.b1"]},
+  "key_journals": [["Synthetic Venue", 2]],
+  "key_authors": [["Author D", 2]],
+  "year_distribution": {"2022": 2},
+  "search_papers": [
+    {
+      "id": "10.0000/synthetic.b1",
+      "title": "Synthetic search record B1 on topic beta",
+      "abstract": "Synthetic abstract B1.",
+      "authors": [{"name": "Author D", "author_id": null}],
+      "year": 2022,
+      "venue": "Synthetic Venue",
+      "doi": "10.0000/synthetic.b1",
+      "citation_count": 18,
+      "reference_count": 25,
+      "citation_ids": [],
+      "reference_ids": [],
+      "source": "synthetic_openalex",
+      "url": null,
+      "relevance_score": 0.66,
+      "topics": [],
+      "canonical_id": "10.0000/synthetic.b1"
+    },
+    {
+      "id": "10.0000/synthetic.b2",
+      "title": "Synthetic search record B2 on topic beta",
+      "abstract": null,
+      "authors": [{"name": "Author D", "author_id": null}],
+      "year": 2022,
+      "venue": "Synthetic Venue",
+      "doi": "10.0000/synthetic.b2",
+      "citation_count": 3,
+      "reference_count": 11,
+      "citation_ids": [],
+      "reference_ids": [],
+      "source": "synthetic_crossref",
+      "url": null,
+      "relevance_score": 0.52,
+      "topics": [],
+      "canonical_id": "10.0000/synthetic.b2"
+    }
+  ],
+  "similar_papers": [],
+  "snowball_result": {
+    "saturated": false,
+    "saturation_reason": "",
+    "initial_ids": ["10.0000/synthetic.b1"],
+    "next_seed_ids": ["10.0000/synthetic.b2"],
+    "all_papers": {
+      "10.0000/synthetic.b1": {
+        "id": "10.0000/synthetic.b1",
+        "title": "Synthetic search record B1 on topic beta",
+        "abstract": "Synthetic abstract B1.",
+        "authors": [{"name": "Author D", "author_id": null}],
+        "year": 2022,
+        "venue": "Synthetic Venue",
+        "doi": "10.0000/synthetic.b1",
+        "citation_count": 18,
+        "reference_count": 25,
+        "citation_ids": [],
+        "reference_ids": [],
+        "source": "synthetic_openalex",
+        "url": null,
+        "relevance_score": 0.66,
+        "topics": [],
+        "canonical_id": "10.0000/synthetic.b1"
+      }
+    },
+    "rounds": [
+      {
+        "source_papers": ["10.0000/synthetic.b1"],
+        "direction": "forward",
+        "new_papers": [
+          {
+            "id": "10.0000/synthetic.b2",
+            "title": "Synthetic search record B2 on topic beta",
+            "abstract": null,
+            "authors": [{"name": "Author D", "author_id": null}],
+            "year": 2022,
+            "venue": "Synthetic Venue",
+            "doi": "10.0000/synthetic.b2",
+            "citation_count": 3,
+            "reference_count": 11,
+            "citation_ids": [],
+            "reference_ids": [],
+            "source": "synthetic_crossref",
+            "url": null,
+            "relevance_score": 0.52,
+            "topics": [],
+            "canonical_id": "10.0000/synthetic.b2"
+          }
+        ]
+      }
+    ]
+  },
+  "prisma": {
+    "records": [
+      {
+        "key": "10.0000/synthetic.b1",
+        "source": "database_search",
+        "screening_decision": "accept"
+      },
+      {
+        "key": "10.0000/synthetic.b2",
+        "source": "citation_expansion",
+        "screening_decision": "pending"
+      }
+    ],
+    "papers": {
+      "10.0000/synthetic.b1": {
+        "id": "10.0000/synthetic.b1",
+        "title": "Synthetic search record B1 on topic beta",
+        "abstract": "Synthetic abstract B1.",
+        "authors": [{"name": "Author D", "author_id": null}],
+        "year": 2022,
+        "venue": "Synthetic Venue",
+        "doi": "10.0000/synthetic.b1",
+        "citation_count": 18,
+        "reference_count": 25,
+        "citation_ids": [],
+        "reference_ids": [],
+        "source": "synthetic_openalex",
+        "url": null,
+        "relevance_score": 0.66,
+        "topics": [],
+        "canonical_id": "10.0000/synthetic.b1"
+      },
+      "10.0000/synthetic.b2": {
+        "id": "10.0000/synthetic.b2",
+        "title": "Synthetic search record B2 on topic beta",
+        "abstract": null,
+        "authors": [{"name": "Author D", "author_id": null}],
+        "year": 2022,
+        "venue": "Synthetic Venue",
+        "doi": "10.0000/synthetic.b2",
+        "citation_count": 3,
+        "reference_count": 11,
+        "citation_ids": [],
+        "reference_ids": [],
+        "source": "synthetic_crossref",
+        "url": null,
+        "relevance_score": 0.52,
+        "topics": [],
+        "canonical_id": "10.0000/synthetic.b2"
+      }
+    }
+  },
+  "search_manifest": {
+    "ranking_mode": "lexical",
+    "selected_providers": ["synthetic_openalex", "synthetic_crossref"]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "version": "3.2",
+  "cases": [
+    {
+      "id": "latest_context_only",
+      "snapshot_context": 3,
+      "current_context": 4,
+      "snapshot_corpus": 5,
+      "current_corpus": 5,
+      "expected": "superseded"
+    },
+    {
+      "id": "latest_corpus_only",
+      "snapshot_context": 4,
+      "current_context": 4,
+      "snapshot_corpus": 5,
+      "current_corpus": 6,
+      "expected": "superseded"
+    },
+    {
+      "id": "unchanged_can_commit",
+      "snapshot_context": 4,
+      "current_context": 4,
+      "snapshot_corpus": 6,
+      "current_corpus": 6,
+      "expected": "commit"
+    }
+  ]
+}

@@ -1,0 +1,293 @@
+{
+  "version": "3.2",
+  "cases": [
+    {
+      "id": "AC-01",
+      "title": "零标记主题闭环",
+      "status": "not_run",
+      "required_this_release": true,
+      "expected": "无需人工标记获得列表与初始概览",
+      "implementation_test": null,
+      "evidence": null
+    },
+    {
+      "id": "AC-02",
+      "title": "单篇及批量PDF入口",
+      "status": "not_run",
+      "required_this_release": true,
+      "expected": "逐文件状态且不要求手填DOI",
+      "implementation_test": null,
+      "evidence": null
+    },
+    {
+      "id": "AC-03",
+      "title": "无DOI文本种子",
+      "status": "not_run",
+      "required_this_release": true,
+      "expected": "本地种子使用题名摘要继续发现",
+      "implementation_test": null,
+      "evidence": null
+    },
+    {
+      "id": "AC-04",
+      "title": "重复上传幂等",
+      "status": "not_run",
+      "required_this_release": true,
+      "expected": "同项目内容hash复用身份与附件",
+      "implementation_test": null,
+      "evidence": null
+    },
+    {
+      "id": "AC-05",
+      "title": "批量部分失败恢复",
+      "status": "not_run",
+      "required_this_release": true,
+      "expected": "成功项保留，仅重试失败项",
+      "implementation_test": null,
+      "evidence": null
+    },
+    {
+      "id": "AC-06",
+      "title": "RRF固定算例",
+      "status": "not_run",
+      "required_this_release": true,
+      "expected": "结果符合ranking_cases.json",
+      "implementation_test": null,
+      "evidence": null
+    },
+    {
+      "id": "AC-07",
+      "title": "缺失数据降级",
+      "status": "not_run",
+      "required_this_release": true,
+      "expected": "未知为null，不产生NaN或虚构0",
+      "implementation_test": null,
+      "evidence": null
+    },
+    {
+      "id": "AC-08",
+      "title": "排除及撤销",
+      "status": "not_run",
+      "required_this_release": true,
+      "expected": "排除后扩展不复活，撤销从原始意图重算",
+      "implementation_test": null,
+      "evidence": null
+    },
+    {
+      "id": "AC-09",
+      "title": "最新上下文胜出",
+      "status": "not_run",
+      "required_this_release": true,
+      "expected": "旧任务完成不得覆盖新快照",
+      "implementation_test": null,
+      "evidence": null
+    },
+    {
+      "id": "AC-10",
+      "title": "来源故障与零结果",
+      "status": "not_run",
+      "required_this_release": true,
+      "expected": "保留部分结果并准确标注coverage",
+      "implementation_test": null,
+      "evidence": null
+    },
+    {
+      "id": "AC-11",
+      "title": "取消刷新重启",
+      "status": "not_run",
+      "required_this_release": true,
+      "expected": "不丢已提交内容，遗留任务为interrupted",
+      "implementation_test": null,
+      "evidence": null
+    },
+    {
+      "id": "AC-12",
+      "title": "会话迁移回滚",
+      "status": "not_run",
+      "required_this_release": true,
+      "expected": "迁移可重复且失败恢复备份",
+      "implementation_test": null,
+      "evidence": null
+    },
+    {
+      "id": "AC-13",
+      "title": "身份合并",
+      "status": "not_run",
+      "required_this_release": true,
+      "expected": "aliases附件证据判断完整迁移",
+      "implementation_test": null,
+      "evidence": null
+    },
+    {
+      "id": "AC-14",
+      "title": "无Key与AI失败",
+      "status": "not_run",
+      "required_this_release": true,
+      "expected": "基础排名仍有效，失败不破坏会话",
+      "implementation_test": null,
+      "evidence": null
+    },
+    {
+      "id": "AC-15",
+      "title": "AI未知重复遗漏ID",
+      "status": "not_run",
+      "required_this_release": true,
+      "expected": "严格拒绝整批不合格AI输出",
+      "implementation_test": null,
+      "evidence": null
+    },
+    {
+      "id": "AC-16",
+      "title": "隐私与凭据",
+      "status": "not_run",
+      "required_this_release": true,
+      "expected": "日志DTO导出无秘密且默认不发PDF",
+      "implementation_test": null,
+      "evidence": null
+    },
+    {
+      "id": "AC-17",
+      "title": "AI窗口边界",
+      "status": "not_run",
+      "required_this_release": true,
+      "expected": "窗口外相对顺序不变，基础分不改变",
+      "implementation_test": null,
+      "evidence": null
+    },
+    {
+      "id": "AC-18",
+      "title": "新手及视觉",
+      "status": "not_run",
+      "required_this_release": true,
+      "expected": "不要求算法设置，既有token抽屉动效保留",
+      "implementation_test": null,
+      "evidence": null
+    },
+    {
+      "id": "AC-19",
+      "title": "稀疏图降级",
+      "status": "not_run",
+      "required_this_release": true,
+      "expected": "返回文本或文献概览并说明关系不足",
+      "implementation_test": null,
+      "evidence": null
+    },
+    {
+      "id": "AC-20",
+      "title": "证据化趋势及线索",
+      "status": "not_run",
+      "required_this_release": true,
+      "expected": "每条结论有证据范围与核查建议",
+      "implementation_test": null,
+      "evidence": null
+    },
+    {
+      "id": "AC-21",
+      "title": "Zotero选择性导入",
+      "status": "not_run",
+      "required_this_release": true,
+      "expected": "仅选择项导入且保留外部键",
+      "implementation_test": null,
+      "evidence": null
+    },
+    {
+      "id": "AC-22",
+      "title": "Zotero写入冲突",
+      "status": "not_run",
+      "required_this_release": true,
+      "expected": "逐项结果、版本冲突不覆盖、不重复新增",
+      "implementation_test": null,
+      "evidence": null
+    },
+    {
+      "id": "AC-23",
+      "title": "CARSI出版社官方跳转",
+      "status": "not_run",
+      "required_this_release": true,
+      "expected": "只打开注册表官方链接，返回不自动标认证成功",
+      "implementation_test": null,
+      "evidence": null
+    },
+    {
+      "id": "AC-24",
+      "title": "官方期刊指标未知",
+      "status": "not_run",
+      "required_this_release": true,
+      "expected": "无来源或许可不展示JIF，不阻塞排序",
+      "implementation_test": null,
+      "evidence": null
+    },
+    {
+      "id": "AC-25",
+      "title": "项目访问隔离",
+      "status": "not_run",
+      "required_this_release": true,
+      "expected": "越权无法读取项目任务附件或凭据",
+      "implementation_test": null,
+      "evidence": null
+    },
+    {
+      "id": "AC-26",
+      "title": "固定硬件性能",
+      "status": "not_run",
+      "required_this_release": true,
+      "expected": "达到目标或明确报告未达标",
+      "implementation_test": null,
+      "evidence": null
+    },
+    {
+      "id": "AC-27",
+      "title": "参考文献DOI误识别",
+      "status": "not_run",
+      "required_this_release": true,
+      "expected": "引用区DOI不可当作当前论文DOI",
+      "implementation_test": null,
+      "evidence": null
+    },
+    {
+      "id": "AC-28",
+      "title": "本轮无直接SSO",
+      "status": "not_run",
+      "required_this_release": true,
+      "expected": "不显示校园登录按钮，不发送CAS验证请求",
+      "implementation_test": null,
+      "evidence": null
+    },
+    {
+      "id": "AC-29",
+      "title": "将来正式CAS",
+      "status": "deferred",
+      "required_this_release": false,
+      "expected": "延期，未来需独立授权与真环境验证",
+      "implementation_test": null,
+      "evidence": null
+    },
+    {
+      "id": "AC-30",
+      "title": "导出PRISMA兼容",
+      "status": "not_run",
+      "required_this_release": true,
+      "expected": "探索判断不改PRISMA，导出含来源",
+      "implementation_test": null,
+      "evidence": null
+    },
+    {
+      "id": "AC-31",
+      "title": "图谱视图折叠",
+      "status": "not_run",
+      "required_this_release": true,
+      "expected": "折叠不删规范文献和证据",
+      "implementation_test": null,
+      "evidence": null
+    },
+    {
+      "id": "AC-32",
+      "title": "有限自动扩展",
+      "status": "not_run",
+      "required_this_release": true,
+      "expected": "自动最多1轮，达到时间/数量预算即停止",
+      "implementation_test": null,
+      "evidence": null
+    }
+  ]
+}

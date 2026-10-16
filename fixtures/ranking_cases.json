@@ -1,0 +1,123 @@
+{
+  "version": "3.2",
+  "cases": [
+    {
+      "id": "rank_topic_beats_citation",
+      "input": {
+        "a": {
+          "topic": 0.9,
+          "impact": 10
+        },
+        "b": {
+          "topic": 0.7,
+          "impact": 100
+        },
+        "c": {
+          "topic": 0.1,
+          "impact": 1000
+        }
+      },
+      "expected_order": [
+        "a",
+        "b",
+        "c"
+      ],
+      "expected_recommended": [
+        "a",
+        "b"
+      ],
+      "expected_raw_expressions": {
+        "a": "(0.6/61+0.1/63)/0.7",
+        "b": "1/62",
+        "c": "(0.6/63+0.1/61)/0.7"
+      }
+    },
+    {
+      "id": "rank_missing_is_neutral",
+      "input": {
+        "a": {
+          "topic": 0.9,
+          "impact": 10
+        },
+        "b": {
+          "topic": 0.7,
+          "impact": null
+        },
+        "c": {
+          "topic": 0.1,
+          "impact": 0
+        }
+      },
+      "expected_order": [
+        "a",
+        "b",
+        "c"
+      ],
+      "expected_signal_ranks": {
+        "impact": {
+          "a": 1.0,
+          "b": 2.0,
+          "c": 3.0
+        }
+      }
+    },
+    {
+      "id": "rank_tie_stable",
+      "input": {
+        "c": {
+          "topic": 0.2
+        },
+        "b": {
+          "topic": 0.9
+        },
+        "a": {
+          "topic": 0.9
+        }
+      },
+      "expected_order": [
+        "a",
+        "b",
+        "c"
+      ],
+      "expected_signal_ranks": {
+        "topic": {
+          "a": 1.5,
+          "b": 1.5,
+          "c": 3.0
+        }
+      }
+    },
+    {
+      "id": "rank_no_distinct_signal",
+      "input": {
+        "b": {
+          "topic": 0
+        },
+        "a": {
+          "topic": 0
+        }
+      },
+      "expected_order": [
+        "a",
+        "b"
+      ],
+      "expected_all_scores_null": true,
+      "expected_recommended": []
+    },
+    {
+      "id": "rank_single",
+      "input": {
+        "a": {
+          "topic": 1
+        }
+      },
+      "expected_order": [
+        "a"
+      ],
+      "expected_all_scores_null": true,
+      "expected_recommended": [
+        "a"
+      ]
+    }
+  ]
+}

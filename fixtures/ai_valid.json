@@ -1,0 +1,28 @@
+{
+  "schema_version": "3.2",
+  "context_hash": "example-context-hash",
+  "ordered_paper_ids": [
+    "p-b",
+    "p-a"
+  ],
+  "judgments": [
+    {
+      "paper_id": "p-b",
+      "priority_score": 4,
+      "direct_relevance": 4,
+      "method_relevance": 2,
+      "role": "representative",
+      "reason": "基于给定摘要支持当前任务。",
+      "evidence_ids": []
+    },
+    {
+      "paper_id": "p-a",
+      "priority_score": 3,
+      "direct_relevance": 3,
+      "method_relevance": 2,
+      "role": "representative",
+      "reason": "基于给定摘要支持当前任务。",
+      "evidence_ids": []
+    }
+  ]
+}
