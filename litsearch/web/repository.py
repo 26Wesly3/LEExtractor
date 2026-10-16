@@ -3,44 +3,22 @@
 from __future__ import annotations
 
 import json
-import os
 import re
-import tempfile
 import threading
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
 from pathlib import Path
 
+from litsearch.jsonio import atomic_json, now  # noqa: F401  (re-exported: existing importers use these)
 from litsearch.persistence import state_from_dict, state_to_dict
 from litsearch.search import ReviewState
 from litsearch.session_schema import validate_session_dict
-
-
-def now() -> str:
-    return datetime.now(timezone.utc).isoformat()
 
 
 class APIError(Exception):
     def __init__(self, status: int, code: str, message: str, detail=None):
         self.status, self.code, self.message, self.detail = status, code, message, detail
         super().__init__(message)
-
-
-def atomic_json(path: Path, data: dict) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    name = None
-    try:
-        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent,
-                                         prefix=".write-", delete=False) as handle:
-            name = handle.name
-            json.dump(data, handle, ensure_ascii=False, allow_nan=False)
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(name, path)
-    finally:
-        if name and os.path.exists(name):
-            os.unlink(name)
 
 
 @dataclass

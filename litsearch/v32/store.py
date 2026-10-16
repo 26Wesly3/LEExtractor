@@ -42,7 +42,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
-from litsearch.web.repository import atomic_json
+from litsearch.jsonio import atomic_json
 
 from .contracts import job_defaults
 from .errors import (

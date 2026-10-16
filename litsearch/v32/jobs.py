@@ -27,7 +27,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Iterable
 
-from litsearch.web.repository import atomic_json
+from litsearch.jsonio import atomic_json
 
 from .contracts import assert_transition, initial_state, job_defaults, terminal_states
 from .errors import NOT_FOUND, RATE_LIMITED, V32Error
