@@ -5,6 +5,15 @@
 > v0.9.12 起新增三级记录体系：面向使用者的本文件、面向开发者的 [DevLog 约定](docs/devlog/README.md)（含 Before/After 数据）
 > 与记录架构决策的 [ADR](docs/decisions/ADR-004-provider-concurrency.md)。同时新增 [CHANGELOG.md](CHANGELOG.md)（结构化 Changelog）。
 
+## v0.9.18（2026-10-17）M4：LEExtractor v3.2 分阶段实施
+
+- 证据化概览：每条 statement 带 text/type/paper_ids/evidence_ids/scope/limitations；无 Key 时仍生成模板概览（AC-01/20）
+- 领域地图：Louvain 固定种子 42、resolution 1.0；节点/边/孤立率不足时降级并标注关系数据不足（AC-19/31）
+- 时间线与趋势：仅比较完整年份、平滑增长率；citation velocity 无历史数据时不给结论（AC-20）
+- 潜在切入点源自至少两个有证据的分支，证据不足返回空数组，不固定生成 3 个创新点（AC-20）
+- 四阶段工作区界面：两入口、文献卡片、逐文件上传状态、三类凭据设置（AC-18/23/24）
+
+本阶段按 `docs/v3.2/` 规范实施；验收状态见 `handoff/IMPLEMENTATION_STATUS.md`。
 ## v0.9.17（2026-10-17）M3：LEExtractor v3.2 分阶段实施
 
 - AI 局部重排窗口：N=min(30,合格候选数)、摘要 2000 字符上限、12000 token 预算（AC-14/17）
