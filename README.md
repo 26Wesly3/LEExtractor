@@ -17,7 +17,7 @@ Search literature. Trace evidence. Build understanding.
 <p>
   <img src="https://img.shields.io/badge/status-public%20beta-64748B?style=flat&labelColor=18181B" alt="Status: public beta">
   <img src="https://img.shields.io/badge/focus-literature%20%26%20evidence-334155?style=flat&labelColor=18181B" alt="Focus: literature and evidence">
-  <img src="https://img.shields.io/badge/version-v0.9.15-0B4FA1?style=flat&labelColor=18181B" alt="Version: v0.9.15">
+  <img src="https://img.shields.io/badge/version-v0.9.16-0B4FA1?style=flat&labelColor=18181B" alt="Version: v0.9.16">
 </p>
 
 <p>
@@ -95,7 +95,7 @@ Ranking is a ranking signal, not a screening decision: human screening, threshol
 
 ### Windows portable (recommended)
 
-1. Download and **fully extract** [`LEExtractor_v0.9.15_Windows_portable.zip`](download/LEExtractor_v0.9.15_Windows_portable.zip) (or grab it from [Releases](https://github.com/26Wesly3/LEExtractor/releases)).
+1. Download and **fully extract** [`LEExtractor_v0.9.16_Windows_portable.zip`](download/LEExtractor_v0.9.16_Windows_portable.zip) (or grab it from [Releases](https://github.com/26Wesly3/LEExtractor/releases)).
 2. Double-click **`Start_LEExtractor.bat`**.
 3. The browser opens <http://127.0.0.1:8012>. Keep the console window open while using it.
 
