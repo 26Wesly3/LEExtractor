@@ -1,0 +1,100 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "3.2"
+    },
+    "context_hash": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "ordered_paper_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "minItems": 2,
+      "uniqueItems": true
+    },
+    "judgments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "paper_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "priority_score": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4
+          },
+          "direct_relevance": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4
+          },
+          "method_relevance": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "foundational",
+              "representative",
+              "review",
+              "methodology",
+              "frontier",
+              "application",
+              "background",
+              "peripheral",
+              "unknown"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 400
+          },
+          "evidence_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "minItems": 0
+          }
+        },
+        "required": [
+          "paper_id",
+          "priority_score",
+          "direct_relevance",
+          "method_relevance",
+          "role",
+          "reason",
+          "evidence_ids"
+        ]
+      },
+      "minItems": 2
+    }
+  },
+  "required": [
+    "schema_version",
+    "context_hash",
+    "ordered_paper_ids",
+    "judgments"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://leextractor.invalid/contracts/3.2/ai_rerank.schema.json",
+  "title": "AI rerank structured output 3.2"
+}

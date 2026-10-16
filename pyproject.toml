@@ -35,6 +35,7 @@ include = ["litsearch", "litsearch.*"]
 
 [tool.setuptools.package-data]
 "litsearch" = ["translation_pins.json", "embedding_pins.json", "ccf_catalog.json"]
+"litsearch.contracts" = ["*.json"]
 "litsearch.web" = ["static/**/*", "static/*"]
 
 [tool.ruff]

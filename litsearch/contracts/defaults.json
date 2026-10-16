@@ -1,0 +1,143 @@
+{
+  "document_version": "3.2",
+  "algorithm_version": "corerank-3.2.0",
+  "parameter_status": "engineering_defaults_unvalidated",
+  "discovery": {
+    "query_variants": 3,
+    "candidate_cap": 300,
+    "auto_rounds": 1,
+    "seeds_per_round": 5,
+    "references_per_seed": 20,
+    "citations_per_seed": 20,
+    "provider_concurrency": 3,
+    "round_budget_seconds": 45,
+    "provider_priority": [
+      "openalex",
+      "semantic_scholar",
+      "crossref",
+      "arxiv",
+      "openreview"
+    ],
+    "provider_connect_timeout_seconds": 3,
+    "provider_total_timeout_seconds": 10,
+    "provider_retries": 1
+  },
+  "ranking": {
+    "rrf_k": 60,
+    "weights": {
+      "topic": 0.6,
+      "impact": 0.1,
+      "graph": 0.1,
+      "seed": 0.1,
+      "feedback": 0.1
+    },
+    "topic_gate_fraction": 0.6,
+    "missing_rank": "midpoint",
+    "tie_method": "average",
+    "tie_round_decimals": 12,
+    "pagerank_alpha": 0.85,
+    "pagerank_max_iter": 100,
+    "pagerank_tol": 1e-06,
+    "graph_min_edges": 5,
+    "starter_size": 10,
+    "starter_pool": 50,
+    "mmr_lambda": 0.75,
+    "feedback": {
+      "alpha": 1.0,
+      "beta": 0.6,
+      "gamma": 0.2,
+      "delta": 0.1,
+      "min_anchor_cosine": 0.8,
+      "clamp_iterations": 30
+    }
+  },
+  "jobs": {
+    "max_heavy_workers": 1,
+    "max_queue": 20,
+    "feedback_debounce_ms": 300,
+    "ai_idle_delay_ms": 2000,
+    "idempotency_ttl_seconds": 86400
+  },
+  "pdf": {
+    "batch_max_files": 10,
+    "file_max_mib": 20,
+    "batch_max_mib": 100,
+    "max_pages": 200,
+    "parser_timeout_seconds": 15,
+    "parser_memory_mib": 256,
+    "max_parser_workers": 1,
+    "minimum_seed_chars": 100,
+    "match_weights": {
+      "title": 0.75,
+      "authors": 0.15,
+      "year": 0.1
+    },
+    "auto_match_score": 0.9,
+    "auto_title_similarity": 0.9,
+    "candidate_score_min": 0.7,
+    "minimum_match_margin": 0.1,
+    "doi_title_similarity": 0.8,
+    "ocr_enabled": false
+  },
+  "ai": {
+    "enabled_by_default": false,
+    "top_n": 30,
+    "minimum_n": 2,
+    "abstract_max_chars": 2000,
+    "abstract_min_chars": 256,
+    "input_token_budget": 12000,
+    "call_budget_seconds": 20,
+    "max_calls_per_rerank": 1,
+    "full_pdf_upload": false,
+    "merge_strategy": "permute_window_only",
+    "schema_version": "3.2",
+    "prompt_version": "rerank-3.2.0"
+  },
+  "performance_targets": {
+    "reference_vcpu": 2,
+    "reference_memory_mib": 2048,
+    "fixture_papers": 300,
+    "repetitions": 20,
+    "fast_ranking_p95_seconds": 2,
+    "warm_enhancement_p95_seconds": 5,
+    "feedback_p95_seconds": 1,
+    "cached_first_result_p95_seconds": 5,
+    "network_first_result_target_seconds": 20,
+    "metadata_api_p95_ms": 500,
+    "app_total_peak_rss_mib": 1400,
+    "enhancement_budget_seconds": 8
+  },
+  "mapping": {
+    "min_nodes": 20,
+    "min_edges": 20,
+    "max_isolate_fraction": 0.5,
+    "random_seed": 42,
+    "resolution": 1.0,
+    "min_community_size": 3,
+    "trend_min_prior_count": 5,
+    "trend_complete_years": 4
+  },
+  "credentials": {
+    "public_persistence": "memory_only",
+    "idle_ttl_seconds": 3600,
+    "return_secret": false
+  },
+  "access": {
+    "application_sso_enabled": false,
+    "federation_sp_enabled": false,
+    "external_resource_links_enabled": true
+  },
+  "zotero": {
+    "default_adapter": "web_api",
+    "export_preview_ttl_seconds": 600,
+    "auto_export": false,
+    "upload_fulltext_by_default": false
+  },
+  "runtime": {
+    "default_mode": "server_basic",
+    "embedding_revision": null,
+    "embedding_status": "must_verify_in_M0",
+    "fulltext_grobid_same_host": false,
+    "companion_enabled": false
+  }
+}

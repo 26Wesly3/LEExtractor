@@ -1,0 +1,36 @@
+{
+  "input_ids": [
+    "p-a",
+    "p-b"
+  ],
+  "context_hash": "example-context-hash",
+  "valid_order": [
+    "p-b",
+    "p-a"
+  ],
+  "invalid_orders": [
+    [
+      "p-a",
+      "p-a"
+    ],
+    [
+      "p-a"
+    ],
+    [
+      "p-a",
+      "unknown"
+    ]
+  ],
+  "outer_order": [
+    "p-a",
+    "p-b",
+    "p-c",
+    "p-d"
+  ],
+  "expected_merged_order": [
+    "p-b",
+    "p-a",
+    "p-c",
+    "p-d"
+  ]
+}
