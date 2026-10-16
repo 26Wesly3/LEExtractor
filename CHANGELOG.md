@@ -9,6 +9,13 @@
 
 ---
 
+## v0.9.17（2026-10-17）M3：LEExtractor v3.2 分阶段实施
+
+- AI 局部重排窗口：N=min(30,合格候选数)、摘要 2000 字符上限、12000 token 预算（AC-14/17）
+- 契约 Schema + 语义双重校验，整批拒绝未知/重复/遗漏 ID 与伪造证据（AC-15）
+- 会话级凭据：provider_id+session 作用域、仅内存、日志与 DTO 无秘密（AC-16）
+
+本阶段按 `docs/v3.2/` 规范实施；验收状态见 `handoff/IMPLEMENTATION_STATUS.md`。
 ## v0.9.16（2026-10-17）M2：LEExtractor v3.2 分阶段实施
 
 - CoreRank 确定性 RRF：固定算例 ranking_cases.json 五个用例全部复现（AC-06）
