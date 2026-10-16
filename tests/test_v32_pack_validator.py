@@ -81,6 +81,31 @@ def test_the_implementer_status_record_is_actually_filled_in():
     assert "873" not in text or "passed" in text
 
 
+def test_line_endings_do_not_invalidate_the_pack_checksums():
+    """git's core.autocrlf rewrote the pack to CRLF and broke this check once.
+
+    The manifest records the pack's bytes as authored (LF). On a Windows checkout
+    with autocrlf=true every text file becomes CRLF, so a raw-bytes hash reports a
+    false mismatch for nearly every manifest entry — which is exactly how R22
+    regressed after a branch checkout. The validator must normalise line endings
+    before hashing, and must say how many files it had to normalise.
+    """
+    code, report = _run()
+    assert code == 0, report
+    assert isinstance(report["manifest_files_line_endings_normalized"], int)
+    assert report["manifest_files_line_endings_normalized"] >= 0
+
+    # If this checkout really does carry CRLF in the pack, the validator must
+    # have noticed and normalised, rather than matching by luck.
+    crlf_files = sum(
+        1 for path in (REPO / "docs" / "v3.2").rglob("*.md") if b"\r\n" in path.read_bytes()
+    )
+    if crlf_files:
+        assert report["manifest_files_line_endings_normalized"] > 0, (
+            "pack files on disk contain CRLF but the validator normalised none"
+        )
+
+
 def test_the_validator_does_not_require_network_or_the_application():
     source = VALIDATOR.read_text(encoding="utf-8")
     for banned in ("requests", "urllib.request", "socket", "http.client"):

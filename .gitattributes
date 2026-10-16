@@ -1,0 +1,23 @@
+# Line-ending policy for content-addressed files.
+#
+# The v3.2 specification pack is checksummed: docs/v3.2/manifest.json records the
+# SHA-256 of every file exactly as authored, and scripts/validate_v32_pack.py
+# verifies them (requirement R22). A Windows checkout with core.autocrlf=true
+# rewrites every text file to CRLF, which changes those bytes and made the pack
+# look corrupt after a branch checkout.
+#
+# Pinning these paths to LF keeps the working tree byte-identical to the pack, so
+# the manifest check verifies content rather than the checkout convention. The
+# validator also normalises line endings before hashing, so this is defence in
+# depth rather than the only thing holding the check up.
+docs/v3.2/**        text eol=lf
+litsearch/contracts/**  text eol=lf
+fixtures/**         text eol=lf
+
+# Binary and generated assets must never be line-ending converted.
+*.png binary
+*.gif binary
+*.ttf binary
+*.zip binary
+web/dist/** -text
+litsearch/web/static/** -text

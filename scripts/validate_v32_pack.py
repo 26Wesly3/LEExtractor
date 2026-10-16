@@ -249,12 +249,34 @@ CONTENT_DIFFERS_FROM_PACK = {
 
 checksum_verified = 0
 checksum_differs = []
+line_ending_normalized: list[str] = []
+
+
+def content_digest(path: Path) -> tuple[str, bool]:
+    """SHA256 of the file's *text content*, independent of line endings.
+
+    The manifest records the digests of the pack exactly as authored, with LF
+    endings.  A Windows checkout with ``core.autocrlf=true`` rewrites every text
+    file to CRLF, which changes the bytes without changing the document; hashing
+    the raw bytes then reports a false mismatch for nearly every manifest entry
+    (this is exactly how the check first failed after a branch checkout).  This
+    normalises CRLF to LF before hashing, so a real content change still fails
+    while a checkout convention does not make the pack look corrupt.
+    ``.gitattributes`` pins these paths to LF as well; this is the belt to that
+    braces.
+    """
+    raw = path.read_bytes()
+    normalized = raw.replace(b"\r\n", b"\n")
+    return hashlib.sha256(normalized).hexdigest(), normalized != raw
+
 
 for item in manifest['files']:
     rel = item['path']
     path = resolve(rel)
     assert path.is_file(), f"{rel} -> {path} is missing"
-    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    digest, was_normalized = content_digest(path)
+    if was_normalized:
+        line_ending_normalized.append(rel)
     if rel in CONTENT_DIFFERS_FROM_PACK:
         checksum_differs.append({'path': rel, 'reason': CONTENT_DIFFERS_FROM_PACK[rel],
                                  'pack_sha256': item['sha256'], 'local_sha256': digest})
@@ -285,6 +307,7 @@ print(json.dumps({
     'requirements': 22,
     'manifest_files_checksum_verified': checksum_verified,
     'manifest_files_content_differs_from_pack': checksum_differs,
+    'manifest_files_line_endings_normalized': len(line_ending_normalized),
     'application_tests': 'not_run',
     'schema_validation': 'used-keyword subset; not a full OpenAPI compiler',
 }, ensure_ascii=False, indent=2))
