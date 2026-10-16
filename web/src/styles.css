@@ -142,3 +142,11 @@ body.reduced *,body.reduced *:before,body.reduced *:after{animation:none!importa
   .stat b{font-size:36px}
   .overview-band{margin-bottom:40px}
 }
+/* v3.2 工作区（附加规则，仅使用既有设计 token；不修改既有选择器）。
+   页头排版沿用 .home-band 的字号体系，保证两条入口与后续区域同一视觉基线。 */
+.theme-v32 .le32-workspace>h1,.le32-settings>h1{font-size:32px;line-height:1.25;font-weight:650;letter-spacing:-.025em;margin-bottom:12px}
+.theme-v32 .le32-workspace h2,.le32-settings h2{font-size:22px;line-height:1.33}
+.theme-v32 .le32-workspace h3,.le32-settings h3{font-size:17px}
+.le32-workspace:focus,[data-v32-list]:focus{outline:none}
+.le32-link:focus-visible,.le32-action:focus-visible,.le32-primary:focus-visible,.le32-view:focus-visible,.le32-stage:focus-visible,.le32-mode:focus-visible,.le32-entry-action:focus-visible,.le32-card-open:focus-visible{outline:3px solid #677b94;outline-offset:3px}
+@media(max-width:599px){.theme-v32 .le32-workspace>h1,.le32-settings>h1{font-size:26px}.theme-v32 .le32-workspace h2,.le32-settings h2{font-size:20px}.le32-workspace{padding-bottom:40px}}
