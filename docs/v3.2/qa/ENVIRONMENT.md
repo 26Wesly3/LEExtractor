@@ -44,9 +44,31 @@ item, which shows the working tree is moving under concurrent v3.2 work):
  "litsearch.web" = ["static/**/*", "static/*"]
 ```
 
-So the single tracked change on top of `e601861b` is packaging the new
-`litsearch/contracts/*.json` into the wheel. **No commit was made by this work
-item** (branch and HEAD are unchanged; the Lead commits).
+So the single tracked change on top of `e601861b` **at measurement time** was
+packaging the new `litsearch/contracts/*.json` into the wheel.
+
+**This work item made no commit.** The Lead commits, and did so while the work
+item was running, so HEAD moved. Both facts are recorded because M0's value
+depends on knowing exactly which commit the baseline describes:
+
+| Observation | Value |
+|---|---|
+| **M0 measurement commit** (the pre-v3.2 working state every number in these QA documents describes) | `e601861bde58b641a1161369a7b5c037b59955c1` — `docs: move the product-concept figure between the title and the language switch, drop the preview section heading`, Thu Oct 15 16:13:26 2026 +0800 |
+| HEAD at the end of this work item | `08888e1326d27ec0a144e718789c471dcc3983a2` — `feat(v3.2): job scheduler, M5 adapters and M0 baseline evidence`, Sat Oct 17 01:02:34 2026 +0800 |
+| Relationship | `git merge-base --is-ancestor e601861b HEAD` → exit 0, so the baseline commit is a direct ancestor of the new HEAD |
+| Commits the Lead added in between | `fb6b866` M0 contract layer / project store / sessions / secret guard · `eb08ea7` CoreRank + feedback · `b1856a5` PDF import, AI rerank, domain map, overview · `08888e1` job scheduler, M5 adapters, M0 baseline evidence |
+| Working tree at the end (not written by this work item) | ` M web/src/main.js` (29 insertions, 2 deletions), `?? litsearch/v32/api.py`, `?? web/src/v32/` |
+
+All eight artefacts of this work item are now tracked (committed by the Lead in
+`08888e1`): the four `docs/v3.2/qa/*.md` files, the three
+`fixtures/legacy_sessions/*.json` documents and
+`tests/test_v32_legacy_fixtures.py`. Verified with
+`git ls-files docs/v3.2/qa fixtures/legacy_sessions tests/test_v32_legacy_fixtures.py`.
+
+`web/src/main.js` is modified in the working tree by another v3.2 work item
+(it is outside this work item's write scope and was not touched here); it is
+listed so that a later reader does not attribute it to the M0 baseline.
+
 
 Version identity: `pyproject.toml:8` `version = "0.9.14"`, and
 `git show HEAD:litsearch/version.py` contains `__version__ = "0.9.14"`.

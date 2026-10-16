@@ -41,6 +41,7 @@ from litsearch.session_schema import SessionSchemaError, validate_session_dict
 from litsearch.sources import SourceManager
 from litsearch.stop_reasons import get_http_budget
 from litsearch.timing import STAGE_EMBEDDING_LOAD, STAGE_TRANSLATION
+from litsearch.v32.api import install_v32
 from litsearch.version import __version__
 from litsearch.web.dto import (
     evidence_dto,
@@ -833,6 +834,15 @@ def create_app(data_dir=None, workflow_factory=None, static_dir=None, translator
     def controlled_file(file_id: str):
         path, meta = repository.file(file_id)
         return FileResponse(path, media_type=meta["media_type"], filename=meta["filename"])
+
+    # v3.2 incremental surface.  It is installed here on purpose: after every
+    # legacy route above, so the four paths both surfaces declare
+    # (POST /api/projects, GET /api/projects/{pid},
+    # POST /api/projects/{pid}/expand, GET /api/projects/{pid}/papers) keep
+    # answering exactly as before, and before the SPA catch-all below, so the
+    # versioned surface is reachable at all.  Nothing long-running happens here:
+    # only the store, the job queue and the router are wired.
+    install_v32(app, data_dir=root, workflow_factory=workflow_factory or default_factory)
 
     source_dist = Path(__file__).resolve().parents[2] / "web" / "dist"
     dist = Path(static_dir or (source_dist if source_dist.is_dir() else Path(__file__).parent / "static")).resolve()

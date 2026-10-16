@@ -31,7 +31,21 @@ SKIP_DIRS = {".git", "node_modules", "__pycache__", ".web-data", ".sessions", ".
 
 #: Mojibake markers. A UTF-8 file read as cp1252/latin-1 and written back as
 #: UTF-8 leaves these, and they are never legitimate in this repository.
-MOJIBAKE = ("ï¿½", "Ã¤", "Ã¥", "Ã¦", "â€", "ã€", "ï¼", "\ufffd")
+#:
+#: Written as escapes rather than literal characters on purpose: a literal copy
+#: would make this very file match its own scan (which it did until the escapes
+#: went in), and exempting the detector from itself would also exempt a real
+#: regression that mangled this file.
+MOJIBAKE = (
+    "\u00ef\u00bf\u00bd",  # the UTF-8 replacement character, double-encoded
+    "\u00c3\u00a4",        # a-umlaut read as latin-1
+    "\u00c3\u00a5",        # a-ring
+    "\u00c3\u00a6",        # ae-ligature
+    "\u00e2\u20ac",        # the classic mangled smart quote / em dash
+    "\u00e3\u20ac",        # a mangled CJK bracket
+    "\u00ef\u00bc",        # a mangled CJK comma
+    "\ufffd",              # the replacement character itself
+)
 
 
 def _tracked_source_files() -> list[Path]:

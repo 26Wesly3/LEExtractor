@@ -78,6 +78,7 @@ __all__ = [
     "retrieve_candidates",
     "retrieve_neighbours",
     "paper_record",
+    "record_identity",
 ]
 
 #: Which retrieval providers cannot work without a user credential.  This is a
@@ -553,21 +554,37 @@ class RetrievalOutcome:
     failed_sources: list[str] = field(default_factory=list)
     stop_reasons: list[str] = field(default_factory=list)
     raised: str | None = None
+    #: True only when the run could not be attempted at all (no provider client).
+    unavailable: bool = False
 
     @property
     def status(self) -> str:
-        if self.raised and not self.papers:
+        """``within_budget`` / ``partial`` / ``no_results`` / ``failed`` (AC-10).
+
+        A provider that *failed* makes the run incomplete, not broken: the
+        candidates other providers returned are still evidence, so the status is
+        ``partial`` and ``failed_sources`` names what went wrong.  ``failed`` is
+        reserved for a run that could not be attempted at all.
+        """
+        if self.unavailable:
             return str(CoverageStatus.FAILED)
-        if not self.papers:
-            return str(CoverageStatus.NO_RESULTS)
         if self.failed_sources or self.raised:
             return str(CoverageStatus.PARTIAL)
+        if not self.papers:
+            return str(CoverageStatus.NO_RESULTS)
         return str(CoverageStatus.WITHIN_BUDGET)
 
 
 def paper_record(paper: Any) -> dict[str, Any]:
-    """Map one provider record onto the store's paper shape (no invented fields)."""
-    paper_id = getattr(paper, "canonical_id", None) or getattr(paper, "id", None)
+    """Map one provider record onto the store's paper shape (no invented fields).
+
+    The provider's own canonical id is an **alias**, never the internal
+    ``paper_id``: an external id such as ``10.1/a`` contains a slash and would
+    be unusable as a path segment, while the store's contract is an opaque
+    internal identity with every external identifier held as an alias
+    (doc 14/AC-13).
+    """
+    canonical = getattr(paper, "canonical_id", None) or getattr(paper, "id", None)
     authors = []
     for author in getattr(paper, "authors", None) or []:
         name = getattr(author, "name", None) or (author if isinstance(author, str) else None)
@@ -578,19 +595,23 @@ def paper_record(paper: Any) -> dict[str, Any]:
     source = str(getattr(paper, "source", "") or "unknown")
     external_id = getattr(paper, "id", None)
     aliases = set()
+    if canonical:
+        aliases.add(str(canonical))
+    if external_id:
+        aliases.add(str(external_id))
     identifiers = getattr(paper, "identifiers", None)
     for key in ("doi", "openalex", "semantic_scholar", "arxiv", "crossref", "openreview", "dblp"):
         value = getattr(identifiers, key, None) if identifiers is not None else None
         if value:
             aliases.add(str(value))
     return {
-        "paper_id": str(paper_id) if paper_id else None,
+        "paper_id": None,
         "title": str(getattr(paper, "title", "") or ""),
         "authors": authors,
         "year": getattr(paper, "year", None),
         "abstract": getattr(paper, "abstract", None),
         "doi": str(doi) if doi else None,
-        "aliases": sorted(aliases),
+        "aliases": sorted(alias for alias in aliases if alias),
         "citation_count": getattr(paper, "citation_count", None),
         "venue": getattr(paper, "venue", None),
         "doc_type": getattr(paper, "publication_status", None),
@@ -622,6 +643,27 @@ def _result_failed(result: Any) -> bool:
     return status not in {"success", "success_empty", "truncated"}
 
 
+def record_identity(record: Mapping[str, Any]) -> str:
+    """A stable de-duplication key for one retrieved record.
+
+    Two providers describing the same work must collapse into one candidate, and
+    two different works must never collapse: so the key is the strongest
+    identifier the record actually carries, in order, and only when there is
+    none at all does the title stand in.
+    """
+    doi = record.get("doi")
+    if doi:
+        return "doi:" + str(doi).strip().casefold()
+    for alias in sorted(str(value) for value in (record.get("aliases") or []) if value):
+        return "alias:" + alias.casefold()
+    for row in record.get("source_records") or []:
+        external = row.get("external_id") if isinstance(row, Mapping) else None
+        if external:
+            return f"external:{row.get('provider')}:{external}"
+    title = re.sub(r"\s+", " ", str(record.get("title") or "")).strip().casefold()
+    return "title:" + title
+
+
 def retrieve_candidates(
     state: V32State, project: V32Project, job: Any, *, text: str, variants: Sequence[Mapping[str, Any]]
 ) -> RetrievalOutcome:
@@ -639,6 +681,7 @@ def retrieve_candidates(
         return outcome
     client = state.retrieval()
     if client is None:
+        outcome.unavailable = True
         outcome.raised = "retrieval_unavailable"
         outcome.stop_reasons.append("no_retrieval_client")
         return outcome
@@ -659,6 +702,7 @@ def retrieve_candidates(
         )
     except Exception as exc:  # noqa: BLE001 - a provider failure is coverage, not a crash
         outcome.raised = type(exc).__name__
+        outcome.failed_sources.append(type(exc).__name__)
         outcome.stop_reasons.append("provider_error")
         return outcome
 
@@ -671,8 +715,8 @@ def retrieve_candidates(
             record = paper_record(paper)
             if not record["title"] and not record["doi"]:
                 continue
-            identity = str(record["paper_id"] or record["doi"] or "")
-            if identity in by_identity:
+            identity = record_identity(record)
+            if not identity or identity in by_identity:
                 continue
             by_identity[identity] = record
     if time.monotonic() > deadline:
@@ -690,6 +734,7 @@ def retrieve_neighbours(
     outcome = RetrievalOutcome()
     client = state.retrieval()
     if client is None:
+        outcome.unavailable = True
         outcome.raised = "retrieval_unavailable"
         outcome.stop_reasons.append("no_retrieval_client")
         return outcome
@@ -718,8 +763,9 @@ def retrieve_neighbours(
                 record = paper_record(paper)
                 if not record["title"] and not record["doi"]:
                     continue
-                identity = str(record["paper_id"] or record["doi"] or "")
-                by_identity.setdefault(identity, record)
+                identity = record_identity(record)
+                if identity:
+                    by_identity.setdefault(identity, record)
     outcome.papers = list(by_identity.values())
     if not outcome.papers and not outcome.failed_sources:
         outcome.stop_reasons.append("no_new_results")
@@ -783,13 +829,21 @@ def run_discover(state: V32State, project: V32Project, job: Any) -> dict[str, An
         failed_sources=outcome.failed_sources,
         stop_reasons=outcome.stop_reasons,
     )
+    if outcome.unavailable:
+        # Nothing could be attempted at all: report it and leave the previously
+        # committed snapshot alone (a failed run must not overwrite evidence).
+        return {
+            "outcome": "failed",
+            "coverage": coverage,
+            "error_codes": ["retrieval_unavailable"],
+        }
     snapshot = build_snapshot(state, project, ranking, frozen=_frozen_versions(job), coverage=coverage)
     status = _commit(state, project, job, snapshot)
     if status == "superseded":
         return {"superseded": True}
 
     result = {
-        "outcome": "succeeded" if coverage["status"] != str(CoverageStatus.FAILED) else "failed",
+        "outcome": _outcome_for(coverage["status"]),
         "snapshot_id": snapshot["snapshot_id"],
         "coverage": coverage,
         "candidate_count": coverage["candidate_count"],
@@ -799,16 +853,27 @@ def run_discover(state: V32State, project: V32Project, job: Any) -> dict[str, An
         "starter_paper_ids": list(ranking.starter_paper_ids),
         "query_variants": [variant["text"] for variant in variants],
         "ranking_stage": snapshot["ranking_stage"],
-        "error_codes": [],
+        "error_codes": [] if coverage["status"] == str(CoverageStatus.WITHIN_BUDGET) else ["source_failure"],
     }
-    if coverage["status"] == str(CoverageStatus.PARTIAL):
-        result["outcome"] = "partial"
-        result["error_codes"] = ["source_failure"]
     mode = str(job.doc.get("mode") or "basic")
     if mode == "ai_enhanced":
         result["ai_status"] = "skipped"
         result["ai_detail"] = "本轮无可用模型适配器：本地排序已提交，未被改写。"
     return result
+
+
+def _outcome_for(coverage_status: str) -> str:
+    """A job outcome from a coverage status: incomplete is ``partial``.
+
+    ``no_results`` is a *completed* run that found nothing, so it is a success
+    with a ``no_results`` coverage — never a failure and never a fabricated
+    result.
+    """
+    if coverage_status == str(CoverageStatus.FAILED):
+        return "failed"
+    if coverage_status == str(CoverageStatus.PARTIAL):
+        return "partial"
+    return "succeeded"
 
 
 def run_expand(state: V32State, project: V32Project, job: Any) -> dict[str, Any]:
@@ -849,13 +914,13 @@ def run_expand(state: V32State, project: V32Project, job: Any) -> dict[str, Any]
     if _commit(state, project, job, snapshot) == "superseded":
         return {"superseded": True}
     result = {
-        "outcome": "partial" if coverage["status"] in {"partial", "failed"} else "succeeded",
+        "outcome": _outcome_for(coverage["status"]),
         "snapshot_id": snapshot["snapshot_id"],
         "coverage": coverage,
         "seeds": seeds,
         "new_papers": len(saved),
         "candidate_count": coverage["candidate_count"],
-        "error_codes": [] if coverage["status"] == "within_budget" else ["source_failure"],
+        "error_codes": [] if coverage["status"] == str(CoverageStatus.WITHIN_BUDGET) else ["source_failure"],
     }
     return result
 
@@ -1034,13 +1099,13 @@ def run_import(state: V32State, project: V32Project, job: Any) -> dict[str, Any]
             continue
         candidates = state.match_candidates(project, outcome.parsed)
         match = match_parsed(outcome.parsed, candidates)
-        paper_id = match.paper_id
+        paper_id = state.store.resolve_paper_id(project, str(match.paper_id or ""))
         if str(match.status) == str(PdfImportStatus.LOCAL_SEED) or (
             str(match.status) == str(PdfImportStatus.MATCHED) and not paper_id
         ):
             paper_id = state.store.upsert_paper(project, _parsed_record(outcome.parsed))
             added.append(paper_id)
-        record["items"][item_id] = build_import_item(
+        row = build_import_item(
             item_id=item_id,
             attachment=Attachment(
                 attachment_id=attachment_id,
@@ -1055,6 +1120,13 @@ def run_import(state: V32State, project: V32Project, job: Any) -> dict[str, Any]
             match=match,
             error_code=None if paper_id else (match.conflicts[0] if match.conflicts else None),
         )
+        # ``match.paper_id`` is only the candidate's id for a *matched* item;
+        # a local seed's identity is the record this import just created.
+        if paper_id:
+            row["paper_id"] = paper_id
+        if outcome.parsed is not None:
+            row["parsed"] = outcome.parsed.to_dict()
+        record["items"][item_id] = row
         if str(match.status) == str(PdfImportStatus.FAILED):
             failed += 1
         else:
@@ -1094,13 +1166,16 @@ def _item_failure(item: Mapping[str, Any], code: str) -> dict[str, Any]:
 
 
 def _parsed_record(parsed: Any) -> dict[str, Any]:
+    """A local seed built from parsed PDF metadata (identifiers stay aliases)."""
+    aliases = {str(value) for value in [parsed.doi, *(parsed.doi_candidates or [])] if value}
     return {
+        "paper_id": None,
         "title": parsed.title or "",
         "authors": list(parsed.authors or []),
         "year": parsed.year,
         "abstract": parsed.abstract,
         "doi": parsed.doi,
-        "aliases": [value for value in [parsed.doi, *(parsed.doi_candidates or [])] if value],
+        "aliases": sorted(aliases),
     }
 
 
@@ -1120,45 +1195,73 @@ def run_zotero_import(state: V32State, project: V32Project, job: Any) -> dict[st
             ),
         }
     try:
-        from litsearch.v32.zotero import apply_import, normalize_item, plan_import
+        from litsearch.v32.zotero import apply_import, plan_import
     except ImportError as exc:  # pragma: no cover
-        raise V32Error(CAPABILITY_UNAVAILABLE, "zotero_module_unavailable", "Zotero 模块不可用") from exc
+        raise V32Error(503, CAPABILITY_UNAVAILABLE, "Zotero 模块不可用") from exc
 
     state.jobs.set_stage(job, str(JobStage.RETRIEVING), progress=0.2)
     library_type = str(request.get("library_type") or "user")
     library_id = str(request.get("library_id") or "")
     item_keys = [str(key) for key in request.get("item_keys") or []]
+    # ``plan_import`` normalises each remote item itself, so the raw Zotero
+    # response is what it wants — normalising twice would empty the item keys.
     remote = adapter.fetch_items(library_type, library_id, item_keys)
-    items = [
-        normalize_item(raw, library_type=library_type, library_id=library_id) for raw in remote or []
-    ]
     existing = [dict(record) for record in project.doc.get("papers", {}).values()]
     plan = plan_import(
         existing,
-        items,
+        list(remote or []),
         library_type=library_type,
         library_id=library_id,
         selected_keys=item_keys,
         include_attachments=bool(request.get("include_selected_attachments")),
     )
     applied = apply_import(existing, plan)
-    added = []
+    created_ids: dict[str, str] = {}
     for record in applied.get("papers") or []:
-        paper_id = state.store.upsert_paper(project, dict(record))
-        added.append(paper_id)
-    mapping = dict(project.doc.get("zotero_map") or {})
-    for row in plan.get("items") or []:
-        if row.get("item_key"):
-            mapping[str(row["item_key"])] = str(row.get("paper_id") or "")
-    project.doc["zotero_map"] = mapping
-    if added:
+        if str(record.get("import_action") or "") == "create":
+            created_ids[str(record.get("paper_id") or "")] = state.store.upsert_paper(
+                project, dict(record)
+            )
+        elif str(record.get("import_action") or "") == "update":
+            target = project.doc["papers"].get(str(record.get("paper_id") or ""))
+            if target is not None and record.get("zotero"):
+                target["zotero"] = dict(record["zotero"])
+    if created_ids:
         state.store.save(project, touch_corpus=True)
         with job.lock:
             job.doc["corpus_version"] = project.corpus_version
-    results = applied.get("results") or plan.get("results") or []
+
+    mapping = dict(project.doc.get("zotero_map") or {})
+    results: list[dict[str, Any]] = []
+    skipped = 0
+    for row in plan.get("items") or []:
+        item_key = str(row.get("item_key") or "")
+        paper_id = str(created_ids.get(str(row.get("paper_id") or ""), row.get("paper_id") or ""))
+        if item_key:
+            mapping[item_key] = paper_id
+        action = str(row.get("action") or "")
+        if action in {"skipped"}:
+            skipped += 1
+        if not paper_id:
+            continue
+        results.append(
+            {
+                "paper_id": paper_id,
+                "status": {
+                    "create": "successful",
+                    "update": "successful",
+                    "unchanged": "unchanged",
+                    "conflict": "conflict",
+                }.get(action, "unknown_outcome"),
+                "item_key": item_key or None,
+                "item_version": row.get("item_version"),
+                "error_code": None if action in {"create", "update", "unchanged"} else (row.get("reason") or None),
+            }
+        )
+    project.doc["zotero_map"] = mapping
+    state.store.save(project)
     with job.lock:
-        job.doc["zotero_results"] = [dict(row) for row in results]
-    skipped = [row for row in plan.get("items") or [] if row.get("status") == "skipped"]
+        job.doc["zotero_results"] = results
     coverage = coverage_dto(
         status=str(CoverageStatus.PARTIAL if skipped else CoverageStatus.WITHIN_BUDGET),
         candidate_count=len(project.doc.get("papers", {})),
@@ -1168,8 +1271,8 @@ def run_zotero_import(state: V32State, project: V32Project, job: Any) -> dict[st
     return {
         "outcome": "partial" if skipped else "succeeded",
         "coverage": coverage,
-        "imported": len(added),
-        "skipped": len(skipped),
+        "imported": len(created_ids),
+        "skipped": skipped,
         "error_codes": [] if not skipped else ["unsupported_items_skipped"],
     }
 
