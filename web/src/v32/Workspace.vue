@@ -49,6 +49,7 @@ const reasons = reactive({})
 const coverageExpanded = ref(false)
 const accessOptions = ref([])
 const copyState = ref('')
+const importBatch = ref(null)
 const client = computed(() => api)
 
 let pollTimer = null
@@ -239,6 +240,14 @@ async function loadOverview() {
   try { overview.value = await api.overview(props.projectId) } catch { overview.value = overview.value }
 }
 
+/** 导入批次完成后刷新语料与概览；面板本身的逐项状态由 UploadPanel 负责。 */
+function onImportBatch(batch) { importBatch.value = batch || null }
+
+async function onImportSettled() {
+  await loadPapers({ keepAnchor: false })
+  await loadOverview()
+}
+
 async function judge({ paperId, value, reason = '' }) {
   if (!paperId) return
   const before = judged[paperId]
@@ -341,6 +350,13 @@ watch(() => props.projectId, async value => {
 
 watch(() => props.view, value => { page.value = value === 'settings' ? 'settings' : 'workspace' })
 
+// 进入某个阶段时读取该阶段所需的事实（读取幂等，不改动判断）。
+watch(activeStage, async value => {
+  if (!props.projectId) return
+  if (value === 'papers') await loadPapers({ keepAnchor: false })
+  if (value === 'threads' || value === 'insight') await loadOverview()
+})
+
 onBeforeUnmount(() => { stopped = true; stopPolling() })
 
 /** 测试与父级集成使用：纯状态访问，不改变既有行为。 */
@@ -388,7 +404,19 @@ if (props.projectId) {
         <p v-if="stageNotice" class="le32-ranking-stage" data-v32-ranking-stage role="status">{{ stageNotice }}</p>
 
         <template v-if="activeStage === 'anchors'">
-          <section class="le32-anchor" data-v32-anchor>
+          <section v-if="project?.entry_mode === 'pdf'" class="le32-anchor" data-v32-anchor data-v32-anchor-import>
+            <h2>{{ t('研究起点', 'Research anchors') }}</h2>
+            <p class="muted">{{ t('上传的 PDF 逐文件解析与匹配；已识别或已确认为本地文献的文件作为种子继续发现。','Each uploaded PDF is parsed and matched; files that matched or continued as local seeds become discovery seeds.') }}</p>
+            <UploadPanel
+              :client="client"
+              :lang="lang"
+              :project-id="projectId"
+              :expected-revision="project?.revision ?? 0"
+              @batch="onImportBatch"
+              @settled="onImportSettled"
+            />
+          </section>
+          <section v-else class="le32-anchor" data-v32-anchor>
             <h2>{{ t('研究起点', 'Research anchors') }}</h2>
             <template v-if="project?.anchor?.original_text">
               <p class="muted">{{ t('已保存的研究意图','The saved research intent') }}</p>

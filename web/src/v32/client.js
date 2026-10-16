@@ -128,10 +128,16 @@ export function createV32Client({
       if (timerId !== null) clearTimeout(timerId)
     }
     if (response.status === 204) return null
-    const text = typeof response.text === 'function' ? await response.text() : ''
+    // A real fetch Response exposes text(); some embedded/test transports only
+    // expose json(). Accept either so an empty body still ends up as null.
     let data = null
-    if (text) {
-      try { data = JSON.parse(text) } catch { data = null }
+    if (typeof response.text === 'function') {
+      const text = await response.text()
+      if (text) {
+        try { data = JSON.parse(text) } catch { data = null }
+      }
+    } else if (typeof response.json === 'function' && response.status !== 204) {
+      try { data = await response.json() } catch { data = null }
     }
     if (!response.ok) {
       const envelope = data && typeof data === 'object' && data.error ? data.error : null

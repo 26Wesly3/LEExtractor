@@ -78,6 +78,23 @@ const OVERVIEW = {
 beforeEach(() => { document.body.innerHTML = '' })
 
 describe('Workspace', () => {
+  it('opens the v3.2 import panel for a PDF-entry project and the direction form otherwise', async () => {
+    const client = fakeClient()
+    client.getProject = vi.fn(async () => ({ project_id: 'p1', revision: 4, entry_mode: 'pdf', name: 'demo' }))
+    const mounted = mountComponent(Workspace, { client, projectId: 'p1', stage: 'anchors', lang: 'zh' })
+    await settle(60)
+    expect(document.querySelector('[data-v32-anchor-import]')).toBeTruthy()
+    expect(document.querySelector('[data-v32-upload]')).toBeTruthy()
+    expect(document.querySelector('[data-v32-research-text]')).toBeNull()
+    mounted.unmount()
+
+    const topic = mountComponent(Workspace, { client: fakeClient(), projectId: 'p1', stage: 'anchors', lang: 'zh' })
+    await settle(60)
+    expect(document.querySelector('[data-v32-research-text]')).toBeTruthy()
+    expect(document.querySelector('[data-v32-anchor-import]')).toBeNull()
+    topic.unmount()
+  })
+
   it('opens the three credential areas from the settings view and never renders a plaintext key', async () => {
     const client = fakeClient()
     client.credentials = vi.fn(async () => ({ items: [{ provider_id: 'semantic_scholar', kind: 'retrieval', configured: true, updated_at: null }] }))

@@ -150,3 +150,13 @@ body.reduced *,body.reduced *:before,body.reduced *:after{animation:none!importa
 .le32-workspace:focus,[data-v32-list]:focus{outline:none}
 .le32-link:focus-visible,.le32-action:focus-visible,.le32-primary:focus-visible,.le32-view:focus-visible,.le32-stage:focus-visible,.le32-mode:focus-visible,.le32-entry-action:focus-visible,.le32-card-open:focus-visible{outline:3px solid #677b94;outline-offset:3px}
 @media(max-width:599px){.theme-v32 .le32-workspace>h1,.le32-settings>h1{font-size:26px}.theme-v32 .le32-workspace h2,.le32-settings h2{font-size:20px}.le32-workspace{padding-bottom:40px}}
+
+/* v3.2 首屏（docs/v3.2/05「页面结构」）：首页封面不再撑满一屏，改为按字标与求是鹰的
+   自然高度收缩，并以视口高度设上限，使「从研究方向开始」「从已有文献开始」两个主入口
+   落在首屏内。仅新增这一条规则，既有 .cover 规则、字标、求是鹰与全部动效均未改动。 */
+.theme-home .cover{height:auto;min-height:min(38svh,320px)}
+
+/* v3.2 首屏 · 窄屏（同上依据）：窄屏上两张入口卡片改为上下排列，因此只压缩 v3.2 自己的
+   入口块——导语限两行、卡片说明句隐藏，两个入口的标题与动作按钮全部保留，使两个入口
+   一起落在首屏内。选择器全部属于 v3.2 入口组件，未触及基线任何选择器。 */
+@media(max-width:599px){.le32-entries .le32-lead{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.le32-entry>p{display:none}}

@@ -5,6 +5,16 @@
 > v0.9.12 起新增三级记录体系：面向使用者的本文件、面向开发者的 [DevLog 约定](docs/devlog/README.md)（含 Before/After 数据）
 > 与记录架构决策的 [ADR](docs/decisions/ADR-004-provider-concurrency.md)。同时新增 [CHANGELOG.md](CHANGELOG.md)（结构化 Changelog）。
 
+## v0.9.19（2026-10-17）M5：LEExtractor v3.2 分阶段实施
+
+- Zotero：官方版本前置条件、逐项结果、预览绑定 owner+revision+item hash 且 600 s 过期（AC-21/22）
+- 外部访问入口仅取自 contracts/access_links.json；无 CAS 客户端、无票据校验、无校园登录入口（AC-23/28）
+- 官方期刊指标无许可来源时返回 unavailable，引用代理指标标注「内部引用代理指标」（AC-24）
+- 项目隔离与凭据：越权一律 404，DTO/日志/导出无秘密（AC-16/25）
+- R22：规范包校验在仓库路径映射下 status: pass，35 个 manifest 校验和通过
+- 性能：固定 300 篇语料 20 次重复，五项预算全部 met；参考 2 vCPU/2 GB 未实测，已如实标注
+
+本阶段按 `docs/v3.2/` 规范实施；验收状态见 `handoff/IMPLEMENTATION_STATUS.md`。
 ## v0.9.18（2026-10-17）M4：LEExtractor v3.2 分阶段实施
 
 - 证据化概览：每条 statement 带 text/type/paper_ids/evidence_ids/scope/limitations；无 Key 时仍生成模板概览（AC-01/20）
