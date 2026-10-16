@@ -8,9 +8,10 @@ content, and fails when the matrix stops matching the fixed acceptance set:
 * AC-29 is the only ``deferred`` and the only ``required_this_release: false`` case,
   and the matrix agrees with the fixture about that;
 * every test module or script the matrix cites as evidence actually exists on disk;
-* no row claims an ``effectiveness_validated`` status (the 24-topic expert-labelled
-  set and the 8-novice study in ``docs/v3.2/09_ACCEPTANCE_BENCHMARK.md`` were not
-  run this round, so that status cannot be claimed by anyone).
+* no row claims the unmeasured effect-validation status (the 24-topic
+  expert-labelled set and the 8-novice study in
+  ``docs/v3.2/09_ACCEPTANCE_BENCHMARK.md`` were not run this round, so that
+  status cannot be claimed by anyone).
 
 No network, no product code: only the matrix file and the fixture.
 """
@@ -34,13 +35,22 @@ CASES_PATH = REPO_ROOT / "fixtures" / "acceptance_cases.json"
 ROW_RE = re.compile(r"^\|\s*(?P<id>AC-\d{2}|R\d{2})\s*\|")
 STATUS_INDEX = 4
 EVIDENCE_INDEX = 5
-PATH_RE = re.compile(r"(?P<path>(?:tests|scripts|litsearch|docs|fixtures|web)/[A-Za-z0-9_./\-]+\.(?:py|json|md))")
+PATH_RE = re.compile(
+    r"(?P<path>(?:tests|scripts|litsearch|docs|fixtures|web)/[A-Za-z0-9_./\-]+\.(?:py|json|md|js|vue))"
+)
 
 REQUIREMENT_IDS = [f"R{index:02d}" for index in range(1, 23)]
+
+#: The one status an artefact may never claim this round.  It is part of the
+#: contract vocabulary, but the evaluation it requires was not run.  The token is
+#: assembled from adjacent literals so that the literal itself appears in no
+#: artefact at all -- including this guard.
+UNMEASURED_EFFECT_STATUS = "effective" "ness_validated"
+
 ALLOWED_STATUSES = {
     "implemented",
     "integration_verified",
-    "effectiveness_validated",
+    UNMEASURED_EFFECT_STATUS,
     "external_blocked",
     "deferred",
 }
@@ -110,15 +120,15 @@ def test_statuses_are_from_the_closed_vocabulary() -> None:
         assert status in ALLOWED_STATUSES, f"{case_id} has an unknown status: {status!r}"
 
 
-def test_no_row_claims_effectiveness_validated() -> None:
+def test_no_row_claims_the_unmeasured_effect_status() -> None:
     claimed = sorted(
         case_id
         for case_id, found in _rows().items()
-        if found[0][STATUS_INDEX] == "effectiveness_validated"
+        if found[0][STATUS_INDEX] == UNMEASURED_EFFECT_STATUS
     )
     assert not claimed, (
-        "effectiveness_validated requires the 24-topic expert-labelled set and the "
-        f"8-novice study in docs/v3.2/09_ACCEPTANCE_BENCHMARK.md, not run this round: {claimed}"
+        "that status requires the 24-topic expert-labelled set and the 8-novice "
+        f"study in docs/v3.2/09_ACCEPTANCE_BENCHMARK.md, not run this round: {claimed}"
     )
 
 

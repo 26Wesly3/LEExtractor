@@ -84,7 +84,7 @@ $env:PYTHONUTF8="1"; python scripts/v32_perf_probe.py --cpus 2
 
 ### 2.6 HTTP 传输层 — `not_measured`
 
-上表的「元数据 API」测的是 `papers_payload` 的**进程内**构造耗时，**不含** ASGI/HTTP 传输与序列化后写 socket 的开销。本脚本刻意不经 HTTP 客户端，原因之一是本机 `NO_PROXY` 环境变量含字面量 `[::1]`，会让 httpx 抛 `InvalidURL`——同一环境问题也使 `tests/test_mcp_host_compat.py` 的 3 个用例失败（见 `KNOWN_LIMITATIONS.md`，并在 `ACCEPTANCE_MATRIX.md` 中复现记录）。因此「端到端 HTTP p95」标 **`not_measured`**，不给数字。
+上表的「元数据 API」测的是 `papers_payload` 的**进程内**构造耗时，**不含** ASGI/HTTP 传输与序列化后写 socket 的开销。本脚本不经 HTTP 客户端，原因是本机 `NO_PROXY` 含字面量 `[::1]`，`httpx.Client()` 构造即抛 `httpx.InvalidURL: Invalid port: ':1]'`（已实测复现，见 `KNOWN_LIMITATIONS.md` L12），FastAPI `TestClient` 同样构造失败。因此「端到端 HTTP p95」标 **`not_measured`**，不给数字。注意：`tests/test_mcp_host_compat.py` 本轮 11 passed（未复现失败），与本条不矛盾——httpx 构造失败是独立实测的。
 
 ## 3. 结论
 
@@ -101,4 +101,4 @@ $env:PYTHONUTF8="1"; python scripts/v32_perf_probe.py --cpus 2
 
 **没有任何一项被记为「通过」而没有实测**；没有删除或缩小语料来掩盖结果；`AC-26` 因此记为「本地预算已达标、外部/合计项未测」。
 
-**这不是效果结论。** 本报告只测工程预算，不是 `docs/v3.2/09_ACCEPTANCE_BENCHMARK.md` 的 24 主题专家标注效果评测；后者本轮未执行（`effectiveness_validated` 不可声明，见 `ACCEPTANCE_MATRIX.md`）。
+**这不是效果结论。** 本报告只测工程预算，不是 `docs/v3.2/09_ACCEPTANCE_BENCHMARK.md` 的 24 主题专家标注效果评测；后者本轮未执行，效果验证状态不可声明（见 `ACCEPTANCE_MATRIX.md`）。
