@@ -7,13 +7,12 @@ import { EAGLE_GRID } from './eagle-grid.js'
 import HomeOverview from './HomeOverview.vue'
 import { pageEntryId, recordSearchEntryClick } from './stats.js'
 import ForceGraph from 'force-graph'
+// 语言与「减少动态效果」由外壳统一持有（S2 从本文件提取，见 shell/prefs.js）。
+import { lang,reduced } from './shell/prefs.js'
 const route=useRoute(),router=useRouter()
 const {width:viewportWidth}=useDisplay()
 const drawerWidth=computed(()=>viewportWidth.value<960?viewportWidth.value:Math.min(880,Math.max(400,viewportWidth.value/2)))
-const lang=ref(localStorage.getItem('le.language')||'zh'),reduced=ref(localStorage.getItem('le.reduced')==='true')
 const t=(zh,en)=>lang.value==='zh'?zh:en
-watch(lang,value=>{localStorage.setItem('le.language',value);document.documentElement.lang=value==='zh'?'zh-CN':'en'})
-watch(reduced,value=>{localStorage.setItem('le.reduced',String(value));document.body.classList.toggle('reduced',value)})
 const page=computed(()=>route.name==='paper'?'paper':String(route.name||'home').replace('project-',''))
 const projectId=computed(()=>String(route.params.projectId||'')),project=ref(null),projects=ref([]),job=ref(null)
 const busy=ref(false),loading=ref(false),error=ref(''),notice=ref(''),navOpen=ref(false),projectError=ref(false)
@@ -229,30 +228,12 @@ const progressEntries=computed(()=>Object.entries(job.value?.progress||{}).filte
 watch(()=>route.fullPath,async()=>{clearTimeout(timer);closeNav();rotorReset();questionSelection.value=null;plan.value=null;exportFile.value=null;restoreSeeds();await loadPage()})
 watch([query,direction],()=>{englishQuery.value='';plan.value=null})
 watch(reviewStage,()=>{readConfirmed.value=false;if(page.value==='review')action(loadReview)})
-onMounted(async()=>{document.documentElement.lang=lang.value==='zh'?'zh-CN':'en';document.body.classList.toggle('reduced',reduced.value);restoreSeeds();await loadPage();try{settings.value=await request('/settings');if(settings.value.providers?.google_scholar?.configured&&!providers.value.includes('google_scholar'))providers.value.push('google_scholar')}catch{}})
+onMounted(async()=>{restoreSeeds();await loadPage();try{settings.value=await request('/settings');if(settings.value.providers?.google_scholar?.configured&&!providers.value.includes('google_scholar'))providers.value.push('google_scholar')}catch{}})
 onBeforeUnmount(()=>{clearTimeout(timer);stopEagle();stopGraph()})
 </script>
 
 <template>
-<v-app :class="{'theme-home':page==='home'}">
-  <a class="skip-link" href="#main">{{t('跳到主要内容','Skip to content')}}</a>
-  <header class="topbar">
-    <router-link to="/" class="brand" aria-label="LEExtractor home">LEExtractor<span class="brand-tag">{{t('文献研究工作台','Research workspace')}}</span></router-link>
-    <nav class="toplinks" :aria-label="t('主导航','Main navigation')"><router-link to="/projects">{{t('项目','Projects')}}</router-link><router-link to="/settings">{{t('设置','Settings')}}</router-link><v-btn size="small" variant="text" @click="lang=lang==='zh'?'en':'zh'" :aria-label="t('切换到英文','Switch to Chinese')">{{lang==='zh'?'EN':'中文'}}</v-btn><v-btn size="small" variant="outlined" @click="navOpen?closeNav():openNav()" :aria-expanded="navOpen">{{t('导航','Navigate')}} <span aria-hidden="true">☰</span></v-btn></nav>
-  </header>
-  <div v-if="navOpen||navClosing" class="nav-scrim" :class="{open:navOpen}" aria-hidden="true" @click="closeNav()"></div>
-  <nav v-if="navOpen||navClosing" class="nav-panel" :class="{open:navOpen,'is-closing':navClosing}" :aria-label="t('工作台导航','Workspace navigation')">
-    <div class="nav-panel__head"><strong>{{t('LEExtractor 工作台','LEExtractor workbench')}}</strong><button type="button" class="nav-panel__close" @click="closeNav()" :aria-label="t('关闭菜单','Close menu')">×</button></div>
-    <nav class="navmap">
-      <button v-for="([key,text],index) in navModules()" :key="key" type="button" class="navmap__item" :class="{current:page===key||(key==='results'&&page==='paper')}" :aria-current="(page===key||(key==='results'&&page==='paper'))?'page':null" :style="{'--nav-i':index}" @click="key==='projects'?router.push('/projects'):(key==='home'?router.push('/'):navigate(key))">
-        <span class="navmap__idx">{{String(index+1).padStart(2,'0')}}</span>
-        <span class="navmap__name">{{text}}</span>
-        <span class="navmap__desc">{{navDesc(key)}}</span>
-      </button>
-    </nav>
-  </nav>
   <nav v-if="projectId&&!projectError" class="work-tabs" :aria-label="t('项目页面','Project pages')"><button v-for="[key,text] in navigation" :key="key" :class="{active:page===key||(key==='results'&&page==='paper')}" @click="navigate(key)">{{text}}</button><span class="project-name">{{project?.name||projectId}}</span></nav>
-  <main id="main">
     <div v-if="error" class="global-message"><v-alert type="error" variant="tonal" closable @click:close="error=''" role="alert">{{error}}</v-alert></div>
     <div v-if="notice" class="global-message"><v-alert type="info" variant="tonal" closable @click:close="notice=''" role="status">{{notice}}</v-alert></div>
     <div v-if="project?.demo" class="demo-banner">{{t('隔离演示项目 · 所有文献与关系为模拟数据，不可作为真实研究证据。','Isolated demo project · All records and relationships are synthetic, not research evidence.')}}</div>
@@ -350,8 +331,6 @@ onBeforeUnmount(()=>{clearTimeout(timer);stopEagle();stopGraph()})
     </div>
 
     <section v-if="page==='paper'&&detail" class="paper-background container"><v-btn variant="outlined" @click="backToResults">{{t('← 返回结果','← Back to results')}}</v-btn><p class="mt-6">{{t('论文详情已在右侧打开；关闭后回到当前项目结果。','Paper details are open in the panel. Close it to return to the project results.')}}</p></section>
-  </main>
   <v-navigation-drawer v-if="detail&&(page==='paper'||drawerClosing)" :model-value="drawerOpen" location="right" temporary :class="['paper-drawer',{'is-open':drawerOpen,'is-closing':drawerClosing}]" :width="drawerWidth" @update:model-value="value=>{if(!value&&drawerOpen)closeDrawer()}"><div class="drawer-inner"><div class="row-between"><span class="eyebrow">{{t('论文详情','Paper details')}}</span><v-btn variant="text" @click="closeDrawer" :aria-label="t('关闭论文详情','Close paper details')">{{t('关闭','Close')}} ×</v-btn></div><h1>{{detail.title}}</h1><p class="paper-meta mt-3">{{detail.year}} · {{detail.venue}} · {{detail.citation_count||0}} {{t('次引用','citations')}}</p><p v-if="detail.ccf?.rank" class="mt-3">CCF-{{detail.ccf.rank}} ({{detail.ccf.edition}}) · {{detail.ccf.note}}</p><p class="mt-3">{{authors(detail)}}</p><dl class="meta-grid mt-4"><div><dt>{{t('来源库','Provider')}}</dt><dd>{{providerNames(detail)}}</dd></div><div><dt>DOI</dt><dd><a v-if="detail.doi" :href="'https://doi.org/'+detail.doi" target="_blank" rel="noopener noreferrer">{{detail.doi}}</a><span v-else class="muted">{{t('该来源未提供 DOI','No DOI from this provider')}}</span></dd></div><div><dt>{{t('被引次数','Cited by')}}</dt><dd>{{detail.citation_count??'—'}}</dd></div><div><dt>{{t('参考文献数','References')}}</dt><dd>{{detail.reference_count??'—'}}</dd></div><div><dt>{{t('原文链接','Source link')}}</dt><dd><a v-if="safeUrl(detail.url)" :href="safeUrl(detail.url)" target="_blank" rel="noopener noreferrer">{{safeUrl(detail.url)}}</a><span v-else class="muted">{{t('未提供','Not provided')}}</span></dd></div><div><dt>{{t('标识符','Identifiers')}}</dt><dd class="mono">{{identifierText(detail)}}</dd></div></dl><div class="actions mt-4"><v-btn variant="outlined" @click="toggleSeed(detail)">{{selected.includes(detail.paper_key)?t('取消种子选择','Deselect seed'):t('设为扩展种子','Select as seed')}}</v-btn><v-btn v-if="safeUrl(detail.url)" :href="safeUrl(detail.url)" target="_blank" rel="noopener noreferrer" color="primary">{{t('打开论文页面 ↗','Open paper page ↗')}}</v-btn></div><hr/><h3>{{t('摘要','Abstract')}}</h3><p class="full-abstract">{{detail.abstract||t('摘要不可用，请从论文页面核查。','Abstract unavailable. Check the paper page.')}}</p><hr/><h3>{{t('相关度与评分上下文','Relevance and score context')}}</h3><p>{{t('相关度','Relevance')}} {{percent(detail.relevance_score)}} · {{detail.score_context_id||'—'}}</p><p class="muted">{{t('相关度是当前查询的排序依据，不是纳入概率或论文质量。','Relevance ranks the current query; it is not inclusion probability or paper quality.')}}</p><p v-if="detail.score_breakdown?.semantic!==undefined" class="muted">{{t('本地多语言 MiniLM：标题与完整摘要分块编码，语义 60%＋关键词 15%＋方向概念覆盖 25%。','Local multilingual MiniLM: title and complete abstract chunks; semantic 60% + lexical 15% + focus coverage 25%.')}}</p><table class="score-table mt-4"><tbody><tr v-for="row in scoreRows" :key="row.key"><th>{{row.label}}</th><td>{{row.value}}</td></tr></tbody></table><details class="mt-4"><summary>{{t('原始评分字段','Raw score fields')}}</summary><pre>{{JSON.stringify(detail.score_breakdown||{},null,2)}}</pre></details><hr/><div v-if="detail.search_snippet" class="mt-6"><h3>{{t('检索片段（非完整摘要）','Search snippet (not a full abstract)')}}</h3><p>{{detail.search_snippet}}</p></div><h3>{{t('发现轨迹','Discovery trail')}}</h3><article v-for="(trace,index) in detail.discovery_traces||[]" :key="index" class="trace"><strong>{{trace.method}} · {{sourceLabel(trace.provider)}}</strong><p v-if="trace.query">{{t('查询','Query')}}: {{trace.query}}</p><p v-if="trace.seed_id">{{t('种子','Seed')}}: {{trace.seed_id}}</p><details><summary>{{t('查看证据字段','Inspect evidence fields')}}</summary><pre>{{JSON.stringify(trace,null,2)}}</pre></details></article><p v-if="!detail.discovery_traces?.length" class="muted">{{t('没有保存的发现轨迹。旧会话可能缺少这些字段。','No saved discovery trails. Older sessions may lack these fields.')}}</p><hr/><h3>{{t('决定历史','Decision history')}}</h3><ul v-if="(detail.history||[]).length" class="brief-list"><li v-for="(row,index) in detail.history" :key="index">{{historyLine(row)}}</li></ul><p v-else class="muted">{{t('尚未记录人工筛选决定。','No human screening decision recorded yet.')}}</p><hr/><h3>{{t('筛选与获取状态','Screening and retrieval status')}}</h3><pre>{{JSON.stringify(detail.screening||{},null,2)}}</pre><h4 class="mt-4">{{t('冲突记录','Conflicts')}}</h4><pre>{{JSON.stringify(detail.conflicts||[],null,2)}}</pre><h3 class="mt-6">{{t('关系依据','Relationship evidence')}}</h3><pre>{{JSON.stringify(detail.relations||[],null,2)}}</pre><p class="muted">{{detail.canonical_id}}</p></div></v-navigation-drawer>
   <footer class="footer"><router-link to="/">LEExtractor</router-link><span>{{t('惟学无际，际于天地','Knowledge without limits')}}</span><span>{{t('证据留下，判断由你。','Keep the evidence. Make the judgment.')}}</span></footer>
-</v-app>
 </template>

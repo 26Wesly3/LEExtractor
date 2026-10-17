@@ -522,7 +522,7 @@ async function openEntry(payload) {
         : t('研究方向项目', 'Research direction project'),
       entry_mode: chosen,
     })
-    await router.push(`/v32/projects/${encodeURIComponent(created.project_id)}/anchors`)
+    await router.push(`/projects/${encodeURIComponent(created.project_id)}/anchors`)
   } catch (failure) {
     // 失败只显示一行状态，不阻断页面其余内容。
     error.value = errorLine(

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // The v3.2 entry choice must CREATE A PROJECT and NAVIGATE.
 //
-// Regression: Workspace.vue renders EntryChoice on /v32 (a route with no
+// Regression: Workspace.vue renders EntryChoice on the entry route (no projectId),
 // projectId), and its handler used to be
 //     async function openEntry(mode) { entryMode.value = mode; activeStage.value = 'anchors' }
 // — it never called the API and never navigated, so both main entries were dead
@@ -15,13 +15,14 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import { describe, expect, it } from 'vitest'
 
 import Workspace from './Workspace.vue'
-import { createV32Routes } from './routes.js'
+import { createAppRoutes } from '../router.js'
 import { click, jsonResponse, mountComponent, sessionResponder, settle, stubFetch } from './test-harness.js'
 
 const PROJECT_ID = 'a'.repeat(32)
 
 function memoryRouter() {
-  return createRouter({ history: createMemoryHistory(), routes: createV32Routes() })
+  // S1 起只有一张路由表：入口页是 /search，工作区是 /projects/:id/:stage。
+  return createRouter({ history: createMemoryHistory(), routes: createAppRoutes() })
 }
 
 async function mountEntries() {
@@ -42,7 +43,7 @@ async function mountEntries() {
     anchor: {},
   }, 201))
   const router = memoryRouter()
-  await router.push('/v32')
+  await router.push('/search')
   await router.isReady()
   const mounted = mountComponent(Workspace, { projectId: '', stage: 'anchors', lang: 'zh' }, { router })
   await settle()
@@ -76,7 +77,7 @@ describe('v3.2 entry choice', () => {
     expect(created.headers['X-CSRF-Token']).toBe('csrf-token-abc')
     expect(String(created.headers['Idempotency-Key']).length).toBeGreaterThanOrEqual(16)
 
-    expect(router.currentRoute.value.path).toBe(`/v32/projects/${PROJECT_ID}/anchors`)
+    expect(router.currentRoute.value.path).toBe(`/projects/${PROJECT_ID}/anchors`)
     unmount()
   })
 
@@ -88,7 +89,7 @@ describe('v3.2 entry choice', () => {
 
     const created = api.calls.find(call => call.url === '/api/v3/projects')
     expect(created.body.entry_mode).toBe('pdf')
-    expect(router.currentRoute.value.path).toBe(`/v32/projects/${PROJECT_ID}/anchors`)
+    expect(router.currentRoute.value.path).toBe(`/projects/${PROJECT_ID}/anchors`)
     unmount()
   })
 
@@ -99,7 +100,7 @@ describe('v3.2 entry choice', () => {
       error: { code: 'capability_unavailable', message: '服务暂不可用', retryable: true, details: {}, request_id: 'r1' },
     }, 503))
     const router = memoryRouter()
-    await router.push('/v32')
+    await router.push('/search')
     await router.isReady()
     const { unmount } = mountComponent(Workspace, { projectId: '', stage: 'anchors', lang: 'zh' }, { router })
     await settle()
@@ -114,7 +115,7 @@ describe('v3.2 entry choice', () => {
     expect(alert.textContent).not.toContain('V32Error')
     expect(alert.textContent).not.toContain('at ')
     // And the page stays on the entries rather than pretending to be in a project.
-    expect(router.currentRoute.value.path).toBe('/v32')
+    expect(router.currentRoute.value.path).toBe('/search')
     unmount()
   })
 })

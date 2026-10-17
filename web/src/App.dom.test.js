@@ -4,13 +4,14 @@ import { readFileSync } from 'node:fs'
 import { createApp,nextTick } from 'vue'
 import { createMemoryHistory,createRouter } from 'vue-router'
 import App from './App.vue'
+import AppShell from './shell/AppShell.vue'
 import { createWorkspaceTheme } from './bootstrap.js'
 
 // 旧工作台的页面在 S1 之后只以重定向形式存在（src/router.js）。这些用例测的是
-// App.vue 自己的页面逻辑，所以在这里保留一张本地旧表；S6 删除旧分支时一并删除。
-const LegacyPage={template:'<span />'}
+// App.vue 自己的页面逻辑，所以在这里保留一张本地旧表，并把每个路径都直接挂到
+// App.vue（S2 起外壳由 AppShell 提供）。S6 删除旧分支时一并删除。
 function createLegacyRouter(history){
-  const routes=[{path:'/',name:'home',component:LegacyPage},{path:'/search',name:'search',component:LegacyPage},{path:'/projects',name:'projects',component:LegacyPage},{path:'/settings',name:'settings',component:LegacyPage},...['search','results','expand','landscape','questions','review','export'].map(name=>({path:`/projects/:projectId/${name}`,name:`project-${name}`,component:LegacyPage})),{path:'/projects/:projectId/papers/:paperKey',name:'paper',component:LegacyPage},{path:'/:pathMatch(.*)*',redirect:'/'}]
+  const routes=[{path:'/',name:'home',component:App},{path:'/search',name:'search',component:App},{path:'/projects',name:'projects',component:App},{path:'/settings',name:'settings',component:App},...['search','results','expand','landscape','questions','review','export'].map(name=>({path:`/projects/:projectId/${name}`,name:`project-${name}`,component:App})),{path:'/projects/:projectId/papers/:paperKey',name:'paper',component:App},{path:'/:pathMatch(.*)*',redirect:'/'}]
   return createRouter({history,routes,scrollBehavior:()=>({top:0})})
 }
 
@@ -33,7 +34,7 @@ async function settle(){for(let i=0;i<80;i++){await Promise.resolve();await next
 function button(text){return [...document.querySelectorAll('button,a.v-btn')].find(el=>el.textContent.trim()===text)}
 function input(label){const target=[...document.querySelectorAll('label')].find(el=>el.textContent.trim()===label && el.getAttribute('for'));expect(target,`missing label ${label}`).toBeTruthy();return document.getElementById(target.getAttribute('for'))}
 async function click(text){const target=button(text);expect(target,`missing button ${text}`).toBeTruthy();target.click();await settle()}
-async function mount(path){router=createLegacyRouter(createMemoryHistory());await router.push(path);await router.isReady();app=createApp(App);app.config.errorHandler=(err)=>errors.push(err.message);domHost=document.createElement('div');document.body.appendChild(domHost);app.use(router).use(createWorkspaceTheme()).mount(domHost);await settle()}
+async function mount(path){router=createLegacyRouter(createMemoryHistory());await router.push(path);await router.isReady();app=createApp(AppShell);app.config.errorHandler=(err)=>errors.push(err.message);domHost=document.createElement('div');document.body.appendChild(domHost);app.use(router).use(createWorkspaceTheme()).mount(domHost);await settle()}
 async function navigate(path){await router.push(path);await settle()}
 function mockServer(url,options={}){
   const parsed=new URL(url,'http://localhost'),path=parsed.pathname,method=options.method||'GET',body=options.body?JSON.parse(options.body):undefined
