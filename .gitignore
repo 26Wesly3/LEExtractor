@@ -61,6 +61,12 @@ node_modules/
 web/.vite/
 !web/dist/
 !web/dist/**
+# 首页像素基线：before 是冻结的基线（入库），after 每步重新生成（不入库）。
+web/e2e-shots/home-after-*
+web/e2e-shots/home-before.json
+web/e2e-shots/home-after.json
+# 本机 esbuild 临时目录不可写时的构建临时区（见 docs/handoff/UI_INTEGRATION_PLAN.md S0）
+web/.tmp-build/
 artifacts/
 deliverables/
 .ruff_cache/
