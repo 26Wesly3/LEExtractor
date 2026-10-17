@@ -132,7 +132,10 @@ defineExpose({ refresh, stopPolling, setBatch })
       {{ t('选取 1 至 10 个 PDF。每个文件独立解析与匹配，无法读取的文件明确失败，不会记为成功。','Select 1 to 10 PDFs. Each file is parsed and matched independently; an unreadable file fails explicitly instead of being recorded as a success.') }}
     </p>
     <div class="le32-upload-pick">
-      <input ref="fileInput" type="file" accept="application/pdf,.pdf" multiple :disabled="busy" :aria-label="t('选择 PDF 文件','Choose PDF files')" data-v32-upload-input @change="onPick" />
+      <input id="le32-upload-input" ref="fileInput" class="le32-upload-input" type="file" accept="application/pdf,.pdf" multiple :disabled="busy" :aria-label="t('选择 PDF 文件','Choose PDF files')" data-v32-upload-input @change="onPick" />
+      <label class="le32-primary le32-upload-label" :class="{ 'is-disabled': busy }" for="le32-upload-input">
+        {{ files.length ? `${files.length} ${t('个文件已选择','files selected')}` : t('选择文件', 'Choose files') }}
+      </label>
       <button type="button" class="le32-primary" :disabled="busy || !files.length" data-v32-upload-submit @click="submit">
         {{ t('导入并发现文献', 'Import and discover literature') }}
       </button>
@@ -175,7 +178,12 @@ defineExpose({ refresh, stopPolling, setBatch })
 .le32-upload { border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); padding: var(--s-6); }
 .le32-upload h2 { font-size: 20px; margin-bottom: var(--s-2); }
 .le32-upload-pick { display: flex; flex-wrap: wrap; gap: var(--s-3); align-items: center; margin-top: var(--s-4); }
-.le32-upload-pick input[type="file"] { font-size: 13px; }
+/* 原生 file input 无法统一外观：藏起来，用 label 做同一个黑色按钮。
+   元素仍在 DOM 里，键盘与读屏照常可用（label 的 for 指向它）。 */
+.le32-upload-input { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.le32-upload-label { display: inline-flex; align-items: center; cursor: pointer; }
+.le32-upload-input:focus-visible + .le32-upload-label { outline: 3px solid #677b94; outline-offset: 2px; }
+.le32-upload-label.is-disabled { opacity: .55; cursor: not-allowed; }
 .le32-primary { min-height: 40px; padding: 10px 18px; border: 1px solid var(--ink); border-radius: 8px; background: var(--ink); color: #fff; font-size: 14px; font-weight: 550; }
 .le32-primary[disabled] { opacity: .55; cursor: not-allowed; }
 .le32-upload-batch { margin-top: var(--s-4); }
