@@ -17,13 +17,17 @@ import re
 import urllib.error
 import urllib.parse
 import urllib.request
+from pathlib import Path
 from typing import Any, Callable, Iterable, Mapping
 
 __all__ = [
     "ZoteroLocalError",
+    "attachments",
+    "attachment_path",
     "base_url",
     "collections",
     "items",
+    "pdf_payloads",
     "status",
 ]
 
@@ -206,3 +210,93 @@ def fetch_many(keys: Iterable[str], *, transport: Transport | None = None) -> li
     for key in keys:
         rows.append(item(str(key), transport=transport))
     return rows
+
+
+def attachments(item_key: str, *, transport: Transport | None = None) -> list[dict[str, Any]]:
+    """附件清单（只取 PDF）。Zotero 本地接口的 /children 给的是子附件条目。"""
+    payload = _call(f"/api/users/0/items/{urllib.parse.quote(str(item_key))}/children", {}, transport=transport)
+    rows: list[dict[str, Any]] = []
+    for child in payload or []:
+        if not isinstance(child, Mapping):
+            continue
+        data = dict(child.get("data") or {})
+        content_type = str(data.get("contentType") or "").lower()
+        item_type = str(data.get("itemType") or "")
+        if item_type != "attachment":
+            continue
+        if content_type and content_type != "application/pdf":
+            continue
+        rows.append(
+            {
+                "key": str(data.get("key") or child.get("key") or ""),
+                "content_type": content_type or "application/pdf",
+                "filename": str(data.get("filename") or "") or None,
+                "title": str(data.get("title") or "") or None,
+            }
+        )
+    return rows
+
+
+def attachment_path(attachment_key: str, *, transport: Transport | None = None) -> Path | None:
+    """附件的本机路径。本地接口对 /file 回 302，Location 是 file://… 的绝对路径。"""
+    key = str(attachment_key or "").strip()
+    if not key:
+        return None
+    url = _url(f"/api/users/0/items/{urllib.parse.quote(key)}/file", {})
+    location = str((transport or _file_redirect)(url, 8.0) or "")
+    if location.startswith("file://"):
+        from urllib.parse import unquote, urlparse
+
+        return Path(unquote(urlparse(location).path.lstrip("/"))) if os.name == "nt" else Path(unquote(urlparse(location).path))
+    return None
+
+
+def _file_redirect(url: str, timeout: float) -> str:
+    """只取 302 的 Location，不跟到 file://（urllib 不跟）。"""
+
+    class NoRedirect(urllib.request.HTTPRedirectHandler):
+        def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: D401, ANN001
+            return None
+
+    opener = urllib.request.build_opener(NoRedirect)
+    request = urllib.request.Request(url, method="GET")
+    try:
+        with opener.open(request, timeout=timeout):
+            return ""
+    except urllib.error.HTTPError as error:
+        return str(error.headers.get("location") or "") if error.code in (301, 302, 303, 307, 308) else ""
+    except (urllib.error.URLError, TimeoutError, OSError):
+        return ""
+
+
+#: 单个 PDF 的上限，与上传接口保持一致的口径（50 MiB）。
+MAX_PDF_BYTES = 50 * 1024 * 1024
+
+
+def pdf_payloads(
+    item_keys: Iterable[str], *, transport: Transport | None = None
+) -> tuple[list[tuple[str, bytes]], list[str]]:
+    """读取选中条目的 PDF：返回 ``[(文件名, 字节)]`` 与读不到的说明。"""
+    payloads: list[tuple[str, bytes]] = []
+    problems: list[str] = []
+    for key in item_keys:
+        try:
+            children = attachments(str(key), transport=transport)
+        except ZoteroLocalError as error:
+            problems.append(f"{key}: {error.code}")
+            continue
+        if not children:
+            problems.append(f"{key}: no_pdf_attachment")
+            continue
+        for child in children:
+            path = attachment_path(child["key"], transport=transport)
+            if path is None or not path.exists():
+                problems.append(f"{key}/{child['key']}: pdf_not_on_disk")
+                continue
+            size = path.stat().st_size
+            if size <= 0 or size > MAX_PDF_BYTES:
+                problems.append(f"{key}/{child['key']}: pdf_size_invalid")
+                continue
+            name = child.get("filename") or f"{key}.pdf"
+            payloads.append((name if name.lower().endswith(".pdf") else f"{name}.pdf", path.read_bytes()))
+    return payloads, problems

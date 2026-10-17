@@ -71,8 +71,8 @@ async function importSelected() {
       expected_revision: Number(props.revision || 1),
     })
     message.value = t(
-      `已导入 ${result.imported} 条（新增 ${result.created} 条）。`,
-      `Imported ${result.imported} items (${result.created} new).`,
+      `已导入 ${result.imported} 条，PDF ${result.pdfs ?? 0} 个（新增 ${result.created} 条）。`,
+      `Imported ${result.imported} items and ${result.pdfs ?? 0} PDFs (${result.created} new).`,
     )
     selected.value = []
     emit('imported', result)
@@ -100,7 +100,7 @@ onMounted(loadStatus)
     </p>
 
     <template v-else-if="status?.running">
-      <p class="muted">{{ status.library_name || t('我的文库', 'My library') }} · {{ t('只读：不会改动你的 Zotero 库', 'Read-only: your Zotero library is not modified') }}</p>
+      <p class="muted">{{ status.library_name || t('我的文库', 'My library') }}</p>
       <div class="le32-zotero-tools">
         <select v-model="collection" :aria-label="t('按分类筛选', 'Filter by collection')" data-v32-zotero-collection @change="search">
           <option value="">{{ t('全部分类', 'All collections') }}</option>
@@ -123,8 +123,14 @@ onMounted(loadStatus)
       </ul>
       <p v-else class="muted">{{ t('没有匹配的条目。', 'No matching items.') }}</p>
 
-      <button type="button" class="le32-primary" :disabled="busy || !selected.length" data-v32-zotero-import @click="importSelected">
-        {{ t(`导入选中的 ${selected.length} 条`, `Import ${selected.length} selected`) }}
+      <button
+        type="button"
+        class="le32-import-button"
+        :disabled="busy || !selected.length"
+        data-v32-zotero-import
+        @click="importSelected"
+      >
+        {{ busy ? t('正在导入…', 'Importing…') : t(`导入选中的 ${selected.length} 条（含 PDF）`, `Import ${selected.length} items with PDFs`) }}
       </button>
       <p v-if="message" class="muted" role="status" data-v32-zotero-message>{{ message }}</p>
       <p v-if="error" class="error-text" role="alert" data-v32-zotero-error>{{ error }}</p>
@@ -142,4 +148,22 @@ onMounted(loadStatus)
 .le32-zotero-rows { max-height: 320px; overflow-y: auto; margin: 0 0 var(--s-3); }
 .le32-zotero-row { display: flex; gap: var(--s-2); align-items: flex-start; padding: var(--s-2) 0; border-bottom: 1px solid var(--border); font-size: 13.5px; cursor: pointer; }
 .le32-zotero-row input { margin-top: 3px; }
+/* 导入按钮自己带样式：父组件的 scoped 样式传不到子组件（之前它渲染成一行文字）。 */
+.le32-import-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 10px 18px;
+  border: 1px solid var(--ink);
+  border-radius: 8px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 550;
+  cursor: pointer;
+}
+.le32-import-button:hover { background: var(--ink-2, var(--ink)); }
+.le32-import-button:disabled { opacity: .45; cursor: not-allowed; }
 </style>

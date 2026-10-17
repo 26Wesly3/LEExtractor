@@ -282,6 +282,8 @@ class ZoteroLocalImportBody(RevisionBody):
     """S11：把本机 Zotero 里选中的条目导入当前项目。"""
 
     item_keys: list[str] = Field(min_length=1, max_length=500)
+    # 默认把 PDF 一起导入（与元数据同一批），这样导入的文献能直接参与解析与筛选。
+    include_pdfs: bool = True
 
 
 class ZoteroImportBody(RevisionBody):
@@ -1204,10 +1206,29 @@ def build_router(state: V32State) -> APIRouter:
                 rank_project(state, project)
             except Exception:  # noqa: BLE001 - 排序失败不该丢掉已导入的记录
                 pass
+        pdfs = 0
+        pdf_problems: list[str] = []
+        import_payload: dict[str, Any] = {}
+        # 元数据之后是 PDF：读 Zotero 附件，走与上传相同的解析/匹配批次。
+        if paper_ids and body.include_pdfs:
+            payloads, pdf_problems = zotero_local.pdf_payloads(body.item_keys)
+            pdfs = len(payloads)
+            if payloads:
+                import_payload = _begin_import(
+                    project,
+                    session,
+                    payloads,
+                    f"zotero-local-{project.project_id}-{body.expected_revision}"[:128],
+                    body.expected_revision,
+                )
         return {
             "imported": len(paper_ids),
             "created": max(0, created),
             "paper_ids": paper_ids,
+            "pdfs": pdfs,
+            "pdf_problems": pdf_problems,
+            "import_id": import_payload.get("import_id"),
+            "import_job_id": import_payload.get("job_id"),
             "revision": project.revision,
             "corpus_version": project.corpus_version,
         }
@@ -1306,6 +1327,70 @@ def build_router(state: V32State) -> APIRouter:
         return payload
 
     # -- import -----------------------------------------------------------
+
+    def _begin_import(
+        project: Any,
+        session: Any,
+        payloads: list[tuple[str, bytes]],
+        idempotency_key: str,
+        expected_revision: int,
+    ) -> dict[str, Any]:
+        """把一批 PDF 变成一次导入批次并排队解析。
+
+        上传接口与「从本机 Zotero 导入」共用这一条路径：两边导入的 PDF 走同一个
+        解析/匹配流程，行为一致。
+        """
+        from litsearch.v32.pdf_import import plan_batch
+
+        plan_batch([(name, len(data)) for name, data in payloads])
+        import_id = hashlib.sha256(
+            f"{session.owner_id}|{project.project_id}|{idempotency_key}".encode("utf-8")
+        ).hexdigest()[:32]
+        items: dict[str, dict[str, Any]] = {}
+        order: list[str] = []
+        for name, data in payloads:
+            digest = content_hash(data)
+            reused = digest in (project.doc.get("attachments") or {})
+            attachment = state.store.add_attachment(project, data, name)
+            item_id = str(attachment["attachment_id"])
+            order.append(item_id)
+            items[item_id] = {
+                "item_id": item_id,
+                "attachment_id": str(attachment["attachment_id"]),
+                "display_name": str(attachment["display_name"]),
+                "content_hash": str(attachment["content_hash"]),
+                "status": "uploaded",
+                "paper_id": None,
+                "match_candidates": [],
+                "match_score": None,
+                "error_code": None,
+                "retryable": False,
+                "size_bytes": int(attachment.get("size") or 0),
+                "reused": bool(reused),
+            }
+        record = {
+            "import_id": import_id,
+            "project_id": project.project_id,
+            "expected_revision": int(expected_revision),
+            "item_ids": order,
+            "items": items,
+            "created_at": iso_now(),
+            "updated_at": iso_now(),
+            "job_id": "",
+        }
+        project.doc.setdefault("imports", {})[import_id] = record
+        state.store.save(project)
+        job = state.jobs.submit(
+            project,
+            "import",
+            stage=str(JobStage.PARSING),
+            import_id=import_id,
+            priority=True,
+            session_ref=session.session_id,
+        )
+        record["job_id"] = job.job_id
+        state.store.save(project)
+        return _import_batch(state, project, import_id)
 
     @router.post("/projects/{pid}/papers/import", status_code=202)
     async def import_papers(

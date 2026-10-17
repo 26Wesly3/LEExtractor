@@ -823,8 +823,6 @@ if (props.projectId) {
               <p class="muted" data-v32-mode-note>{{ modelMode === 'ai_enhanced' ? t('将把题名与摘要等元数据发送给配置的模型服务。','Titles and abstracts are sent to the configured model service.') : t('不调用任何远程模型。','No remote model is called.') }}</p>
               <button type="button" class="le32-primary" :disabled="busy || !researchText.trim()" data-v32-discover @click="startDiscovery">{{ t('开始发现核心文献', 'Discover core literature') }}</button>
             </template>
-            <!-- S11：本机 Zotero 以侧栏方式接入，不占正文版面。 -->
-            <button type="button" class="le32-action" data-v32-zotero-open @click="openZotero">{{ t('从本机 Zotero 导入', 'Import from local Zotero') }}</button>
           </section>
         </template>
 
