@@ -82,7 +82,7 @@ onMounted(load)
       <div>
         <p class="eyebrow">{{ t('旧版存储', 'Legacy storage') }}</p>
         <h1 id="le-list-title">{{ t('项目', 'Projects') }}</h1>
-        <p class="muted le-list-lead">{{ t('这些是旧版项目：只读，只提供 RIS 导出。新的研究请在「新研究」里开始；导出的 RIS 可以在上传面板里导入成一个 v3 项目。', 'These projects use the legacy store: read-only, RIS export only. Start new work from New research; an exported RIS can be imported into a v3 project from the upload panel.') }}</p>
+        <p class="muted le-list-lead">{{ t('工作区项目可以直接打开。旧版项目属于旧存储：只读，只提供 RIS 导出；导出的 RIS 可以在上传面板里导入成一个 v3 项目。新的研究请在「开始新研究」里开始。', 'Workspace projects open directly. Legacy projects use the old store: read-only, RIS export only; an exported RIS can be imported into a v3 project from the upload panel. Start new work from New research.') }}</p>
       </div>
       <button type="button" class="le-list-primary" @click="router.push('/search')">{{ t('开始新研究', 'Start new research') }}</button>
     </header>

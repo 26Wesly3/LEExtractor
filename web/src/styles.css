@@ -148,6 +148,7 @@ body.reduced *,body.reduced *:before,body.reduced *:after{animation:none!importa
 .le-list-error{margin:0 0 20px;padding:12px 14px;border:1px solid #b3261e;border-radius:8px;color:#b3261e;font-size:13px}
 .le-list-rows{list-style:none;margin:0;padding:0;display:grid;gap:12px}
 .le-list-section{margin:8px 0 14px;font-size:15px;letter-spacing:.01em}
+.le-list-rows + .le-list-section{margin-top:32px}
 .le-list-section + .muted{margin-bottom:24px}
 .le-list-row{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:18px 20px;border:1px solid var(--line);border-radius:10px;background:#fff}
 .le-list-row-main strong{font-size:16px}
