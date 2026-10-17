@@ -463,6 +463,13 @@ function pollJob(jobId) {
       const active = ['queued', 'running', 'cancel_requested'].includes(next?.state)
       if (!active) {
         stopPolling()
+        // 「继续发现」时后端会用 discover 取代 expand（superseded）。此时不能就
+        // 此停住：跟到这个项目当前真正在跑的任务上，否则界面会一直停在旧列表，
+        // 看起来像"点了开始没反应"。
+        if (next?.state === 'superseded' || next?.state === 'interrupted') {
+          await loadProject()
+          if (pollTimer !== null) return
+        }
         const anchor = anchorNow()
         await loadPapers({ keepAnchor: false })
         restore(anchor)
