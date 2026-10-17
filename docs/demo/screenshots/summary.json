@@ -1,0 +1,58 @@
+{
+  "base": "http://127.0.0.1:8000",
+  "topic": "薄荷干旱胁迫的转录组响应与次生代谢",
+  "shots": [
+    "..\\docs\\demo\\screenshots\\01-entry.png",
+    "..\\docs\\demo\\screenshots\\02-anchors-filled.png",
+    "..\\docs\\demo\\screenshots\\03-progress.png",
+    "..\\docs\\demo\\screenshots\\04-discovered.png",
+    "..\\docs\\demo\\screenshots\\05-核心文献筛选推荐.png",
+    "..\\docs\\demo\\screenshots\\05-papers-drawer.png",
+    "..\\docs\\demo\\screenshots\\07-研究领域概述.png",
+    "..\\docs\\demo\\screenshots\\08-创新点探索.png",
+    "..\\docs\\demo\\screenshots\\08-export-menu.png"
+  ],
+  "steps": [
+    {
+      "step": "create project",
+      "projectId": "9f92b5415c86498d93a75e260745a8e2"
+    },
+    {
+      "step": "discovery finished",
+      "progressSeen": true,
+      "finished": true,
+      "discoverSeconds": 55
+    },
+    {
+      "step": "papers",
+      "cards": 20,
+      "firstTitle": "Quantifying impacts of the drought 2018 on European ecosyste",
+      "reasonSamples": []
+    },
+    {
+      "step": "threads",
+      "hasBranches": 0,
+      "journalRows": 0,
+      "journalSamples": []
+    },
+    {
+      "step": "insight",
+      "textLength": 945
+    },
+    {
+      "step": "export",
+      "formats": [
+        "RIS",
+        "BibTeX",
+        "CSV 表格",
+        "证据包",
+        "PRISMA 流程"
+      ]
+    },
+    {
+      "step": "threads text",
+      "empty": false
+    }
+  ],
+  "problems": []
+}
