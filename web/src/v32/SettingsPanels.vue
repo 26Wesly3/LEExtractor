@@ -6,15 +6,19 @@
 //   * 选择基础模式不调用任何远程模型；选择 AI 增强时明确说明会发送元数据。
 // 本轮不提供任何校园账号登录入口（AC-28）。
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { errorLine } from './client.js'
+import { createV32Client, errorLine } from './client.js'
 
 const props = defineProps({
   lang: { type: String, default: 'zh' },
-  client: { type: Object, required: true },
+  // 路由直接渲染这个组件时没有人传 client（/settings），所以必须有默认值，
+  // 否则所有请求都变成 undefined.method 调用，页面看起来只是"检测失败"。
+  client: { type: Object, default: null },
   modelMode: { type: String, default: 'basic' },
 })
 
 const emit = defineEmits(['update:modelMode'])
+
+const api = props.client || createV32Client()
 
 const t = (zh, en) => (props.lang === 'zh' ? zh : en)
 const statuses = ref([])
@@ -30,7 +34,13 @@ const drafts = reactive(emptyDrafts())
 const busy = ref('')
 const message = ref('')
 const error = ref('')
-const presets = ref([])
+// 服务端预设拿不到时也要能选；与 litsearch/v32/model_settings.py 的 PRESETS 对齐。
+const presets = ref([
+  { id: 'openai', label: 'OpenAI', base_url: 'https://api.openai.com/v1', dialect: 'openai_compatible', default_model: 'gpt-5.5' },
+  { id: 'deepseek', label: 'DeepSeek', base_url: 'https://api.deepseek.com', dialect: 'openai_compatible', default_model: 'deepseek-flash' },
+  { id: 'anthropic', label: 'Anthropic Claude', base_url: 'https://api.anthropic.com/v1', dialect: 'anthropic', default_model: 'claude-opus-5-5' },
+  { id: 'custom', label: '自定义 / 中转站', base_url: '', dialect: 'openai_compatible', default_model: '' },
+])
 const probeBusy = ref('')
 const probeState = reactive({})
 
@@ -56,7 +66,7 @@ async function probeModel(provider) {
   probeBusy.value = provider.id
   delete probeState[provider.id]
   try {
-    const result = await props.client.probeModel({
+    const result = await api.probeModel({
       preset_id: draft.preset,
       base_url: draft.base_url || undefined,
       dialect: draft.dialect || undefined,
@@ -137,15 +147,15 @@ async function load() {
   try {
     // 先建立匿名会话：凭据状态接口要求会话 cookie，直接读会在首次进入设置页时
     // 拿到 401，控制台里留一条红字、状态显示成「未配置」但其实是没授权读。
-    try { await props.client.session() } catch { /* 会话失败时下面会给出可读错误 */ }
-    const data = await props.client.credentials()
+    try { await api.session() } catch { /* 会话失败时下面会给出可读错误 */ }
+    const data = await api.credentials()
     statuses.value = Array.isArray(data?.items) ? data.items : []
     try {
-      const list = await props.client.modelPresets()
-      presets.value = Array.isArray(list?.items) ? list.items : []
+      const list = await api.modelPresets()
+      if (Array.isArray(list?.items) && list.items.length) presets.value = list.items
       const row = presetRow(drafts.ai_model.preset)
       if (row && !drafts.ai_model.base_url) drafts.ai_model.base_url = row.base_url
-    } catch { /* 预设拿不到时仍可用默认的三个选项 */ }
+    } catch { /* 预设拿不到时用内置的同名四项兜底 */ }
     error.value = ''
   } catch (problem) {
     error.value = errorLine(problem, t('未能读取凭据状态。', 'Could not read credential status.'))
@@ -161,7 +171,7 @@ async function save(area) {
   error.value = ''
   try {
     if (area.kind === 'model') {
-      const saved = await props.client.saveModelConfig({
+      const saved = await api.saveModelConfig({
         preset_id: draft.preset,
         base_url: draft.base_url || undefined,
         dialect: draft.dialect || undefined,
@@ -182,7 +192,7 @@ async function save(area) {
       if (draft.profile) body.endpoint_profile_id = draft.profile
       if (draft.model && draft.model.trim()) body.model = draft.model.trim()
     }
-    const saved = await props.client.saveCredential(provider.id, body)
+    const saved = await api.saveCredential(provider.id, body)
     // 提交后立即清空输入：明文不再保留在页面状态里。
     draft.secret = ''
     const existing = statuses.value.filter(row => row.provider_id !== provider.id)
@@ -202,7 +212,7 @@ async function clear(area) {
   busy.value = provider.id
   message.value = ''
   try {
-    await props.client.deleteCredential(provider.id)
+    await api.deleteCredential(provider.id)
     statuses.value = statuses.value.map(row => (row.provider_id === provider.id ? { ...row, configured: false, updated_at: null } : row))
     message.value = t('已删除该凭据。', 'The credential was removed.')
   } catch (problem) {
