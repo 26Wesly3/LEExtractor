@@ -22,8 +22,8 @@
 | 启动命令 | `python scripts/launch_web.py`（FastAPI）/ `python scripts/launch_gui.py`（Streamlit）/ `litsearch-mcp`（MCP） | `docs/v3.2/qa/ENVIRONMENT.md` |
 | 测试命令 | `python -m pytest -q`（`testpaths=["tests"]`） | `pyproject.toml` |
 | 基线测试结果 | **873 passed, 5 failed**（259.02 s） | 见下 |
-| 交付时测试结果 | **1236 passed, 2 failed** | `python -m pytest -q`；另见「阶段」表 |
-| 前端 | `cd web; npm test`（vitest 13 文件 / 77 通过）、`npm run build`、`python scripts/sync_web_assets.py` | 见「阶段」表 |
+| 交付时测试结果 | **1242 passed, 2 failed**（159.41 s，安静工作树） | `python -m pytest -q`；另见「阶段」表 |
+| 前端 | `cd web; npm test`（vitest 14 文件 / 81 通过）、`npm run build`、`python scripts/sync_web_assets.py` | 见「阶段」表 |
 
 ### 基线既有失败（**非本次引入，也未隐藏**）
 
@@ -109,8 +109,10 @@ R22 由 `scripts/validate_v32_pack.py` 校验：`PYTHONUTF8=1; python scripts/va
 
 ## 最终交付
 
-规模：`python -m pytest -q -k v32` → **360 passed**（交付前最后实测）；全量 `python -m pytest -q` → **1236 passed, 2 failed**（两项均为基线既有发布文档链接检查）；
-前端 `cd web; npm test` → **13 文件 / 77 通过**。
+规模：`python -m pytest -q -k v32` → **361 passed**（交付前最后实测）；全量 `python -m pytest -q` → **1242 passed, 2 failed**（两项均为基线既有发布文档链接检查）；
+前端 `cd web; npm test` → **14 文件 / 81 通过**。
+
+交付基线：分支 `master` 于 commit `86cbaa9`，标签 `v0.9.19`；功能分支 `feature/v3.2` 于 commit `c4b8241`。两者均已推送到 `origin`。
 
 | 分类 | 内容 |
 |---|---|
