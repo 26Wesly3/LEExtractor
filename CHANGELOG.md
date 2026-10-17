@@ -9,6 +9,14 @@
 
 ---
 
+## v0.9.20（2026-10-17）M5：LEExtractor v3.2 分阶段实施
+
+- 首页恢复为基线原样（封面高度、转子、入场动效、三个原有动作按钮）
+- 修复「获取全文」面板：出版社原文／DOI 官方解析／机构访问入口分开，可用性如实标注，不再是假的浙大认证跳转
+- 本地模型自动发现：已存在的翻译与嵌入模型直接复用，不再重复下载；capabilities 如实报告
+- AI 适配器：OpenAI、DeepSeek、Anthropic Claude 三家 BYOK，严格 JSON 校验，密钥不入日志/错误/仓库
+
+本阶段按 `docs/v3.2/` 规范实施；验收状态见 `handoff/IMPLEMENTATION_STATUS.md`。
 ## v0.9.19（2026-10-17）M5：LEExtractor v3.2 分阶段实施
 
 - Zotero：官方版本前置条件、逐项结果、预览绑定 owner+revision+item hash 且 600 s 过期（AC-21/22）
