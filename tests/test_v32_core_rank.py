@@ -281,7 +281,7 @@ def test_user_anchor_enters_without_topic_evidence():
     assert "anchor" in result.recommended_paper_ids
     evidence = result.by_id("anchor").recommendation_evidence
     assert any(
-        entry["code"] == "user_anchor" and "用户指定起点" in entry["text"] for entry in evidence
+        entry["code"] == "user_anchor" and "手动选进" in entry["text"] for entry in evidence
     )
 
 

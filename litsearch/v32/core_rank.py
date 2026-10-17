@@ -709,9 +709,9 @@ def core_rank(
         out: list[dict[str, Any]] = []
         topic = values[pid][_TOPIC]
         if pid in anchor_extra:
-            text = "用户指定起点：用户显式指定进入推荐"
+            text = "你手动选进了推荐：这篇由你决定，不是算法挑的"
             if topic is None or topic <= 0:
-                text = "用户指定起点：缺少主题证据，由用户显式指定进入推荐"
+                text = "你手动选进了推荐（这篇缺少主题信息，算法判断不了）"
             out.append(
                 {"code": "user_anchor", "text": text, "paper_ids": [pid], "evidence_ids": []}
             )
@@ -719,20 +719,18 @@ def core_rank(
             out.append(
                 {
                     "code": "topic_gate",
-                    "text": (
-                        f"主题信号位于本候选集主题门槛前 {fraction:.0%}"
-                        "（相对候选集的工程启发式，不代表绝对相关度）"
-                    ),
+                    "text": f"主题相关：在本批 {len(values)} 篇里排前 {fraction:.0%}",
                     "paper_ids": [pid],
                     "evidence_ids": [],
                 }
             )
+        # 理由面向使用者：先说结论，再说一句依据；不出现指标名、算法名或英文术语。
         if active_signals and neutral is not None:
-            for signal, code, label in (
-                (str(Signal.IMPACT), "impact_age_adjusted", "年龄调整后的引用影响"),
-                (str(Signal.GRAPH), "graph_percentile", "已观察引用图中的 PageRank"),
-                (str(Signal.SEED), "seed_similarity", "与已确认种子向量的最大余弦相似度"),
-                (str(Signal.FEEDBACK), "feedback_similarity", "与更新后查询向量的余弦相似度"),
+            for signal, code, headline, because in (
+                (str(Signal.IMPACT), "impact_age_adjusted", "影响力高", "按发表年限折算后，引用表现高于本批中位"),
+                (str(Signal.GRAPH), "graph_percentile", "被引较多", "在本批已获取的引用网络里处于中心"),
+                (str(Signal.SEED), "seed_similarity", "和种子文献接近", "与你选定的种子文献内容接近"),
+                (str(Signal.FEEDBACK), "feedback_similarity", "符合你最新的判断", "与你调整后的研究方向更一致"),
             ):
                 info = state[signal]
                 if not info["active"]:
@@ -743,7 +741,7 @@ def core_rank(
                 out.append(
                     {
                         "code": code,
-                        "text": f"{label}高于候选集中位（第 {rank:.1f} 名）",
+                        "text": f"{headline}：{because}",
                         "paper_ids": [pid],
                         "evidence_ids": [],
                     }
