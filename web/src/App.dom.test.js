@@ -2,9 +2,17 @@
 import { afterEach,beforeEach,describe,expect,it,vi } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { createApp,nextTick } from 'vue'
-import { createMemoryHistory } from 'vue-router'
+import { createMemoryHistory,createRouter } from 'vue-router'
 import App from './App.vue'
-import { createWorkspaceRouter,createWorkspaceTheme } from './bootstrap.js'
+import { createWorkspaceTheme } from './bootstrap.js'
+
+// 旧工作台的页面在 S1 之后只以重定向形式存在（src/router.js）。这些用例测的是
+// App.vue 自己的页面逻辑，所以在这里保留一张本地旧表；S6 删除旧分支时一并删除。
+const LegacyPage={template:'<span />'}
+function createLegacyRouter(history){
+  const routes=[{path:'/',name:'home',component:LegacyPage},{path:'/search',name:'search',component:LegacyPage},{path:'/projects',name:'projects',component:LegacyPage},{path:'/settings',name:'settings',component:LegacyPage},...['search','results','expand','landscape','questions','review','export'].map(name=>({path:`/projects/:projectId/${name}`,name:`project-${name}`,component:LegacyPage})),{path:'/projects/:projectId/papers/:paperKey',name:'paper',component:LegacyPage},{path:'/:pathMatch(.*)*',redirect:'/'}]
+  return createRouter({history,routes,scrollBehavior:()=>({top:0})})
+}
 
 const pid='d'.repeat(32),key='a'.repeat(64),secondKey='b'.repeat(64),jid='c'.repeat(32)
 const basePaper={paper_key:key,canonical_id:'10.1000/observed-record',title:'Evidence retained from a provider',abstract:'A complete abstract supplied by the backend.',authors:[{name:'Researcher A'}],year:2024,venue:'Test Journal',doi:'10.1000/observed-record',citation_count:12,reference_count:2,source:'openalex',providers:['openalex'],topics:[],url:'https://example.org/paper',relevance_score:.75,score_context_id:'ctx-1',score_breakdown:{lexical:.75},discovery_traces:[{method:'keyword',provider:'openalex',query:'evidence',seed_id:'',round_no:0,score:.75,evidence_ids:[],timestamp:'2026-10-09T10:00:00Z'}],screening:{title_decision:'pending',full_text_decision:'pending',full_text_retrieved:false,retrieval_attempted:false,reason:'',full_text_reason:'',status:'not_started',requires_manual_review:false}}
@@ -25,7 +33,7 @@ async function settle(){for(let i=0;i<80;i++){await Promise.resolve();await next
 function button(text){return [...document.querySelectorAll('button,a.v-btn')].find(el=>el.textContent.trim()===text)}
 function input(label){const target=[...document.querySelectorAll('label')].find(el=>el.textContent.trim()===label && el.getAttribute('for'));expect(target,`missing label ${label}`).toBeTruthy();return document.getElementById(target.getAttribute('for'))}
 async function click(text){const target=button(text);expect(target,`missing button ${text}`).toBeTruthy();target.click();await settle()}
-async function mount(path){router=createWorkspaceRouter(createMemoryHistory());await router.push(path);await router.isReady();app=createApp(App);app.config.errorHandler=(err)=>errors.push(err.message);domHost=document.createElement('div');document.body.appendChild(domHost);app.use(router).use(createWorkspaceTheme()).mount(domHost);await settle()}
+async function mount(path){router=createLegacyRouter(createMemoryHistory());await router.push(path);await router.isReady();app=createApp(App);app.config.errorHandler=(err)=>errors.push(err.message);domHost=document.createElement('div');document.body.appendChild(domHost);app.use(router).use(createWorkspaceTheme()).mount(domHost);await settle()}
 async function navigate(path){await router.push(path);await settle()}
 function mockServer(url,options={}){
   const parsed=new URL(url,'http://localhost'),path=parsed.pathname,method=options.method||'GET',body=options.body?JSON.parse(options.body):undefined
