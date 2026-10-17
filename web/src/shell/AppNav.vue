@@ -10,6 +10,8 @@ import { computed, nextTick, onBeforeUnmount, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { lang, motionReduced } from './prefs.js'
 import { buildMenu } from './nav-items.js'
+import { projectTitle } from './project-title.js'
+import { STAGES } from '../v32/states.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -25,6 +27,22 @@ const toggleEl = ref(null)
 let navTimer = null
 
 const items = computed(() => buildMenu({ t, lang: lang.value, hasProject: hasProject.value }))
+
+/* 工作区阶段条（S4）：由路由驱动，刷新与前进后退都不会丢阶段。 */
+const inWorkspace = computed(() => route.name === 'workspace' || route.name === 'paper')
+const projectId = computed(() => String(route.params.projectId || ''))
+const stages = computed(() => STAGES.map(stage => ({ key: stage.key, label: lang.value === 'zh' ? stage.zh : stage.en })))
+const currentProjectName = computed(() => projectTitle.value || projectId.value)
+
+/** 阶段条用 roving tabindex：只有当前项可 Tab 到，左右键在项之间移动焦点。 */
+function onStageKeydown(event, index) {
+  const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0
+  if (!step) return
+  event.preventDefault()
+  const nodes = [...(event.currentTarget?.parentElement?.querySelectorAll('.le-nav-stage') || [])]
+  const next = nodes[(index + step + nodes.length) % nodes.length]
+  if (next) next.focus()
+}
 
 /** 当前条目：workspace 用阶段名，旧路由名归一成阶段。 */
 const activeKey = computed(() => {
@@ -107,6 +125,11 @@ onBeforeUnmount(() => { if (typeof document !== 'undefined') document.removeEven
     <router-link to="/" class="brand" aria-label="LEExtractor home">LEExtractor<span class="brand-tag">{{ t('文献研究工作台', 'Research workspace') }}</span></router-link>
     <nav class="toplinks" :aria-label="t('主导航', 'Main navigation')"><router-link to="/projects">{{ t('项目', 'Projects') }}</router-link><router-link to="/settings">{{ t('设置', 'Settings') }}</router-link><v-btn size="small" variant="text" @click="toggleLang" :aria-label="t('切换到英文', 'Switch to Chinese')">{{ lang === 'zh' ? 'EN' : '中文' }}</v-btn><v-btn ref="toggleEl" size="small" variant="outlined" @click="navOpen ? closeNav() : openNav()" :aria-expanded="navOpen" aria-controls="le-nav-panel">{{ t('导航', 'Navigate') }} <span aria-hidden="true">☰</span></v-btn></nav>
   </header>
+  <nav v-if="inWorkspace" class="le-nav-stages" :aria-label="t('工作区阶段', 'Workspace stages')">
+    <router-link v-for="(stage, index) in stages" :key="stage.key" class="le-nav-stage" :class="{ current: activeKey === stage.key }" :to="`/projects/${projectId}/${stage.key}`" :aria-current="activeKey === stage.key ? 'step' : null" :tabindex="activeKey === stage.key ? 0 : -1" @keydown="onStageKeydown($event, index)">{{ stage.label }}</router-link>
+    <span class="project-name">{{ currentProjectName }}</span>
+    <button type="button" class="le-nav-export" @click="go('export')">{{ t('导出', 'Export') }}</button>
+  </nav>
   <div v-if="navOpen || navClosing" class="nav-scrim" :class="{ open: navOpen }" aria-hidden="true" @click="closeNav()"></div>
   <nav v-if="navOpen || navClosing" id="le-nav-panel" ref="panelEl" class="nav-panel" :class="{ open: navOpen, 'is-closing': navClosing }" :aria-label="t('工作台导航', 'Workspace navigation')" @keydown="onPanelKeydown">
     <div class="nav-panel__head"><strong>{{ t('LEExtractor 工作台', 'LEExtractor workbench') }}</strong><button ref="closeEl" type="button" class="nav-panel__close" @click="closeNav()" :aria-label="t('关闭菜单', 'Close menu')">×</button></div>

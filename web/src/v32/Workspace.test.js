@@ -122,11 +122,12 @@ describe('Workspace', () => {
     mounted.unmount()
   })
 
-  it('exposes the four stages and the wait state of the fast result', async () => {
+  it('renders the stage it was routed to and the wait state of the fast result', async () => {
+    // S4：阶段条在 shell/AppNav.vue（见 shell/AppNav.test.js），工作区自己按
+    // props.stage 渲染，不再有内部 tab 与本地 activeStage。
     const mounted = mountComponent(Workspace, { client: fakeClient(), projectId: 'p1', stage: 'papers', lang: 'zh' })
     await settle(60)
-    expect(all('[data-v32-stage]').map(node => node.getAttribute('data-v32-stage'))).toEqual(['anchors', 'papers', 'threads', 'insight'])
-    expect(all('[data-v32-stage]').map(node => node.textContent.trim())).toEqual(['研究起点', '核心文献', '研究脉络', '研究洞察'])
+    expect(all('[data-v32-stage]')).toHaveLength(0)
     expect(text('[data-v32-ranking-stage]')).toBe('排序已更新')
     expect(text('[data-v32-snapshot]')).toContain('排名快照版本')
     // 默认视图只展示推荐组，探索列表在独立视图中保留。

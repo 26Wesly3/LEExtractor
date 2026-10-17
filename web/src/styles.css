@@ -151,6 +151,19 @@ body.reduced *,body.reduced *:before,body.reduced *:after{animation:none!importa
 .le32-link:focus-visible,.le32-action:focus-visible,.le32-primary:focus-visible,.le32-view:focus-visible,.le32-stage:focus-visible,.le32-mode:focus-visible,.le32-entry-action:focus-visible,.le32-card-open:focus-visible{outline:3px solid #677b94;outline-offset:3px}
 @media(max-width:599px){.theme-v32 .le32-workspace>h1,.le32-settings>h1{font-size:26px}.theme-v32 .le32-workspace h2,.le32-settings h2{font-size:20px}.le32-workspace{padding-bottom:40px}}
 
+/* 外壳导航的阶段条（S4）。替代旧 .work-tabs 与 .le32-stage-nav：一行、可横向滚动、
+   当前项用下划线，右侧是项目名与导出。只新增 .le-nav-* 选择器，不动既有规则。 */
+.le-nav-stages{display:flex;align-items:center;gap:4px;overflow-x:auto;padding:0 var(--gutter);height:49px;border-bottom:1px solid var(--border);background:var(--surface);white-space:nowrap;scrollbar-width:thin}
+.le-nav-stage{display:inline-flex;align-items:center;height:49px;padding:0 16px;font-size:14px;color:var(--muted);border-bottom:2px solid transparent;text-decoration:none}
+.le-nav-stage:hover{color:var(--ink);text-decoration:none}
+.le-nav-stage.current{border-color:#000;color:#000;font-weight:550}
+.le-nav-stage:focus-visible{outline:3px solid #677b94;outline-offset:-3px}
+.le-nav-stages .project-name{margin-left:auto;font-size:12px;color:var(--muted);padding:0 20px;max-width:280px;overflow:hidden;text-overflow:ellipsis}
+.le-nav-export{margin-left:8px;font-size:13px;padding:6px 14px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--ink)}
+.le-nav-export:hover{background:var(--surface-3)}
+.le-nav-export:focus-visible{outline:3px solid #677b94;outline-offset:2px}
+@media(max-width:599px){.le-nav-stages .project-name{display:none}}
+
 /* 首页保持基线原样：这里不再覆盖 .theme-home .cover。
    之前为了让「从研究方向开始 / 从已有文献开始」进入首屏，曾把封面改成自动高度加
    视口比例上限（具体数值故意不写在这里，见 web/src/v32/home-first-screen.test.js

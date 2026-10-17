@@ -153,4 +153,29 @@ describe('AppNav', () => {
     await settle()
     expect(document.activeElement).toBe(toggle)
   })
+
+  it('shows the stage bar as router links with roving tabindex (S4)', async () => {
+    await mount(`/projects/${PROJECT}/threads`)
+    const bar = document.querySelector('.le-nav-stages')
+    expect(bar, 'a workspace route must show the stage bar').toBeTruthy()
+    const links = [...bar.querySelectorAll('.le-nav-stage')]
+    expect(links.map(node => node.textContent.trim())).toEqual(['研究起点', '核心文献', '研究脉络', '研究洞察'])
+    expect(links.map(node => node.getAttribute('href'))).toEqual([
+      `/projects/${PROJECT}/anchors`, `/projects/${PROJECT}/papers`, `/projects/${PROJECT}/threads`, `/projects/${PROJECT}/insight`,
+    ])
+    const current = links.find(node => node.getAttribute('aria-current') === 'step')
+    expect(current.textContent.trim()).toBe('研究脉络')
+    // roving tabindex：只有当前项在 Tab 序列里，左右键在项之间移动焦点。
+    expect(links.map(node => node.getAttribute('tabindex'))).toEqual(['-1', '-1', '0', '-1'])
+    links[2].focus()
+    links[2].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))
+    expect(document.activeElement).toBe(links[3])
+    links[3].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))
+    expect(document.activeElement).toBe(links[0])
+  })
+
+  it('keeps the stage bar out of the home page', async () => {
+    await mount('/')
+    expect(document.querySelector('.le-nav-stages')).toBeNull()
+  })
 })

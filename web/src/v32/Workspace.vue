@@ -15,6 +15,7 @@ import { anchorFrom, coverageLine, emptyStateCopy, enhancementNotice, rankingSta
 import { judgementStateLabel, snapshotLabel } from './card.js'
 import { EXCLUSION_REASONS } from './states.js'
 import { venueRows } from './venue.js'
+import { setProjectTitle } from '../shell/project-title.js'
 import ExportMenu from './ExportMenu.vue'
 import EntryChoice from './EntryChoice.vue'
 import PaperCard from './PaperCard.vue'
@@ -33,7 +34,9 @@ const t = (zh, en) => (props.lang === 'zh' ? zh : en)
 const api = props.client || createV32Client()
 
 const page = ref(props.view === 'settings' ? 'settings' : 'workspace')
-const activeStage = ref(props.stage || 'anchors')
+// S4：阶段由路由驱动。组件不再自己记住阶段，刷新、前进后退和直接粘贴链接都
+// 落到同一个阶段；未知阶段（例如旧书签）回落到研究起点。
+const activeStage = computed(() => (STAGES.some(stage => stage.key === props.stage) ? props.stage : 'anchors'))
 const entryMode = ref('')
 const researchText = ref('')
 const modelMode = ref('basic')
@@ -282,6 +285,7 @@ async function loadProject() {
   try {
     const data = await api.getProject(props.projectId)
     project.value = data
+    setProjectTitle(data?.name || '')
     entryMode.value = data?.entry_mode || entryMode.value
     // AC-11: a refresh resumes the most recent job that is still running.
     const active = Array.isArray(data?.active_job_ids) ? data.active_job_ids : []
@@ -510,7 +514,7 @@ async function openEntry(payload) {
   const requested = typeof payload === 'string' ? payload : payload?.mode
   const chosen = requested === 'pdf' ? 'pdf' : 'topic'
   entryMode.value = chosen
-  activeStage.value = 'anchors'
+  // 阶段由路由决定：下面 push 到 /projects/:id/anchors，无需在这里改本地状态。
   error.value = ''
   notice.value = ''
   busy.value = true
@@ -587,19 +591,6 @@ if (props.projectId) {
       </template>
 
       <template v-else>
-        <nav class="le32-stage-nav" data-v32-stages :aria-label="t('工作区阶段','Workspace stages')">
-          <button
-            v-for="stage in stageTabs"
-            :key="stage.key"
-            type="button"
-            class="le32-stage"
-            :class="{ 'is-active': activeStage === stage.key }"
-            :data-v32-stage="stage.key"
-            :aria-current="activeStage === stage.key ? 'step' : null"
-            @click="activeStage = stage.key"
-          >{{ stage.label }}</button>
-        </nav>
-
         <div
           v-if="jobActive"
           class="le32-progress"
@@ -855,9 +846,7 @@ if (props.projectId) {
 
 <style scoped>
 .le32-workspace { max-width: 1180px; margin: 0 auto; padding: var(--s-6) var(--gutter) var(--s-16); }
-.le32-stage-nav { display: flex; gap: var(--s-2); flex-wrap: wrap; border-bottom: 1px solid var(--border); margin-bottom: var(--s-4); }
-.le32-stage { padding: 12px 16px; background: none; border: 0; border-bottom: 2px solid transparent; color: var(--muted); font-size: 14px; }
-.le32-stage.is-active { border-color: var(--ink); color: var(--ink); font-weight: 600; }
+/* S4：阶段条移到 shell/AppNav.vue（.le-nav-*），这里不再保留 .le32-stage-* 规则。 */
 .le32-ranking-stage { font-size: 13px; color: var(--text-2); margin-bottom: var(--s-3); }
 .le32-anchor { border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); padding: var(--s-6); display: flex; flex-direction: column; gap: var(--s-3); }
 .le32-anchor textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font: inherit; font-size: 14px; }
