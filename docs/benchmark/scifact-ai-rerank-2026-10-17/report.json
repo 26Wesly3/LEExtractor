@@ -1,0 +1,425 @@
+{
+  "dataset": "BEIR SciFact test pilot (30 queries)",
+  "run_dir": "benchmarks\\results\\scifact-pilot-2026-10-10",
+  "window": 20,
+  "model": {
+    "profile": "deepseek",
+    "model": "deepseek-flash",
+    "host": "api.deepseek.com"
+  },
+  "cases": 30,
+  "skipped": [
+    "1266",
+    "185",
+    "491"
+  ],
+  "ai_rerank": {
+    "precision@20": 0.0467,
+    "ndcg@20": 0.5909,
+    "recall@50": 0.8767,
+    "mrr@50": 0.5216,
+    "cases": 30
+  },
+  "ai_rerank_applied_only": {
+    "precision@20": 0.0463,
+    "ndcg@20": 0.5727,
+    "recall@50": 0.863,
+    "mrr@50": 0.5026,
+    "cases": 27
+  },
+  "call_budget_seconds": 45.0,
+  "recomputed_frozen": {
+    "bm25": {
+      "precision@20": 0.045,
+      "ndcg@20": 0.6631,
+      "recall@50": 0.8433,
+      "mrr@50": 0.6367
+    },
+    "lexical": {
+      "precision@20": 0.045,
+      "ndcg@20": 0.5941,
+      "recall@50": 0.81,
+      "mrr@50": 0.5339
+    },
+    "minilm_title_abstract": {
+      "precision@20": 0.0383,
+      "ndcg@20": 0.4856,
+      "recall@50": 0.7367,
+      "mrr@50": 0.4268
+    },
+    "minilm_title": {
+      "precision@20": 0.035,
+      "ndcg@20": 0.5438,
+      "recall@50": 0.73,
+      "mrr@50": 0.504
+    },
+    "current_hybrid": {
+      "precision@20": 0.0467,
+      "ndcg@20": 0.68,
+      "recall@50": 0.8767,
+      "mrr@50": 0.6379
+    }
+  },
+  "per_case": [
+    {
+      "case_id": "1014",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "seconds": 12.96,
+      "precision@20": 0.05,
+      "ndcg@20": 0.6309,
+      "recall@50": 1.0,
+      "mrr@50": 0.5
+    },
+    {
+      "case_id": "1086",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "seconds": 16.09,
+      "precision@20": 0.05,
+      "ndcg@20": 1.0,
+      "recall@50": 1.0,
+      "mrr@50": 1.0
+    },
+    {
+      "case_id": "1088",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "seconds": 13.38,
+      "precision@20": 0.05,
+      "ndcg@20": 0.3869,
+      "recall@50": 1.0,
+      "mrr@50": 0.2
+    },
+    {
+      "case_id": "1099",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "seconds": 11.94,
+      "precision@20": 0.05,
+      "ndcg@20": 0.6309,
+      "recall@50": 1.0,
+      "mrr@50": 0.5
+    },
+    {
+      "case_id": "1100",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "seconds": 13.11,
+      "precision@20": 0.05,
+      "ndcg@20": 1.0,
+      "recall@50": 1.0,
+      "mrr@50": 1.0
+    },
+    {
+      "case_id": "1204",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "seconds": 10.07,
+      "precision@20": 0.05,
+      "ndcg@20": 1.0,
+      "recall@50": 1.0,
+      "mrr@50": 1.0
+    },
+    {
+      "case_id": "1216",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "seconds": 18.71,
+      "precision@20": 0.05,
+      "ndcg@20": 1.0,
+      "recall@50": 1.0,
+      "mrr@50": 1.0
+    },
+    {
+      "case_id": "124",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "seconds": 8.58,
+      "precision@20": 0.05,
+      "ndcg@20": 1.0,
+      "recall@50": 1.0,
+      "mrr@50": 1.0
+    },
+    {
+      "case_id": "1266",
+      "status": "failed",
+      "error_code": "transport_error",
+      "detail": "ProviderError: DeepSeek 请求失败（https://api.deepseek.com/chat/completions）：TimeoutError",
+      "window": 20,
+      "seconds": 20.12,
+      "precision@20": 0.05,
+      "ndcg@20": 1.0,
+      "recall@50": 1.0,
+      "mrr@50": 1.0
+    },
+    {
+      "case_id": "1290",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "seconds": 12.65,
+      "precision@20": 0.05,
+      "ndcg@20": 0.3869,
+      "recall@50": 1.0,
+      "mrr@50": 0.2
+    },
+    {
+      "case_id": "132",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "seconds": 18.81,
+      "precision@20": 0.0,
+      "ndcg@20": 0.0,
+      "recall@50": 0.0,
+      "mrr@50": 0.0
+    },
+    {
+      "case_id": "133",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "seconds": 17.84,
+      "precision@20": 0.15,
+      "ndcg@20": 0.3098,
+      "recall@50": 0.8,
+      "mrr@50": 0.1429
+    },
+    {
+      "case_id": "142",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "seconds": 18.07,
+      "precision@20": 0.05,
+      "ndcg@20": 0.5,
+      "recall@50": 1.0,
+      "mrr@50": 0.3333
+    },
+    {
+      "case_id": "185",
+      "status": "failed",
+      "error_code": "transport_error",
+      "detail": "ProviderError: DeepSeek 请求失败（https://api.deepseek.com/chat/completions）：TimeoutError",
+      "window": 20,
+      "seconds": 20.15,
+      "precision@20": 0.05,
+      "ndcg@20": 0.2626,
+      "recall@50": 1.0,
+      "mrr@50": 0.0769
+    },
+    {
+      "case_id": "198",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "seconds": 14.09,
+      "precision@20": 0.05,
+      "ndcg@20": 1.0,
+      "recall@50": 1.0,
+      "mrr@50": 1.0
+    },
+    {
+      "case_id": "208",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "seconds": 11.72,
+      "precision@20": 0.05,
+      "ndcg@20": 0.301,
+      "recall@50": 1.0,
+      "mrr@50": 0.1111
+    },
+    {
+      "case_id": "213",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "seconds": 13.79,
+      "precision@20": 0.05,
+      "ndcg@20": 0.3869,
+      "recall@50": 1.0,
+      "mrr@50": 0.2
+    },
+    {
+      "case_id": "230",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "seconds": 14.76,
+      "precision@20": 0.05,
+      "ndcg@20": 0.6309,
+      "recall@50": 1.0,
+      "mrr@50": 0.5
+    },
+    {
+      "case_id": "239",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "seconds": 20.02,
+      "precision@20": 0.0,
+      "ndcg@20": 0.0,
+      "recall@50": 1.0,
+      "mrr@50": 0.0333
+    },
+    {
+      "case_id": "312",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "seconds": 15.63,
+      "precision@20": 0.05,
+      "ndcg@20": 0.3562,
+      "recall@50": 1.0,
+      "mrr@50": 0.1667
+    },
+    {
+      "case_id": "324",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "seconds": 12.66,
+      "precision@20": 0.0,
+      "ndcg@20": 0.0,
+      "recall@50": 0.0,
+      "mrr@50": 0.0
+    },
+    {
+      "case_id": "491",
+      "status": "failed",
+      "error_code": "transport_error",
+      "detail": "ProviderError: DeepSeek 请求失败（https://api.deepseek.com/chat/completions）：TimeoutError",
+      "window": 20,
+      "seconds": 20.28,
+      "precision@20": 0.05,
+      "ndcg@20": 1.0,
+      "recall@50": 1.0,
+      "mrr@50": 1.0
+    },
+    {
+      "case_id": "50",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "seconds": 19.32,
+      "precision@20": 0.05,
+      "ndcg@20": 1.0,
+      "recall@50": 1.0,
+      "mrr@50": 1.0
+    },
+    {
+      "case_id": "54",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "seconds": 14.84,
+      "precision@20": 0.05,
+      "ndcg@20": 1.0,
+      "recall@50": 1.0,
+      "mrr@50": 1.0
+    },
+    {
+      "case_id": "619",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "seconds": 12.64,
+      "precision@20": 0.05,
+      "ndcg@20": 0.3869,
+      "recall@50": 0.5,
+      "mrr@50": 0.5
+    },
+    {
+      "case_id": "628",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "seconds": 10.02,
+      "precision@20": 0.05,
+      "ndcg@20": 0.256,
+      "recall@50": 1.0,
+      "mrr@50": 0.0714
+    },
+    {
+      "case_id": "693",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "seconds": 9.2,
+      "precision@20": 0.05,
+      "ndcg@20": 1.0,
+      "recall@50": 1.0,
+      "mrr@50": 1.0
+    },
+    {
+      "case_id": "808",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "seconds": 18.42,
+      "precision@20": 0.05,
+      "ndcg@20": 1.0,
+      "recall@50": 1.0,
+      "mrr@50": 1.0
+    },
+    {
+      "case_id": "887",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "seconds": 12.19,
+      "precision@20": 0.0,
+      "ndcg@20": 0.0,
+      "recall@50": 0.0,
+      "mrr@50": 0.0
+    },
+    {
+      "case_id": "922",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "seconds": 14.25,
+      "precision@20": 0.05,
+      "ndcg@20": 0.301,
+      "recall@50": 1.0,
+      "mrr@50": 0.1111
+    }
+  ]
+}
