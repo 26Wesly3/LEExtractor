@@ -826,6 +826,25 @@ def normalize_item(
 ) -> dict[str, Any]:
     """Normalise one Zotero API item, preserving its external keys."""
     entry = _mapping(raw)
+    # 幂等：``ZoteroWebAdapter.fetch_items`` 返回的已经是本函数的输出形状。
+    # 如果再走一遍下面的 "data" 解析，itemType 会变成空串，plan_import 就会把
+    # 每一条都判成 unsupported_item_type（真机导入 0 条就是这么来的）。
+    if entry.get("item_type") and not entry.get("data") and not entry.get("itemType"):
+        return {
+            "library_type": str(entry.get("library_type") or library_type or ""),
+            "library_id": str(entry.get("library_id") or library_id or ""),
+            "item_key": str(entry.get("item_key") or ""),
+            "item_version": entry.get("item_version"),
+            "collection_key": entry.get("collection_key"),
+            "item_type": str(entry.get("item_type") or ""),
+            "title": str(entry.get("title") or ""),
+            "doi": normalize_doi(entry.get("doi")),
+            "year": entry.get("year"),
+            "authors": list(entry.get("authors") or []),
+            "tags": list(entry.get("tags") or []),
+            "notes": list(entry.get("notes") or []),
+            "attachments": list(entry.get("attachments") or []),
+        }
     data = _mapping(entry.get("data")) or entry
     meta = _mapping(entry.get("meta"))
     library = _mapping(entry.get("library"))
@@ -897,6 +916,12 @@ def plan_import(
             "item_type": item["item_type"],
             "item_version": item["item_version"],
             "paper_id": None,
+            # 导入时要写进项目记录的文献信息。少了这些，导入的条目只有题名，
+            # DOI/作者/年份全丢（真机导入曾出现 doi: None）。
+            "doi": item.get("doi"),
+            "authors": list(item.get("authors") or []),
+            "year": item.get("year"),
+            "collection_key": item["collection_key"],
             "action": "skipped",
             "reason": "",
             "external": {
@@ -996,6 +1021,11 @@ def apply_import(
                 {
                     "paper_id": paper_id,
                     "title": str(decision.get("title") or ""),
+                    "doi": decision.get("doi") or None,
+                    "authors": list(decision.get("authors") or []),
+                    "year": decision.get("year"),
+                    "venue": None,
+                    "doc_type": decision.get("item_type") or None,
                     "zotero": external,
                     "import_action": "create",
                 }

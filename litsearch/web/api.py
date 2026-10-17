@@ -188,7 +188,26 @@ def _settings():
         "openalex": {"configured": bool(os.environ.get("OPENALEX_API_KEY", "").strip())},
         "google_scholar": {"configured": bool(os.environ.get("SERPAPI_API_KEY", "").strip()), "integration": "SerpApi"},
         "unpaywall": {"configured": bool(os.environ.get("LEEXTRACTOR_UNPAYWALL_EMAIL", "").strip())},
+        "zotero": {"configured": bool(os.environ.get("ZOTERO_API_KEY", "").strip())},
     }}
+
+
+def _zotero_settings_from_env():
+    """Deployment-level Zotero Web API settings, read from the environment only.
+
+    The adapter never reads credentials itself (see ``litsearch/v32/zotero.py``);
+    the deployment has to inject them.  Values live in ``.env`` (git-ignored) or
+    the process environment; nothing here is written back or exposed via a DTO.
+    """
+    api_key = os.environ.get("ZOTERO_API_KEY", "").strip()
+    if not api_key:
+        return None
+    return {
+        "api_key": api_key,
+        "library_type": os.environ.get("ZOTERO_LIBRARY_TYPE", "user").strip() or "user",
+        "library_id": os.environ.get("ZOTERO_LIBRARY_ID", "").strip(),
+        "collection_key": os.environ.get("ZOTERO_COLLECTION_KEY", "").strip() or None,
+    }
 
 
 def create_app(data_dir=None, workflow_factory=None, static_dir=None, translator=None):
@@ -842,7 +861,12 @@ def create_app(data_dir=None, workflow_factory=None, static_dir=None, translator
     # answering exactly as before, and before the SPA catch-all below, so the
     # versioned surface is reachable at all.  Nothing long-running happens here:
     # only the store, the job queue and the router are wired.
-    install_v32(app, data_dir=root, workflow_factory=workflow_factory or default_factory)
+    install_v32(
+        app,
+        data_dir=root,
+        workflow_factory=workflow_factory or default_factory,
+        zotero_settings=_zotero_settings_from_env(),
+    )
 
     source_dist = Path(__file__).resolve().parents[2] / "web" / "dist"
     dist = Path(static_dir or (source_dist if source_dist.is_dir() else Path(__file__).parent / "static")).resolve()

@@ -2114,11 +2114,20 @@ def run_zotero_import(state: V32State, project: V32Project, job: Any) -> dict[st
             job.doc["corpus_version"] = project.corpus_version
 
     mapping = dict(project.doc.get("zotero_map") or {})
+    # item_key → 新内部 id。计划的 paper_id 在 create 时是 None，所以要按
+    # apply_import 产出的记录反查，否则 zotero_map 会写成空串。
+    by_item_key = {
+        str(record["zotero"]["item_key"]): str(
+            created_ids.get(str(record.get("paper_id") or "")) or record.get("paper_id") or ""
+        )
+        for record in (applied.get("papers") or [])
+        if isinstance(record.get("zotero"), Mapping) and record["zotero"].get("item_key")
+    }
     results: list[dict[str, Any]] = []
     skipped = 0
     for row in plan.get("items") or []:
         item_key = str(row.get("item_key") or "")
-        paper_id = str(created_ids.get(str(row.get("paper_id") or ""), row.get("paper_id") or ""))
+        paper_id = str(by_item_key.get(item_key) or created_ids.get(str(row.get("paper_id") or ""), ""))
         if item_key:
             mapping[item_key] = paper_id
         action = str(row.get("action") or "")
@@ -2150,6 +2159,24 @@ def run_zotero_import(state: V32State, project: V32Project, job: Any) -> dict[st
         stop_reasons=["unsupported_items_skipped"] if skipped else [],
         scope="zotero_import",
     )
+    if created_ids:
+        # 导入的条目必须立刻能在「核心文献筛选推荐」里看到：该列表遍历的是快照
+        # 条目，没有快照就只有 0 条（真机导入后列表空白就是这么来的）。
+        state.jobs.set_stage(job, str(JobStage.FAST_RANKING), progress=0.8)
+        try:
+            ranking = rank_project(state, project)
+            snapshot = build_snapshot(
+                state,
+                project,
+                ranking,
+                frozen=_frozen_versions(job),
+                coverage=coverage,
+            )
+            _commit(state, project, job, snapshot)
+        except Exception:  # noqa: BLE001 - 排序失败也不能丢掉已导入的记录
+            import logging
+
+            logging.getLogger(__name__).exception("zotero_import ranking/snapshot failed")
     return {
         "outcome": "partial" if skipped else "succeeded",
         "coverage": coverage,

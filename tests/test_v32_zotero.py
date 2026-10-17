@@ -728,3 +728,60 @@ def test_run_export_updates_through_the_recorded_item_key():
     results = Z.run_export(handoff, fake, confirm=True)
     assert results[0]["status"] == "successful"
     assert fake.calls[0]["items"][0]["item_key"] == "BETAKEY"
+
+# --------------------------------------------------------------------------
+# 真机导入发现的三个缺陷（2026-10-17，对着本机 Zotero 9 验证）
+# --------------------------------------------------------------------------
+
+NORMALIZED_ROW = {
+    "library_type": "user",
+    "library_id": "20842927",
+    "item_key": "4J8EZXM9",
+    "item_version": 608,
+    "collection_key": None,
+    "item_type": "preprint",
+    "title": "Attention Is All You Need",
+    "doi": "10.48550/arxiv.1706.03762",
+    "year": 2017,
+    "authors": ["Ashish Vaswani", "Noam Shazeer"],
+    "tags": [],
+    "notes": [],
+    "attachments": [],
+}
+
+
+def test_normalize_item_is_idempotent_for_fetch_items_output():
+    """fetch_items 返回的已是规范化形状；再规范化一次不能把 item_type 清空。"""
+    twice = Z.normalize_item(NORMALIZED_ROW)
+    assert twice["item_type"] == "preprint"
+    assert twice["title"] == "Attention Is All You Need"
+    assert twice["year"] == 2017
+    assert Z.normalize_item(twice) == twice
+
+
+def test_plan_import_accepts_already_normalized_rows():
+    """双重规范化曾让每一条都被判成 unsupported_item_type（真机导入 0 条）。"""
+    plan = Z.plan_import(
+        [],
+        [NORMALIZED_ROW],
+        library_type="user",
+        library_id="20842927",
+        selected_keys=["4J8EZXM9"],
+    )
+    assert plan["counts"] == {"create": 1}
+    assert plan["items"][0]["action"] == "create"
+
+
+def test_apply_import_keeps_doi_authors_and_year():
+    plan = Z.plan_import(
+        [],
+        [NORMALIZED_ROW],
+        library_type="user",
+        library_id="20842927",
+        selected_keys=["4J8EZXM9"],
+    )
+    record = Z.apply_import([], plan)["papers"][0]
+    assert record["doi"] == "10.48550/arxiv.1706.03762"
+    assert record["year"] == 2017
+    assert record["authors"] == ["Ashish Vaswani", "Noam Shazeer"]
+    assert record["item_type"] if "item_type" in record else record["doc_type"] == "preprint"

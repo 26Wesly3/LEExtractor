@@ -863,6 +863,12 @@ if (props.projectId) {
             </ol>
             <div v-else class="empty" data-v32-empty>
               <p data-v32-empty-copy>{{ emptyCopy.text }}</p>
+              <!-- 导入/上传进来的条目没有主题信号，落在「探索」而不是「推荐」；
+                   默认视图空着会让人以为没导入成功。 -->
+              <p v-if="listView === 'recommended'" class="muted" data-v32-empty-view-hint>
+                {{ t('「推荐」只放有主题相关证据的条目。你导入或上传的文献在「探索」和「全部」里。', 'Recommended only lists items with topic evidence. Imported or uploaded records are under Exploration and All.') }}
+                <button type="button" class="le32-link" data-v32-empty-view-all @click="listView = 'all'">{{ t('看全部', 'See all') }}</button>
+              </p>
               <button type="button" class="le32-primary" :disabled="busy" data-v32-empty-action @click="continueDiscovery">{{ emptyCopy.action }}</button>
             </div>
 
