@@ -67,7 +67,22 @@ describe('PaperCard', () => {
     expect(text('[data-card-action="excluded"]')).toBe('排除')
     click('[data-card-action="excluded"]')
     await settle()
-    expect(seen).toEqual([{ paperId: 'w1', value: 'excluded' }])
+    // 排除先选原因；默认「未说明」不进入负反馈。
+    expect(seen).toEqual([])
+    click('[data-card-exclusion-option="unspecified"]')
+    await settle()
+    expect(seen).toEqual([{ paperId: 'w1', value: 'excluded', exclusionReason: 'unspecified' }])
+    mounted.unmount()
+
+    // Escape 或「取消」关闭原因选择且不发送。
+    const cancelled = []
+    mounted = mountComponent(PaperCard, { item, lang: 'zh', onJudge: payload => cancelled.push(payload) })
+    click('[data-card-action="excluded"]')
+    await settle()
+    click('[data-card-exclusion-cancel]')
+    await settle()
+    expect(document.querySelector('[data-card-exclusion]')).toBeNull()
+    expect(cancelled).toEqual([])
     mounted.unmount()
 
     // After the backend reports the judgement, the human label replaces the action label.
@@ -97,6 +112,20 @@ describe('PaperCard', () => {
     expect(document.querySelector('[data-card-role]')).toBeNull()
     expect(text('[data-card-no-reason]')).toContain('没有可展示的推荐依据')
     all('[data-card-action]').forEach(node => expect(node.disabled).toBe(true))
+    mounted.unmount()
+  })
+
+  it('shows sourced venue badges and the unknown official metrics in the detail view', async () => {
+    const venue = { metrics: [
+      { metric_type: 'ccf_rank', value: 'A', source_name: 'CCF 推荐国际学术会议和期刊目录', verification_status: 'unverified', note: '' },
+      { metric_type: 'official_jif', value: null, source_name: '未配置许可来源', verification_status: 'unavailable', note: '无可验证的许可来源。' },
+    ] }
+    mounted = mountComponent(PaperCard, { item, lang: 'zh', venue })
+    expect(text('[data-card-venue]')).toContain('CCF A')
+    click('.le32-card-detail-toggle')
+    await settle()
+    expect(text('[data-card-venue-detail]')).toContain('未知')
+    expect(text('[data-card-venue-detail]')).toContain('无可验证的许可来源')
     mounted.unmount()
   })
 })

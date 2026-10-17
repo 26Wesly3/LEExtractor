@@ -3,7 +3,9 @@
 //   序号、题名、作者/年份/出版源、最多 2 条实际推荐依据、角色（有依据时）、
 //   「标记核心」「相关」「排除」三个动作；core_score 仅在详情中展示，不叫核心概率；
 //   用户确认与算法推荐使用不同标签。
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
+import { EXCLUSION_REASONS } from './states.js'
+import { venueBadges, venueRows } from './venue.js'
 import { cardReasons, cardRole, coreScoreText, judgementLabel, judgementStateLabel, metaLine, snapshotLabel, systemEligibilityLabel } from './card.js'
 
 const props = defineProps({
@@ -13,6 +15,8 @@ const props = defineProps({
   snapshotId: { type: String, default: '' },
   busy: { type: Boolean, default: false },
   pinned: { type: Boolean, default: false },
+  // GET …/venue-metrics 的结果（或 { error }）；未读取时为 null。
+  venue: { type: Object, default: null },
 })
 
 const emit = defineEmits(['open', 'judge'])
@@ -34,6 +38,12 @@ const scoreText = computed(() => coreScoreText(props.item, props.lang))
 const snapshot = computed(() => snapshotLabel(props.snapshotId, props.lang))
 const eligibility = computed(() => ranking.value?.eligibility || '')
 const abstract = computed(() => paper.value.abstract || '')
+const venueTags = computed(() => venueBadges(props.venue, props.lang))
+const venueDetail = computed(() => venueRows(props.venue, props.lang))
+const reasonOptions = computed(() => EXCLUSION_REASONS.map(row => ({ value: row.value, label: props.lang === 'zh' ? row.zh : row.en })))
+// 排除先选原因：只有「不相关」进入负反馈（doc 02「人工判断」）。
+const choosingReason = ref(false)
+const reasonHost = ref(null)
 
 const actions = computed(() => [
   { value: 'core', label: t('标记核心', 'Mark core') },
@@ -43,9 +53,23 @@ const actions = computed(() => [
 
 function judge(value) {
   if (props.busy) return
+  if (value === 'excluded' && judgement.value !== 'excluded') {
+    choosingReason.value = true
+    nextTick(() => reasonHost.value?.querySelector('button')?.focus?.())
+    return
+  }
+  choosingReason.value = false
   // 再次点击同一动作即撤销判断（unjudged）。
   emit('judge', { paperId: paper.value.paper_id, value: judgement.value === value ? 'unjudged' : value })
 }
+
+function chooseReason(code) {
+  if (props.busy) return
+  choosingReason.value = false
+  emit('judge', { paperId: paper.value.paper_id, value: 'excluded', exclusionReason: code })
+}
+
+function cancelReason() { choosingReason.value = false }
 
 function undo() {
   if (props.busy) return
@@ -74,6 +98,7 @@ function undo() {
         <span v-if="systemLabel" class="badge badge--system" data-card-system-label>{{ systemLabel }}</span>
         <span v-if="humanState" class="badge badge--human" data-card-human-label>{{ humanState }}</span>
         <span v-if="eligibility === 'exploration'" class="badge" data-card-eligibility="exploration">{{ t('探索列表','Exploration list') }}</span>
+        <span v-for="tag in venueTags" :key="tag.type" class="badge le32-venue-badge" data-card-venue :data-card-venue-type="tag.type" :title="tag.source">{{ tag.text }}<span class="le32-venue-src"> · {{ t('来源','Source') }}：{{ tag.source }}</span></span>
       </div>
 
       <div class="le32-card-actions" role="group" :aria-label="t('文献判断','Record judgement')">
@@ -94,6 +119,23 @@ function undo() {
         </button>
       </div>
 
+      <div
+        v-if="choosingReason"
+        ref="reasonHost"
+        class="le32-exclusion"
+        data-card-exclusion
+        role="group"
+        :aria-label="t('排除原因','Exclusion reason')"
+        @keydown.esc.stop.prevent="cancelReason"
+      >
+        <span class="le32-exclusion-title">{{ t('排除原因', 'Why exclude?') }}</span>
+        <div class="le32-exclusion-options">
+          <button v-for="option in reasonOptions" :key="option.value" type="button" class="le32-action" :data-card-exclusion-option="option.value" :disabled="busy" @click="chooseReason(option.value)">{{ option.label }}</button>
+          <button type="button" class="le32-link-btn" data-card-exclusion-cancel @click="cancelReason">{{ t('取消', 'Cancel') }}</button>
+        </div>
+        <p class="muted le32-exclusion-help" data-card-exclusion-help>{{ t('排除只隐藏这篇文献并不再用它扩展；只有「不相关」会作为负反馈影响排序。', 'Excluding only hides this record and stops expansion from it; only “Not relevant” is used as negative feedback.') }}</p>
+      </div>
+
       <button type="button" class="le32-card-detail-toggle" :aria-expanded="detailOpen ? 'true' : 'false'" @click="detailOpen = !detailOpen">
         {{ detailOpen ? t('收起详情', 'Hide details') : t('查看详情', 'Details') }}
       </button>
@@ -107,6 +149,11 @@ function undo() {
           <div><dt>DOI</dt><dd class="mono">{{ paper.doi || t('未提供','Not provided') }}</dd></div>
           <div><dt>{{ t('被引次数','Cited by') }}</dt><dd>{{ paper.citation_count === null || paper.citation_count === undefined ? t('未知','Unknown') : paper.citation_count }}</dd></div>
         </dl>
+        <ul class="brief-list le32-venue-detail" data-card-venue-detail>
+          <li v-for="row in venueDetail" :key="row.type" :data-venue-metric="row.type">
+            {{ row.label }}：{{ row.value }}<span v-if="row.source"> · {{ t('来源','Source') }}：{{ row.source }}</span><span v-if="row.reason"> · {{ row.reason }}</span>
+          </li>
+        </ul>
         <details v-if="ranking?.breakdown?.length" class="le32-breakdown">
           <summary>{{ t('排序依据','Ranking basis') }}</summary>
           <ul class="brief-list">
@@ -143,4 +190,11 @@ function undo() {
 .le32-abstract { margin-top: var(--s-3) !important; color: var(--text-2); line-height: 1.8; }
 .le32-abstract { display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden; }
 .le32-breakdown { margin-top: var(--s-3); }
+.le32-venue-src { color: var(--muted); font-weight: 400; }
+.le32-venue-detail { margin-top: var(--s-3); font-size: 13px; color: var(--text-2); }
+.le32-exclusion { margin-top: var(--s-3); padding: var(--s-3) var(--s-4); border: 1px solid var(--border); border-radius: 8px; background: var(--surface-2); }
+.le32-exclusion-title { font-size: 13px; font-weight: 600; color: var(--ink); }
+.le32-exclusion-options { display: flex; gap: var(--s-2); flex-wrap: wrap; align-items: center; margin-top: var(--s-2); }
+.le32-exclusion-help { margin: var(--s-2) 0 0; font-size: 12.5px; }
+.le32-link-btn { background: none; border: 0; padding: 0 4px; color: var(--link); font-size: 13px; }
 </style>

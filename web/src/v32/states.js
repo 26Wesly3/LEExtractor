@@ -167,3 +167,16 @@ export const JUDGEMENT_ACTIONS = Object.freeze([
   { value: 'relevant', zh: '相关', en: 'Relevant' },
   { value: 'excluded', zh: '排除', en: 'Exclude' },
 ])
+
+/**
+ * Exclusion reasons, in display order. The values are the backend enum
+ * (litsearch/v32/types.py ExclusionReason); only not_relevant is negative
+ * feedback (doc 02「人工判断」, NEGATIVE_FEEDBACK_REASONS).
+ */
+export const EXCLUSION_REASONS = Object.freeze([
+  { value: 'not_relevant', zh: '不相关', en: 'Not relevant', negative: true },
+  { value: 'read', zh: '已读', en: 'Already read', negative: false },
+  { value: 'duplicate', zh: '重复', en: 'Duplicate', negative: false },
+  { value: 'not_now', zh: '暂不看', en: 'Not now', negative: false },
+  { value: 'unspecified', zh: '未说明', en: 'Unspecified', negative: false },
+])

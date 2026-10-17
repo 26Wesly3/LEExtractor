@@ -163,3 +163,32 @@ describe('v3.2 client', () => {
     expect(caught.message).not.toContain('secret')
   })
 })
+
+describe('v3.2 client export download', () => {
+  it('reads GET /projects/{pid}/export?format=… as a blob with the server filename', async () => {
+    const responders = harness([{
+      method: 'GET',
+      match: '/api/v3/projects/p1/export',
+      handler: () => ({
+        ok: true, status: 200, statusText: 'OK',
+        headers: { get: name => ({ 'content-disposition': 'attachment; filename="p1-export.bib"', 'content-type': 'application/x-bibtex' })[name.toLowerCase()] || null },
+        blob: async () => new Blob(['@article{x}'], { type: 'application/x-bibtex' }),
+      }),
+    }])
+    const client = createV32Client({ fetchImpl: (url, options) => responders.resolve(url, options) })
+    const result = await client.exportProject('p1', 'bibtex')
+    const call = responders.calls.find(row => row.url === '/api/v3/projects/p1/export')
+    expect(call.method).toBe('GET')
+    expect(call.query.get('format')).toBe('bibtex')
+    expect(result.filename).toBe('p1-export.bib')
+    expect(await result.blob.text()).toBe('@article{x}')
+  })
+
+  it('throws the error envelope when the export route is missing (404)', async () => {
+    const responders = harness()
+    const client = createV32Client({ fetchImpl: (url, options) => responders.resolve(url, options) })
+    const caught = await client.exportProject('p1', 'ris').catch(error => error)
+    expect(caught).toBeInstanceOf(V32Error)
+    expect(caught.status).toBe(404)
+  })
+})

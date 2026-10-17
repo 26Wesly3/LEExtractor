@@ -153,6 +153,42 @@ export function createV32Client({
     return data
   }
 
+  /**
+   * GET a file (not JSON). Returns { blob, filename, contentType }; an error
+   * response is decoded into the same V32Error envelope as every other call.
+   */
+  async function download(path, query, fallbackName) {
+    const url = urlFor(path, query)
+    logger.debug?.(`v32 GET ${path} (download)`)
+    let response
+    try {
+      response = await transport()(url, { method: 'GET', headers: {}, credentials: 'same-origin' })
+    } catch (error) {
+      throw new V32Error({ code: 'network_error', message: '无法连接到本地服务，请确认服务仍在运行。', retryable: true, details: { reason: String(error?.name || 'error') } })
+    }
+    const header = name => (typeof response.headers?.get === 'function' ? response.headers.get(name) : null) || ''
+    if (!response.ok) {
+      let envelope = null
+      try {
+        const text = typeof response.text === 'function' ? await response.text() : ''
+        envelope = text ? JSON.parse(text)?.error || null : null
+      } catch { envelope = null }
+      throw new V32Error({
+        code: envelope?.code || 'http_error',
+        message: envelope?.message || `请求失败（HTTP ${response.status}）`,
+        retryable: envelope?.retryable === true,
+        details: envelope?.details || {},
+        request_id: envelope?.request_id || '',
+        status: response.status,
+      })
+    }
+    const contentType = header('content-type')
+    let blob
+    if (typeof response.blob === 'function') blob = await response.blob()
+    else blob = new Blob([typeof response.text === 'function' ? await response.text() : ''], { type: contentType || 'application/octet-stream' })
+    return { blob, filename: filenameFrom(header('content-disposition')) || fallbackName, contentType }
+  }
+
   /** GET /api/v3/session — the CSRF token used by every later mutation. */
   async function session({ force = false } = {}) {
     if (csrfToken && !force) return { csrf_token: csrfToken, cached: true }
@@ -256,8 +292,31 @@ export function createV32Client({
 
     zoteroExport: (pid, body, options = {}) => write('POST', `${project(pid)}/zotero/export`, { body, action: 'expand', scope: 'zotero', retry: options.retry }),
 
+    // GET /api/v3/projects/{pid}/export?format=ris|bibtex|csv|evidence_pack|prisma
+    exportProject: (pid, format) => download(`${project(pid)}/export`, { format }, `${pid}-${format}.${EXPORT_EXTENSIONS[format] || 'txt'}`),
+
     zoteroResults: (pid, jobId) => read(`${project(pid)}/jobs/${encodeURIComponent(jobId)}/zotero-results`),
   }
+}
+
+export const EXPORT_FORMATS = Object.freeze(['ris', 'bibtex', 'csv', 'evidence_pack', 'prisma'])
+
+const EXPORT_EXTENSIONS = Object.freeze({ ris: 'ris', bibtex: 'bib', csv: 'csv', evidence_pack: 'zip', prisma: 'txt' })
+
+/** The filename from a Content-Disposition header (RFC 6266 filename* first). */
+export function filenameFrom(disposition) {
+  const value = String(disposition || '')
+  const star = value.match(/filename\*\s*=\s*(?:UTF-8'')?([^;]+)/i)
+  let name = ''
+  if (star) {
+    try { name = decodeURIComponent(star[1].trim().replace(/^"|"$/g, '')) } catch { name = '' }
+  }
+  if (!name) {
+    const plain = value.match(/filename\s*=\s*"?([^";]+)"?/i)
+    name = plain ? plain[1].trim() : ''
+  }
+  // Never let a server-supplied name carry a path.
+  return name.replace(/^.*[\\/]/, '')
 }
 
 /** One restrained line for the user: the contract message, never a stack trace. */

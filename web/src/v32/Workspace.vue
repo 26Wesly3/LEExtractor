@@ -13,6 +13,9 @@ import { useRouter } from 'vue-router'
 import { createV32Client, errorLine, safeUrl } from './client.js'
 import { anchorFrom, coverageLine, emptyStateCopy, enhancementNotice, rankingStageForJob, rankingStageLabel, reasonTextForError, resolvePinned, restoreAnchor, resultState, stageLabel, STAGES } from './states.js'
 import { judgementStateLabel, snapshotLabel } from './card.js'
+import { EXCLUSION_REASONS } from './states.js'
+import { venueRows } from './venue.js'
+import ExportMenu from './ExportMenu.vue'
 import EntryChoice from './EntryChoice.vue'
 import PaperCard from './PaperCard.vue'
 import SettingsPanels from './SettingsPanels.vue'
@@ -47,6 +50,10 @@ const overview = ref(null)
 const pinnedId = ref('')
 const judged = reactive({})
 const reasons = reactive({})
+// paper_id -> 后端枚举 exclusion_reason（not_relevant / read / duplicate / not_now / unspecified）。
+const exclusionCodes = reactive({})
+// paper_id -> GET …/venue-metrics 的结果，或 { error }。
+const venues = reactive({})
 const coverageExpanded = ref(false)
 const accessOptions = ref([])
 const copyState = ref('')
@@ -132,6 +139,49 @@ const insight = computed(() => {
     scope: data.coverage?.scope || '',
   }
 })
+
+// 研究意图预览（doc 02「从研究方向开始」/ R05）。只读：后端目前没有接受
+// objects / tasks / methods / exclusions 的更新接口（discover 只收 research_text，
+// 且请求体 extra="forbid"），因此这里不提供保存按钮。
+const INTENT_FIELDS = [
+  { key: 'objects', zh: '研究对象', en: 'Objects' },
+  { key: 'tasks', zh: '任务/问题', en: 'Task / question' },
+  { key: 'methods', zh: '方法', en: 'Methods' },
+  { key: 'constraints', zh: '必要约束', en: 'Constraints' },
+  { key: 'exclusions', zh: '排除项', en: 'Exclusions' },
+]
+const QUERY_SOURCES = {
+  original: ['原文', 'Original'],
+  rule: ['规则生成', 'Rule-generated'],
+  translation: ['译文', 'Translation'],
+  model: ['模型生成', 'Model-generated'],
+}
+const CJK = /[㐀-鿿]/
+const intent = computed(() => {
+  const anchor = project.value?.anchor
+  if (!anchor || !anchor.original_text) return null
+  const variants = Array.isArray(anchor.query_variants) ? anchor.query_variants : []
+  const fromModel = anchor.intent_origin === 'model_inference' || variants.some(row => row?.source === 'model')
+  const language = variants.find(row => row?.source === 'original')?.language || (CJK.test(anchor.original_text) ? 'zh' : 'en')
+  return {
+    origin: fromModel ? t('AI 解读（模型推断，待你确认）', 'AI reading (model inference, for you to confirm)') : t('规则解读（未调用模型）', 'Rule-based reading (no model called)'),
+    fields: INTENT_FIELDS.map(field => {
+      const values = Array.isArray(anchor[field.key]) ? anchor[field.key].filter(Boolean) : []
+      return { key: field.key, label: t(field.zh, field.en), text: values.length ? values.join('；') : t('未填写', 'Not filled in') }
+    }),
+    language: language === 'zh' ? t('中文', 'Chinese') : language === 'en' ? t('英文', 'English') : language,
+    queries: variants.filter(row => row?.text).map((row, index) => ({
+      key: `${row.source}-${index}`,
+      source: row.source || 'original',
+      sourceLabel: QUERY_SOURCES[row.source] ? t(...QUERY_SOURCES[row.source]) : (row.source || ''),
+      text: row.text,
+      language: row.language || '',
+    })),
+  }
+})
+
+const reasonChoices = computed(() => EXCLUSION_REASONS.map(row => ({ value: row.value, label: t(row.zh, row.en) })))
+const pinnedVenue = computed(() => (pinnedItem.value ? venueRows(venues[pinnedItem.value.paper.paper_id] || null, LANG.value) : []))
 
 function judgementOf(item) {
   return judged[item?.paper?.paper_id] ?? item?.judgement?.value ?? 'unjudged'
@@ -253,7 +303,9 @@ async function loadPapers({ view = listView.value, cursor = null, keepAnchor = t
     rows.forEach(row => {
       const id = row?.paper?.paper_id
       if (id && row?.judgement?.value) judged[id] = row.judgement.value
+      if (id && row?.judgement?.exclusion_reason) exclusionCodes[id] = row.judgement.exclusion_reason
     })
+    loadVenues(rows)
     error.value = ''
     if (anchor) { await nextTick(); restore(anchor) }
   } catch (problem) {
@@ -270,6 +322,18 @@ async function loadPapers({ view = listView.value, cursor = null, keepAnchor = t
 }
 
 const listHost = ref(null)
+
+/** 期刊指标按 paper_id 缓存；读取失败记录原因，不影响列表。 */
+async function loadVenues(rows) {
+  if (typeof api.venueMetrics !== 'function') return
+  const ids = rows.map(row => row?.paper?.paper_id).filter(id => id && !(id in venues))
+  await Promise.all(ids.map(async id => {
+    venues[id] = null
+    try { venues[id] = await api.venueMetrics(props.projectId, id) } catch (problem) {
+      venues[id] = { error: errorLine(problem, t('请求未完成', 'request failed')) }
+    }
+  }))
+}
 
 function anchorNow() { return anchorFrom(listHost.value, pinnedId.value) }
 
@@ -337,24 +401,28 @@ async function onImportSettled() {
   await loadOverview()
 }
 
-async function judge({ paperId, value, reason = '' }) {
+async function judge({ paperId, value, reason, exclusionReason }) {
   if (!paperId) return
   const before = judged[paperId]
+  const beforeCode = exclusionCodes[paperId]
   judged[paperId] = value
-  if (value === 'excluded') reasons[paperId] = reason
+  if (value === 'excluded' && reason !== undefined) reasons[paperId] = reason
+  if (value === 'excluded') exclusionCodes[paperId] = exclusionReason || exclusionCodes[paperId] || 'unspecified'
   try {
     const saved = await api.judge(props.projectId, {
       expected_revision: project.value?.revision ?? 0,
       paper_id: paperId,
       judgement: value,
       // 排除默认仅隐藏并禁止自动扩展；只有原因 not_relevant 才进入负反馈。
-      exclusion_reason: 'unspecified',
+      // 非排除判断必须是 unspecified（store.set_judgement 会拒绝其他值）。
+      exclusion_reason: value === 'excluded' ? exclusionCodes[paperId] : 'unspecified',
       reason: value === 'excluded' ? (reasons[paperId] || '') : '',
     }, { scope: paperId })
     if (saved?.revision !== undefined && project.value) project.value = { ...project.value, revision: saved.revision }
     notice.value = value === 'unjudged' ? t('已撤销判断。', 'Judgement undone.') : t('判断已保存，后台按需重排。', 'Judgement saved; the ranking is refreshed in the background when needed.')
   } catch (problem) {
     judged[paperId] = before
+    exclusionCodes[paperId] = beforeCode
     if (problem?.code === 'revision_conflict') {
       error.value = reasonTextForError(problem, LANG.value)
       await loadProject()
@@ -566,6 +634,23 @@ if (props.projectId) {
             <template v-if="project?.anchor?.original_text">
               <p class="muted">{{ t('已保存的研究意图','The saved research intent') }}</p>
               <p data-v32-anchor-text>{{ project.anchor.original_text }}</p>
+              <div v-if="intent" class="le32-intent" data-v32-intent>
+                <div class="le32-intent-head">
+                  <h3>{{ t('研究意图预览', 'Research intent preview') }}</h3>
+                  <span class="badge badge--system" data-v32-intent-origin>{{ intent.origin }}</span>
+                </div>
+                <dl class="le32-intent-grid">
+                  <div v-for="field in intent.fields" :key="field.key" :data-v32-intent-field="field.key"><dt>{{ field.label }}</dt><dd>{{ field.text }}</dd></div>
+                  <div data-v32-intent-field="language"><dt>{{ t('语言', 'Language') }}</dt><dd>{{ intent.language }}</dd></div>
+                </dl>
+                <template v-if="intent.queries.length">
+                  <h4>{{ t('实际检索式', 'Queries sent') }}</h4>
+                  <ul class="brief-list" data-v32-intent-queries>
+                    <li v-for="query in intent.queries" :key="query.key" :data-v32-intent-query="query.source"><span class="muted">{{ query.sourceLabel }}<template v-if="query.language"> · {{ query.language }}</template>：</span>{{ query.text }}</li>
+                  </ul>
+                </template>
+                <p class="muted" data-v32-intent-edit-note>{{ t('暂不支持在此编辑这些字段：当前接口只接受研究方向原文。缺失的字段保持为空，不会自动补写。', 'These fields cannot be edited here yet: the current interface only accepts the original research text. Missing fields stay empty and are never filled in automatically.') }}</p>
+              </div>
             </template>
             <template v-else>
               <label class="field-label" for="v32-research-text">{{ t('输入研究方向', 'Enter a research direction') }}</label>
@@ -585,6 +670,7 @@ if (props.projectId) {
             <div class="le32-papers-head">
               <h2>{{ t('核心文献', 'Core literature') }}</h2>
               <span class="muted" data-v32-snapshot>{{ snapshot }}</span>
+              <ExportMenu :client="client" :project-id="projectId" :lang="lang" />
             </div>
             <div class="le32-view-row">
               <button v-for="option in ['recommended', 'exploration', 'excluded', 'all']" :key="option" type="button" class="le32-view" :class="{ 'is-active': listView === option }" :data-v32-view="option" @click="listView = option">
@@ -614,6 +700,7 @@ if (props.projectId) {
                 :snapshot-id="snapshotId"
                 :busy="busy"
                 :pinned="pinnedId === item.paper.paper_id"
+                :venue="venues[item.paper.paper_id] || null"
                 @open="openPaper"
                 @judge="judge"
               />
@@ -658,7 +745,10 @@ if (props.projectId) {
 
         <template v-else>
           <section class="le32-insight" data-v32-insight>
-            <h2>{{ t('研究洞察', 'Research insight') }}</h2>
+            <div class="le32-papers-head">
+              <h2>{{ t('研究洞察', 'Research insight') }}</h2>
+              <ExportMenu :client="client" :project-id="projectId" :lang="lang" />
+            </div>
             <p v-if="!insight" class="muted">{{ t('概览尚未生成。','The overview has not been generated yet.') }}</p>
             <template v-else>
               <p class="muted"><strong>{{ t('研究范围', 'Research scope') }}</strong> {{ insight.scope || t('当前检索集','the current retrieved set') }} · {{ statusText(insight.status) }}</p>
@@ -714,6 +804,13 @@ if (props.projectId) {
       <p v-else class="badge badge--system" data-v32-drawer-system>{{ t('算法推荐核心', 'Recommended by the ranking') }}</p>
       <p class="muted">{{ snapshot }}</p>
 
+      <h4>{{ t('出版源指标', 'Venue metrics') }}</h4>
+      <ul class="brief-list le32-venue" data-v32-venue>
+        <li v-for="row in pinnedVenue" :key="row.type" :data-v32-venue-metric="row.type">
+          <strong>{{ row.label }}</strong>：{{ row.value }}<span v-if="row.source" class="muted"> · {{ t('来源','Source') }}：{{ row.source }}</span><span v-if="row.reason" class="muted"> · {{ row.reason }}</span>
+        </li>
+      </ul>
+
       <h4>{{ t('获取全文', 'Get the full text') }}</h4>
       <p class="muted" data-v32-access-note>{{ t('按顺序尝试：先看出版社原文或 DOI 官方解析，再走机构入口。打开链接只代表进入入口页，不代表已获得授权；本应用不会代你登录，也不会读取学校的登录状态。','Try in order: the publisher page or the official DOI resolver first, then an institutional entry. Opening a link only opens an entry point and does not mean access was granted; this app does not sign in for you and never reads the campus login state.') }}</p>
       <ul v-if="accessOptions.length" class="le32-access" data-v32-access>
@@ -730,6 +827,16 @@ if (props.projectId) {
       <p v-if="copyState" class="muted" data-v32-copy-state role="status">{{ copyState }}</p>
 
       <template v-if="judgementOf(pinnedItem) === 'excluded'">
+        <h4>{{ t('排除原因', 'Exclusion reason') }}</h4>
+        <select
+          :value="exclusionCodes[pinnedItem.paper.paper_id] || 'unspecified'"
+          data-v32-exclusion-code
+          :aria-label="t('排除原因','Exclusion reason')"
+          @change="judge({ paperId: pinnedItem.paper.paper_id, value: 'excluded', exclusionReason: $event.target.value })"
+        >
+          <option v-for="option in reasonChoices" :key="option.value" :value="option.value">{{ option.label }}</option>
+        </select>
+        <p class="muted">{{ t('只有「不相关」会作为负反馈影响排序；其余原因只隐藏这篇文献。', 'Only “Not relevant” is used as negative feedback; the other reasons only hide the record.') }}</p>
         <h4>{{ t('排除说明（可选）', 'Exclusion note (optional)') }}</h4>
         <input v-model="reasons[pinnedItem.paper.paper_id]" type="text" :placeholder="t('不填写时按未指定处理','Left blank it stays unspecified')" data-v32-exclusion-reason />
       </template>
@@ -795,5 +902,15 @@ if (props.projectId) {
 .le32-access-badge[data-access-availability="requires_institution"] { border-color: #9a6100; color: #9a6100; }
 .le32-access-hint { margin: 6px 0 0; font-size: 12.5px; }
 .le32-upload-inline { margin-top: var(--s-6); }
+.le32-intent { border-top: 1px solid var(--border); padding-top: var(--s-4); display: flex; flex-direction: column; gap: var(--s-2); }
+.le32-intent-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-3); flex-wrap: wrap; }
+.le32-intent-head h3 { font-size: 15px; }
+.le32-intent-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-2) var(--s-4); margin: 0; font-size: 13.5px; }
+.le32-intent-grid dt { color: var(--muted); font-size: 12.5px; }
+.le32-intent-grid dd { margin: 2px 0 0; overflow-wrap: anywhere; }
+.le32-intent h4 { font-size: 13.5px; margin-top: var(--s-2); }
+.le32-venue { font-size: 13.5px; }
+.le32-drawer select { min-height: 36px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font: inherit; font-size: 13px; }
+@media (max-width: 599px) { .le32-intent-grid { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 959px) { .le32-branch-grid { grid-template-columns: minmax(0, 1fr); } }
 </style>
