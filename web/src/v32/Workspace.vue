@@ -84,7 +84,9 @@ let stopped = false
 const LANG = computed(() => props.lang)
 const stageTabs = computed(() => STAGES.map(stage => ({ ...stage, label: stageLabel(stage.key, LANG.value) })))
 const stageNotice = computed(() => rankingStageLabel(job.value ? rankingStageForJob(job.value, items.value.length > 0) : (items.value.length ? 'refreshed' : 'idle'), LANG.value))
-const coverage = computed(() => coverageLine(overview.value?.coverage || job.value?.coverage || null, LANG.value))
+// 任务自己记录的覆盖状态最接近事实（快照里的 coverage 可能是自动扩展轮之前
+// 写的，或者为空），所以优先用它，拿不到再退回概览。
+const coverage = computed(() => coverageLine(job.value?.coverage || overview.value?.coverage || null, LANG.value))
 const degradation = computed(() => enhancementNotice(job.value, LANG.value))
 const snapshot = computed(() => snapshotLabel(snapshotId.value, LANG.value))
 
@@ -195,6 +197,27 @@ const journalRows = computed(() => {
 function normaliseVenue(name) {
   return String(name || '').toLowerCase().replace(/[^a-z0-9]/g, '')
 }
+
+/** 记录里没有期刊名时（预印本/数据库记录），按来源统计，别留空。 */
+const sourceRows = computed(() => {
+  if (journalRows.value.length) return []
+  const counts = new Map()
+  let known = 0
+  for (const item of items.value) {
+    const paper = item?.paper || item || {}
+    const records = Array.isArray(paper.source_records) ? paper.source_records : []
+    const source = String(
+      (records[0] && records[0].provider) || paper.source || paper.provider || '',
+    ).trim()
+    if (!source) continue
+    known += 1
+    counts.set(source, (counts.get(source) || 0) + 1)
+  }
+  return [...counts.entries()]
+    .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
+    .slice(0, 8)
+    .map(([source, count]) => ({ source, count, share: known ? count / known : 0 }))
+})
 
 // 研究意图预览（doc 02「从研究方向开始」/ R05）。只读：后端目前没有接受
 // objects / tasks / methods / exclusions 的更新接口（discover 只收 research_text，
@@ -840,7 +863,11 @@ if (props.projectId) {
               <ul v-if="journalRows.length" class="brief-list" data-v32-journals>
                 <li v-for="row in journalRows" :key="row.venue">{{ row.venue }} · {{ row.count }} {{ t('篇', 'records') }}（{{ Math.round(row.share * 100) }}%）<span v-if="row.ccf" class="badge" :data-v32-venue-rank="row.venue">CCF {{ row.ccf }}</span><span v-if="row.impactFactor" class="badge" :data-v32-venue-if="row.venue">IF {{ row.impactFactor }}<template v-if="row.quartile"> · {{ row.quartile }}</template></span></li>
               </ul>
+              <ul v-else-if="sourceRows.length" class="brief-list" data-v32-sources>
+                <li v-for="row in sourceRows" :key="row.source">{{ row.source }} · {{ row.count }} {{ t('篇', 'records') }}（{{ Math.round(row.share * 100) }}%）</li>
+              </ul>
               <p v-else class="muted" data-v32-journals-empty>{{ t('检索记录里没有期刊字段，无法统计。','The retrieved records carry no venue field, so there is nothing to count.') }}</p>
+              <p v-if="!journalRows.length && sourceRows.length" class="muted">{{ t('这些记录来自预印本/数据库，没有期刊名，所以先按来源统计。','These records come from preprints/databases and carry no journal name, so they are counted by source.') }}</p>
               <p class="muted le32-venue-note" data-v32-venue-note>{{ t('期刊名与篇数来自本项目的检索记录，并会存进本地期刊缓存（换项目也能查）；CCF 分区来自仓库自带的 2026 第七版目录（只覆盖计算机领域）。影响因子可选：把期刊表用 scripts/import_journal_csv.py 导入本机缓存后，这里会显示 IF 与分区；没有导入就不显示，也不估算。','Venue names and counts come from this project and are kept in a local venue cache; CCF ranks come from the bundled 2026 catalogue (computer science only). Impact factors are optional: import a journal table with scripts/import_journal_csv.py and they appear here; without an import they are neither shown nor estimated.') }}</p>
               <h3>{{ t('时间线', 'Timeline') }}</h3>
               <ul class="le32-timeline" data-v32-timeline>

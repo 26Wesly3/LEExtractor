@@ -310,6 +310,11 @@ def coverage_dto(
     resolved = str(status)
     if resolved not in valid:
         resolved = "no_results" if not candidate_count else "partial"
+    # 不变式：有结果就不能报「没有匹配文献」。检索第一轮为空、随后自动扩展轮
+    # 补到候选时，状态会停在 no_results，界面就会在 75 张卡片上方写"确实没有
+    # 匹配文献"（演示里实际出现过）。
+    if resolved == str(CoverageStatus.NO_RESULTS) and int(candidate_count) > 0:
+        resolved = str(CoverageStatus.PARTIAL)
     return {
         "status": resolved,
         "candidate_count": max(0, int(candidate_count)),
@@ -2247,9 +2252,16 @@ def overview_payload(state: V32State, project: V32Project, session: Any = None) 
     except Exception:  # noqa: BLE001 - 缓存失败不能影响概览
         pass
     snapshot = load_current_snapshot(state, project)
-    coverage = dict(snapshot.get("coverage") or {}) if snapshot else coverage_dto(
-        status=str(CoverageStatus.NO_RESULTS if not records else CoverageStatus.WITHIN_BUDGET),
-        candidate_count=len(records),
+    raw_coverage = dict((snapshot or {}).get("coverage") or {})
+    # 快照里存的是提交那一刻的覆盖状态。自动扩展轮之后候选会变多，但旧快照的
+    # status 仍可能是 no_results；读出来时统一过一遍 coverage_dto，保证「有结果
+    # 就不会显示没有匹配文献」。
+    coverage = coverage_dto(
+        status=str(raw_coverage.get("status") or ("no_results" if not records else "within_budget")),
+        candidate_count=int(raw_coverage.get("candidate_count") or len(records)),
+        failed_sources=raw_coverage.get("failed_sources") or (),
+        stop_reasons=raw_coverage.get("stop_reasons") or (),
+        scope=str(raw_coverage.get("scope") or "current_retrieval_set"),
     )
     view = {
         "snapshot_id": (snapshot or {}).get("snapshot_id"),
