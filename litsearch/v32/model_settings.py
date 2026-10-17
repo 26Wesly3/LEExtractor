@@ -262,6 +262,9 @@ def save_persisted(root: Path | str, payload: dict[str, Any]) -> Path:
         "model": str(payload.get("model") or ""),
         "api_key": str(payload.get("api_key") or ""),
         "provider_id": str(payload.get("provider_id") or "ai_model"),
+        # 记住用户选的服务商预设：重启后仍按同一身份建适配器，报错里的服务商
+        # 名称才不会退化成一个笼统的 openai。
+        "profile": str(payload.get("profile") or "custom"),
         "saved_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     }
     temporary = path.with_suffix(".tmp")
@@ -288,6 +291,8 @@ def load_persisted(root: Path | str) -> dict[str, Any] | None:
         "base_url": document.get("base_url") or "",
         "dialect": document.get("dialect") or "openai_compatible",
         "model": document.get("model") or None,
+        # 兼容旧文件：没有 profile 时按 custom 处理（地址仍决定真实去向）。
+        "endpoint_profile_id": document.get("profile") or "custom",
     }
 
 

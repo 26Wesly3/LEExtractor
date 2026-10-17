@@ -109,6 +109,7 @@ def test_persisted_credential_is_owner_only_and_round_trips(tmp_path):
         "base_url": "https://relay.example.com/v1",
         "dialect": "openai_compatible",
         "model": "gpt-4o",
+        "endpoint_profile_id": "custom",
     }
     assert ms.clear_persisted(tmp_path) is True
     assert ms.load_persisted(tmp_path) is None

@@ -1206,6 +1206,7 @@ def build_router(state: V32State) -> APIRouter:
                     "dialect": dialect,
                     "model": model or "",
                     "api_key": body.api_key,
+                    "profile": profile,
                 },
             )
             persisted = True
