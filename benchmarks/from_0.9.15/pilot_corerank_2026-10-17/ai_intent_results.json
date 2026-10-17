@@ -1,0 +1,156 @@
+{
+ "rows": [
+  {
+   "topic": "T1",
+   "intent": "raw_chinese",
+   "method": "semantic",
+   "ndcg10": 0.704,
+   "order": [
+    "coupling",
+    "cocitation",
+    "scincl",
+    "scirepeval",
+    "specter",
+    "rag",
+    "dpr",
+    "realm"
+   ]
+  },
+  {
+   "topic": "T1",
+   "intent": "ai_interpreted",
+   "method": "semantic",
+   "ndcg10": 0.9864,
+   "order": [
+    "scincl",
+    "scirepeval",
+    "specter",
+    "coupling",
+    "cocitation",
+    "rag",
+    "dpr",
+    "realm"
+   ]
+  },
+  {
+   "topic": "T2",
+   "intent": "raw_chinese",
+   "method": "semantic",
+   "ndcg10": 0.9808,
+   "order": [
+    "coupling",
+    "cocitation",
+    "scirepeval",
+    "scincl",
+    "dpr",
+    "specter",
+    "rag",
+    "realm"
+   ]
+  },
+  {
+   "topic": "T2",
+   "intent": "ai_interpreted",
+   "method": "semantic",
+   "ndcg10": 0.9941,
+   "order": [
+    "cocitation",
+    "coupling",
+    "scincl",
+    "scirepeval",
+    "specter",
+    "dpr",
+    "rag",
+    "realm"
+   ]
+  },
+  {
+   "topic": "T3",
+   "intent": "raw_chinese",
+   "method": "semantic",
+   "ndcg10": 0.8452,
+   "order": [
+    "dpr",
+    "rag",
+    "realm",
+    "specter",
+    "scincl",
+    "scirepeval",
+    "cocitation",
+    "coupling"
+   ]
+  },
+  {
+   "topic": "T3",
+   "intent": "ai_interpreted",
+   "method": "semantic",
+   "ndcg10": 0.8452,
+   "order": [
+    "dpr",
+    "rag",
+    "realm",
+    "specter",
+    "scincl",
+    "scirepeval",
+    "cocitation",
+    "coupling"
+   ]
+  }
+ ],
+ "interpretations": [
+  {
+   "topic": "T1",
+   "ai_fields": {
+    "english_query": "citation-supervised learning of scientific paper representations for similar paper discovery and retrieval",
+    "object": "scientific paper representations",
+    "task": "similar paper discovery and retrieval",
+    "methods": [
+     "citation supervision",
+     "learning scientific paper representations"
+    ],
+    "synonyms": [
+     "citation-based supervision",
+     "citation signals",
+     "paper embeddings",
+     "document representations",
+     "paper similarity search",
+     "related paper retrieval"
+    ]
+   }
+  },
+  {
+   "topic": "T2",
+   "ai_fields": {
+    "english_query": "bibliographic coupling and co-citation relationships for discovering related scientific literature through 2023",
+    "object": "related scientific literature",
+    "task": "discover related scientific literature using bibliographic coupling and co-citation relationships, with scope through the end of 2023",
+    "methods": [
+     "bibliographic coupling",
+     "co-citation relationships"
+    ],
+    "synonyms": [
+     "bibliometric coupling",
+     "co-citation analysis",
+     "related scholarly literature",
+     "related publications"
+    ]
+   }
+  },
+  {
+   "topic": "T3",
+   "ai_fields": {
+    "english_query": "retrieval-augmented language models for open-domain knowledge question answering: 2020 foundational methods",
+    "object": "open-domain knowledge question answering",
+    "task": "open-domain knowledge question answering",
+    "methods": [
+     "retrieval-augmented language models"
+    ],
+    "synonyms": [
+     "open-domain QA",
+     "retrieval-augmented LMs",
+     "knowledge QA"
+    ]
+   }
+  }
+ ]
+}

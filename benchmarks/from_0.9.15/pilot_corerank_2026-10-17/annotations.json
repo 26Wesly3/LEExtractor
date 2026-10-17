@@ -1,0 +1,292 @@
+{
+  "status": "AI_provisional_development_only",
+  "annotation_date": "2026-10-17",
+  "annotator": "ChatGPT in current conversation; not independent expert consensus",
+  "evidence_depth": "publisher/proceedings metadata and abstracts; not full-text review",
+  "rubric": {
+    "0": "本题范围内不相关",
+    "1": "相关背景或补充",
+    "2": "代表性方法或重要支持",
+    "3": "本题核心必读"
+  },
+  "limitations": [
+    "8篇人工选取的小候选池，不具备真实检索难度",
+    "3题均偏信息检索，不满足跨学科评测",
+    "范围冻结用于开发，不代表2026年前沿全貌",
+    "标注者与开发者相同，不可作为独立胜出证据",
+    "未标注论文必须为null，不可自动记0"
+  ],
+  "papers": [
+    {
+      "paper_id": "specter",
+      "title": "SPECTER: Document-level Representation Learning using Citation-informed Transformers",
+      "year": 2020,
+      "source_url": "https://aclanthology.org/2020.acl-main.207/",
+      "source_summary": "以引文关系监督科学论文的文档表示。"
+    },
+    {
+      "paper_id": "scincl",
+      "title": "Neighborhood Contrastive Learning for Scientific Document Representations with Citation Embeddings",
+      "year": 2022,
+      "source_url": "https://aclanthology.org/2022.emnlp-main.802/",
+      "source_summary": "利用引文嵌入邻域采样构造对比学习样本。"
+    },
+    {
+      "paper_id": "scirepeval",
+      "title": "SciRepEval: A Multi-Format Benchmark for Scientific Document Representations",
+      "year": 2023,
+      "source_url": "https://aclanthology.org/2023.emnlp-main.338/",
+      "source_summary": "覆盖多种科学文档任务，提出任务适配的 SPECTER2。"
+    },
+    {
+      "paper_id": "coupling",
+      "title": "Bibliographic coupling between scientific papers",
+      "year": 1963,
+      "source_url": "https://asistdl.onlinelibrary.wiley.com/doi/abs/10.1002/asi.5090140103",
+      "source_summary": "书目耦合的基础方法论文。"
+    },
+    {
+      "paper_id": "cocitation",
+      "title": "Co-citation in the scientific literature: A new measure of the relationship between two documents",
+      "year": 1973,
+      "source_url": "https://onlinelibrary.wiley.com/doi/abs/10.1002/asi.4630240406",
+      "source_summary": "共被引关系的基础方法论文。"
+    },
+    {
+      "paper_id": "rag",
+      "title": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks",
+      "year": 2020,
+      "source_url": "https://papers.neurips.cc/paper/2020/hash/6b493230205f780e1bc26945df7481e5-Abstract.html",
+      "source_summary": "将参数化生成模型与外部可检索记忆结合。"
+    },
+    {
+      "paper_id": "realm",
+      "title": "Retrieval Augmented Language Model Pre-Training",
+      "year": 2020,
+      "source_url": "https://proceedings.mlr.press/v119/guu20a.html",
+      "source_summary": "将知识检索纳入语言模型预训练。"
+    },
+    {
+      "paper_id": "dpr",
+      "title": "Dense Passage Retrieval for Open-Domain Question Answering",
+      "year": 2020,
+      "source_url": "https://aclanthology.org/2020.emnlp-main.550/",
+      "source_summary": "开放域问答中的稠密段落检索方法。"
+    }
+  ],
+  "topics": [
+    {
+      "topic_id": "T1",
+      "query": "利用引文监督学习科学论文表示，用于相似论文发现与检索；范围截至2023年底",
+      "split": "development",
+      "judgments": [
+        {
+          "paper_id": "specter",
+          "label": 3,
+          "reason": "直接定义引文监督的论文表示路线",
+          "expert_label": null,
+          "role": "foundational",
+          "role_origin": "AI_inference"
+        },
+        {
+          "paper_id": "scincl",
+          "label": 3,
+          "reason": "改进引文邻域训练样本，是直接方法贡献",
+          "expert_label": null,
+          "role": "foundational",
+          "role_origin": "AI_inference"
+        },
+        {
+          "paper_id": "scirepeval",
+          "label": 3,
+          "reason": "评测泛化并给出多格式表示，是直接方法与评测贡献",
+          "expert_label": null,
+          "role": "foundational",
+          "role_origin": "AI_inference"
+        },
+        {
+          "paper_id": "coupling",
+          "label": 1,
+          "reason": "引文关系背景，未直接训练神经表示",
+          "expert_label": null,
+          "role": "background",
+          "role_origin": "AI_inference"
+        },
+        {
+          "paper_id": "cocitation",
+          "label": 1,
+          "reason": "引文关系背景，未直接训练神经表示",
+          "expert_label": null,
+          "role": "background",
+          "role_origin": "AI_inference"
+        },
+        {
+          "paper_id": "rag",
+          "label": 0,
+          "reason": "核心问题是生成，不是科学论文表示",
+          "expert_label": null,
+          "role": "peripheral",
+          "role_origin": "AI_inference"
+        },
+        {
+          "paper_id": "realm",
+          "label": 1,
+          "reason": "检索式预训练的相邻思路",
+          "expert_label": null,
+          "role": "background",
+          "role_origin": "AI_inference"
+        },
+        {
+          "paper_id": "dpr",
+          "label": 2,
+          "reason": "稠密检索的重要方法支持，但不是科学论文专用表示",
+          "expert_label": null,
+          "role": "methodology",
+          "role_origin": "AI_inference"
+        }
+      ]
+    },
+    {
+      "topic_id": "T2",
+      "query": "利用书目耦合与共被引关系发现相关科学文献；范围截至2023年底",
+      "split": "development",
+      "judgments": [
+        {
+          "paper_id": "specter",
+          "label": 2,
+          "reason": "引文信号表示的现代延伸",
+          "expert_label": null,
+          "role": "methodology",
+          "role_origin": "AI_inference"
+        },
+        {
+          "paper_id": "scincl",
+          "label": 2,
+          "reason": "引文图邻域的现代学习方法",
+          "expert_label": null,
+          "role": "methodology",
+          "role_origin": "AI_inference"
+        },
+        {
+          "paper_id": "scirepeval",
+          "label": 1,
+          "reason": "下游表示评测背景",
+          "expert_label": null,
+          "role": "background",
+          "role_origin": "AI_inference"
+        },
+        {
+          "paper_id": "coupling",
+          "label": 3,
+          "reason": "直接定义核心关系",
+          "expert_label": null,
+          "role": "foundational",
+          "role_origin": "AI_inference"
+        },
+        {
+          "paper_id": "cocitation",
+          "label": 3,
+          "reason": "直接定义核心关系",
+          "expert_label": null,
+          "role": "foundational",
+          "role_origin": "AI_inference"
+        },
+        {
+          "paper_id": "rag",
+          "label": 0,
+          "reason": "不研究本题两类引文关系",
+          "expert_label": null,
+          "role": "peripheral",
+          "role_origin": "AI_inference"
+        },
+        {
+          "paper_id": "realm",
+          "label": 0,
+          "reason": "不研究本题两类引文关系",
+          "expert_label": null,
+          "role": "peripheral",
+          "role_origin": "AI_inference"
+        },
+        {
+          "paper_id": "dpr",
+          "label": 1,
+          "reason": "可以构成文本检索对照，非引文方法",
+          "expert_label": null,
+          "role": "background",
+          "role_origin": "AI_inference"
+        }
+      ]
+    },
+    {
+      "topic_id": "T3",
+      "query": "开放域知识问答中的检索增强语言模型：2020年基础方法",
+      "split": "development",
+      "judgments": [
+        {
+          "paper_id": "specter",
+          "label": 0,
+          "reason": "非问答检索增强语言模型",
+          "expert_label": null,
+          "role": "peripheral",
+          "role_origin": "AI_inference"
+        },
+        {
+          "paper_id": "scincl",
+          "label": 0,
+          "reason": "超出年代且非本题对象",
+          "expert_label": null,
+          "role": "peripheral",
+          "role_origin": "AI_inference"
+        },
+        {
+          "paper_id": "scirepeval",
+          "label": 0,
+          "reason": "超出年代且非本题对象",
+          "expert_label": null,
+          "role": "peripheral",
+          "role_origin": "AI_inference"
+        },
+        {
+          "paper_id": "coupling",
+          "label": 0,
+          "reason": "不研究语言模型问答",
+          "expert_label": null,
+          "role": "peripheral",
+          "role_origin": "AI_inference"
+        },
+        {
+          "paper_id": "cocitation",
+          "label": 0,
+          "reason": "不研究语言模型问答",
+          "expert_label": null,
+          "role": "peripheral",
+          "role_origin": "AI_inference"
+        },
+        {
+          "paper_id": "rag",
+          "label": 3,
+          "reason": "直接的检索增强生成框架",
+          "expert_label": null,
+          "role": "foundational",
+          "role_origin": "AI_inference"
+        },
+        {
+          "paper_id": "realm",
+          "label": 3,
+          "reason": "直接的检索增强预训练框架",
+          "expert_label": null,
+          "role": "foundational",
+          "role_origin": "AI_inference"
+        },
+        {
+          "paper_id": "dpr",
+          "label": 2,
+          "reason": "关键检索组件，但本身不等于生成框架",
+          "expert_label": null,
+          "role": "methodology",
+          "role_origin": "AI_inference"
+        }
+      ]
+    }
+  ]
+}

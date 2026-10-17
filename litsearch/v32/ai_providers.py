@@ -225,6 +225,8 @@ class ModelAdapter:
 
     @staticmethod
     def _system_prompt(request: Mapping[str, Any]) -> str:
+        if request.get("system_prompt"):  # other tasks (e.g. intent reading) bring their own rules
+            return str(request["system_prompt"])
         schema = request.get("response_schema") or {}
         return (
             "You re-rank an already-retrieved list of papers for one research intent.\n"
@@ -239,6 +241,8 @@ class ModelAdapter:
 
     @staticmethod
     def _user_prompt(request: Mapping[str, Any]) -> str:
+        if request.get("user_text") is not None:
+            return str(request["user_text"])
         compact = {
             "schema_version": request.get("schema_version"),
             "context_hash": request.get("context_hash"),
@@ -338,6 +342,11 @@ class ModelAdapter:
         return None
 
     # -- ai_rerank protocol ----------------------------------------------
+
+    def intent(self, request: Mapping[str, Any]) -> dict[str, Any]:
+        """Return the parsed JSON for one research-intent reading (no paper data is sent)."""
+        text, _revision = self._call(request, max_tokens=600)
+        return extract_json_object(text)
 
     def rerank(self, request: Mapping[str, Any]) -> dict[str, Any]:
         """Return the parsed structured payload for one rerank window."""

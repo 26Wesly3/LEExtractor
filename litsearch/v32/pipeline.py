@@ -40,7 +40,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterable, Mapping, Sequence
 
-from litsearch.v32 import contracts
+from litsearch.v32 import contracts, intent_ai, semantic
 from litsearch.v32.errors import (
     BAD_REQUEST,
     CAPABILITY_UNAVAILABLE,
@@ -127,6 +127,9 @@ class V32State:
     zotero_settings: Mapping[str, Any] | None = None
     #: ``paper_id -> unit vector``, when a semantic model is actually available.
     vectors: Mapping[str, Sequence[float]] | None = None
+    #: ``(parsed) -> [candidate records]`` from an external metadata source (doc 16).
+    #: Off unless configured; a failed lookup contributes no candidates.
+    external_candidates: Any = None
     #: ``paper_id -> vector`` for the *query/intent* anchor, when available.
     query_vector: Sequence[float] | None = None
     previews: Any = None
@@ -163,7 +166,10 @@ class V32State:
         A deployment with a metadata provider injects a wider candidate set here
         instead of this module inventing a second provider client.
         """
-        return [dict(record) for record in project.doc.get("papers", {}).values()]
+        candidates = [dict(record) for record in project.doc.get("papers", {}).values()]
+        if self.external_candidates is not None:
+            candidates.extend(dict(row) for row in (self.external_candidates(parsed) or []))
+        return candidates
 
     # -- optional stages ---------------------------------------------------
 
@@ -427,12 +433,23 @@ def rank_project(
     records.sort(key=lambda row: str(row.get("paper_id")))
     paper_ids = [str(row["paper_id"]) for row in records]
 
-    scores = topic_scores(ranking_query_text(project), records)
+    query_text = ranking_query_text(project)
+    reading = intent_ai.interpret(query_text, state.ai_adapter) if state.ai_adapter is not None else None
+    if reading:
+        query_text = intent_ai.topic_text(reading)
+    scores = topic_scores(query_text, records)
+    pair = None
+    if state.vectors is None or state.query_vector is None:
+        pair = semantic.paper_and_query_vectors(query_text, records)
+    if pair is not None:
+        # Semantic topic when the pinned model is on disk; lexical share otherwise.
+        scores = semantic.semantic_topic_scores(pair[0], pair[1])
     graph = pagerank_signal(citation_edges(state.store, project), paper_ids, config=cfg)
 
     seed_scores: dict[str, float] = {}
     feedback_values: dict[str, float] = {}
-    vectors = state.vectors
+    vectors = state.vectors if state.vectors is not None else (pair[1] if pair is not None else None)
+    anchor_vector = state.query_vector if state.query_vector is not None else (pair[0] if pair is not None else None)
     if vectors:
         vectors = {str(key): value for key, value in vectors.items()}
         seed_ids = [
@@ -442,8 +459,8 @@ def rank_project(
         try:
             from litsearch.v32.feedback import query_vector, feedback_scores
 
-            anchor = state.query_vector
-            if anchor:
+            anchor = anchor_vector
+            if anchor is not None:
                 q_new = query_vector(anchor, documents.get("judgements") or {}, vectors, config=cfg)
                 feedback_values = {
                     str(pid): float(value)

@@ -1,0 +1,173 @@
+[
+ {
+  "topic": "T1",
+  "split": "development",
+  "method_requested": "semantic",
+  "method_used": "semantic",
+  "reason": null,
+  "order": [
+   "coupling",
+   "cocitation",
+   "scincl",
+   "scirepeval",
+   "specter",
+   "rag",
+   "dpr",
+   "realm"
+  ],
+  "ndcg10": 0.704,
+  "ndcg20": 0.704
+ },
+ {
+  "topic": "T1",
+  "split": "development",
+  "method_requested": "lexical",
+  "method_used": "inactive",
+  "reason": "no_intent_terms",
+  "order": [
+   "dpr",
+   "rag",
+   "specter",
+   "realm",
+   "scirepeval",
+   "scincl",
+   "cocitation",
+   "coupling"
+  ],
+  "ndcg10": 0.7394,
+  "ndcg20": 0.7394
+ },
+ {
+  "topic": "T1",
+  "split": "development",
+  "method_requested": "none",
+  "method_used": "relevance_score",
+  "reason": null,
+  "order": [
+   "dpr",
+   "rag",
+   "specter",
+   "realm",
+   "scirepeval",
+   "scincl",
+   "cocitation",
+   "coupling"
+  ],
+  "ndcg10": 0.7394,
+  "ndcg20": 0.7394
+ },
+ {
+  "topic": "T2",
+  "split": "development",
+  "method_requested": "semantic",
+  "method_used": "semantic",
+  "reason": null,
+  "order": [
+   "coupling",
+   "cocitation",
+   "scirepeval",
+   "scincl",
+   "dpr",
+   "specter",
+   "rag",
+   "realm"
+  ],
+  "ndcg10": 0.9808,
+  "ndcg20": 0.9808
+ },
+ {
+  "topic": "T2",
+  "split": "development",
+  "method_requested": "lexical",
+  "method_used": "inactive",
+  "reason": "no_intent_terms",
+  "order": [
+   "dpr",
+   "rag",
+   "specter",
+   "realm",
+   "scirepeval",
+   "scincl",
+   "cocitation",
+   "coupling"
+  ],
+  "ndcg10": 0.5683,
+  "ndcg20": 0.5683
+ },
+ {
+  "topic": "T2",
+  "split": "development",
+  "method_requested": "none",
+  "method_used": "relevance_score",
+  "reason": null,
+  "order": [
+   "dpr",
+   "rag",
+   "specter",
+   "realm",
+   "scirepeval",
+   "scincl",
+   "cocitation",
+   "coupling"
+  ],
+  "ndcg10": 0.5683,
+  "ndcg20": 0.5683
+ },
+ {
+  "topic": "T3",
+  "split": "development",
+  "method_requested": "semantic",
+  "method_used": "semantic",
+  "reason": null,
+  "order": [
+   "dpr",
+   "rag",
+   "realm",
+   "specter",
+   "scincl",
+   "scirepeval",
+   "cocitation",
+   "coupling"
+  ],
+  "ndcg10": 0.8452,
+  "ndcg20": 0.8452
+ },
+ {
+  "topic": "T3",
+  "split": "development",
+  "method_requested": "lexical",
+  "method_used": "inactive",
+  "reason": "no_intent_terms",
+  "order": [
+   "dpr",
+   "rag",
+   "specter",
+   "realm",
+   "scirepeval",
+   "scincl",
+   "cocitation",
+   "coupling"
+  ],
+  "ndcg10": 0.8076,
+  "ndcg20": 0.8076
+ },
+ {
+  "topic": "T3",
+  "split": "development",
+  "method_requested": "none",
+  "method_used": "relevance_score",
+  "reason": null,
+  "order": [
+   "dpr",
+   "rag",
+   "specter",
+   "realm",
+   "scirepeval",
+   "scincl",
+   "cocitation",
+   "coupling"
+  ],
+  "ndcg10": 0.8076,
+  "ndcg20": 0.8076
+ }
+]

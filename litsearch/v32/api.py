@@ -37,6 +37,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
+from litsearch.v32 import external_match
 from litsearch.v32 import contracts
 from litsearch.v32.errors import (
     CAPABILITY_UNAVAILABLE,
@@ -1423,6 +1424,7 @@ def install_v32(
         ai_adapter=ai_adapter,
         ai_model_revision=ai_model_revision,
         zotero_settings=zotero_settings,
+        external_candidates=external_match.lookup if external_match.switch_on() else None,
         previews=PreviewStore(),
     )
     register_handlers(state)
