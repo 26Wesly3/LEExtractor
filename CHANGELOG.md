@@ -9,6 +9,13 @@
 
 ---
 
+## v0.9.22（2026-10-17）M3：LEExtractor v3.2 分阶段实施
+
+- AI 模型配置入口可用：/v32/settings → AI 模型 → 供应商（OpenAI / DeepSeek / Anthropic Claude）+ 模型名 + Key
+- 修复首次进入设置页的 401：先建立匿名会话再读凭据状态，控制台不再报错
+- 模型名按官方文档校核：gpt-5.5 / deepseek-flash / claude-opus-5-5
+
+本阶段按 `docs/v3.2/` 规范实施；验收状态见 `handoff/IMPLEMENTATION_STATUS.md`。
 ## v0.9.21（2026-10-17）M3：LEExtractor v3.2 分阶段实施
 
 - AI 模型配置入口：/v32/settings「AI 模型」区新增供应商下拉（OpenAI / DeepSeek / Anthropic Claude）＋模型名（留空用默认）＋Key

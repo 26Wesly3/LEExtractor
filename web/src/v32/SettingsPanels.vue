@@ -92,6 +92,9 @@ function isConfigured(providerId) {
 
 async function load() {
   try {
+    // 先建立匿名会话：凭据状态接口要求会话 cookie，直接读会在首次进入设置页时
+    // 拿到 401，控制台里留一条红字、状态显示成「未配置」但其实是没授权读。
+    try { await props.client.session() } catch { /* 会话失败时下面会给出可读错误 */ }
     const data = await props.client.credentials()
     statuses.value = Array.isArray(data?.items) ? data.items : []
     error.value = ''

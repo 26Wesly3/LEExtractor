@@ -17,7 +17,7 @@ Search literature. Trace evidence. Build understanding.
 <p>
   <img src="https://img.shields.io/badge/status-public%20beta-64748B?style=flat&labelColor=18181B" alt="Status: public beta">
   <img src="https://img.shields.io/badge/focus-literature%20%26%20evidence-334155?style=flat&labelColor=18181B" alt="Focus: literature and evidence">
-  <img src="https://img.shields.io/badge/version-v0.9.21-0B4FA1?style=flat&labelColor=18181B" alt="Version: v0.9.21">
+  <img src="https://img.shields.io/badge/version-v0.9.22-0B4FA1?style=flat&labelColor=18181B" alt="Version: v0.9.22">
 </p>
 
 <p>
@@ -95,7 +95,7 @@ LEExtractor 面向科研前期探索：把一句模糊的研究意图，变成�
 
 ### Windows 便携版（推荐）
 
-1. 下载并**完整解压** [`LEExtractor_v0.9.21_Windows_portable.zip`](download/LEExtractor_v0.9.21_Windows_portable.zip)（或从 [Releases](https://github.com/26Wesly3/LEExtractor/releases) 下载）。
+1. 下载并**完整解压** [`LEExtractor_v0.9.22_Windows_portable.zip`](download/LEExtractor_v0.9.22_Windows_portable.zip)（或从 [Releases](https://github.com/26Wesly3/LEExtractor/releases) 下载）。
 2. 双击 **`Start_LEExtractor.bat`**。
 3. 浏览器自动打开 <http://127.0.0.1:8012>，控制台保持打开即运行中。
 
