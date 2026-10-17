@@ -9,6 +9,8 @@ const props = defineProps({
   projectId: { type: String, required: true },
   revision: { type: Number, default: 1 },
   lang: { type: String, default: 'zh' },
+  // 从 Zotero 插件点过来时带上的条目键：加载完列表就把它勾上，少点一次。
+  preselect: { type: String, default: '' },
 })
 const emit = defineEmits(['imported'])
 
@@ -43,7 +45,8 @@ async function search() {
   try {
     const data = await props.client.zoteroLocalItems({ q: query.value, collection: collection.value, limit: 30 })
     rows.value = Array.isArray(data?.items) ? data.items : []
-    selected.value = []
+    const wanted = String(props.preselect || '').trim()
+    selected.value = wanted && rows.value.some(row => row.item_key === wanted) ? [wanted] : []
   } catch (problem) {
     error.value = errorLine(problem, t('读取 Zotero 条目失败。', 'Could not read Zotero items.'))
   } finally {

@@ -19,28 +19,70 @@ function log(message) {
   }
 }
 
+// 在 prefs.js 里留痕：装没装、启动走到哪一步、注册失败的原因。
+// 这是没有调试控制台时唯一能落盘的证据（Zotero.debug 输出抓不到）。
+function mark(name, value) {
+  try {
+    Zotero.Prefs.set("extensions.leextractor." + name, String(value), true);
+  } catch (error) {
+    /* 落盘失败不影响功能 */
+  }
+}
+
 async function startup({ id, rootURI }) {
   await Zotero.initializationPromise;
+  mark("startup", Date.now());
   const scope = {};
   Services.scriptloader.loadSubScript(rootURI + "lib/core.js", scope);
   const core = scope.LEExtractorCore;
   const base = Zotero.Prefs.get("extensions.leextractor.baseUrl", true) || core.DEFAULT_BASE;
+  mark("scripts_loaded", Boolean(core && core.DEFAULT_BASE));
 
   LEExtractorPlugin = { id, core, rootURI, base };
 
   try {
-    LEExtractorPlugin.sectionID = Zotero.ItemPaneManager.registerSection({
-      paneID: "leextractor-core",
-      pluginID: id,
-      header: { l10nID: "leextractor-section-header", icon: "chrome://zotero/skin/16/universal/book.svg" },
-      sidenav: { l10nID: "leextractor-section-sidenav", icon: "chrome://zotero/skin/20/universal/book.svg" },
-      onRender: ({ body, item }) => renderSection(body, item),
-    });
+    const result = registerSection(id);
+    LEExtractorPlugin.sectionID = result.id;
+    mark("section_variant", result.variant);
+    mark("section_registered", LEExtractorPlugin.sectionID);
     log("section registered: " + LEExtractorPlugin.sectionID);
   } catch (error) {
+    mark("error", (error && error.message) || String(error));
     log("registerSection failed: " + (error && error.message));
     throw error;
   }
+}
+
+// 标题文案的兜底：优先用 Fluent（l10nID），解析不到就退回纯文本 label。
+// 之前的版本只用 l10nID，FTL 没被加载时 registerSection 直接抛错，区块就不出现。
+function registerSection(pluginID) {
+  const variants = [
+    {
+      header: { l10nID: "leextractor-section-header", icon: "chrome://zotero/skin/16/universal/book.svg" },
+      sidenav: { l10nID: "leextractor-section-sidenav", icon: "chrome://zotero/skin/20/universal/book.svg" },
+    },
+    {
+      header: { label: "LEExtractor", icon: "chrome://zotero/skin/16/universal/book.svg" },
+      sidenav: { label: "LEExtractor", icon: "chrome://zotero/skin/20/universal/book.svg" },
+    },
+    { header: {}, sidenav: {} },
+  ];
+  let lastError = null;
+  for (const [index, variant] of variants.entries()) {
+    try {
+      const id = Zotero.ItemPaneManager.registerSection({
+        paneID: "leextractor-core",
+        pluginID,
+        onRender: ({ body, item }) => renderSection(body, item),
+        ...variant,
+      });
+      return { id, variant: index };
+    } catch (error) {
+      lastError = error;
+      log("header variant failed: " + (error && error.message));
+    }
+  }
+  throw lastError || new Error("registerSection failed");
 }
 
 function shutdown() {
@@ -83,32 +125,35 @@ function renderSection(body, item) {
   const actions = doc.createElement("div");
   actions.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;";
 
-  const copyButton = doc.createElement("button");
-  copyButton.textContent = "复制题名与 DOI";
-  copyButton.addEventListener("click", async () => {
-    const text = LEExtractorPlugin.core.discoverText([
-      { title: item.getField("title"), DOI: item.getField("DOI") },
-    ]);
-    try {
-      await Zotero.Utilities.Internal.copyTextToClipboard(text);
-      status.textContent = "已复制：" + text.slice(0, 80);
-    } catch (error) {
-      status.textContent = "复制失败：" + (error.message || error);
+  // 主操作：把这条文献送进 LEExtractor（不再让你复制题名再去粘贴）。
+  // 落点带着条目键，侧栏打开后会自动勾上它，只需确认导入。
+  const importButton = doc.createElement("button");
+  importButton.id = "leextractor-import";
+  importButton.textContent = "导入到 LEExtractor";
+  importButton.addEventListener("click", () => {
+    const base = LEExtractorPlugin.base.replace(/\/api\/v3\/?$/, "");
+    const key = encodeURIComponent(String(item.key || ""));
+    if (!key) {
+      status.textContent = "这个条目没有可用的 Zotero 键。";
+      return;
     }
+    Zotero.launchURL(base + "/search?zotero=1&item=" + key);
+    status.textContent = "已打开 LEExtractor，条目已预选，确认导入即可。";
   });
 
   const openButton = doc.createElement("button");
-  openButton.textContent = "打开 LEExtractor 检索页";
+  openButton.textContent = "打开 LEExtractor";
   openButton.addEventListener("click", () => {
-    Zotero.launchURL("http://127.0.0.1:8000/search");
+    const base = LEExtractorPlugin.base.replace(/\/api\/v3\/?$/, "");
+    Zotero.launchURL(base + "/search");
   });
 
-  actions.append(copyButton, openButton);
+  actions.append(importButton, openButton);
   body.append(status, actions);
 
   probe().then((result) => {
     status.textContent = result.running
-      ? "本机 LEExtractor 已连接（" + result.detail + "）。在条目上复制题名，再到检索页粘贴即可。"
+      ? "本机 LEExtractor 已连接（" + result.detail + "）。点「导入到 LEExtractor」把这条文献带过去。"
       : "未发现本机 LEExtractor（" + result.detail + "）。请先在仓库目录运行 python -m litsearch.web --port 8000。";
   });
 }

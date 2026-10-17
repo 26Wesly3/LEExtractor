@@ -514,6 +514,9 @@ async function onZoteroImported(result) {
 /** S11：Zotero 用侧栏接入，开关写在 URL 里（和 ?paper= 同一套做法）。 */
 const zoteroOpen = computed(() => Boolean(injectedRoute && route.query.zotero === '1'))
 
+/** Zotero 插件点过来时带 ?item=<条目键>，侧栏加载完自动勾上它。 */
+const zoteroPreselect = computed(() => String((injectedRoute && route.query.item) || ''))
+
 function openZotero() {
   if (!injectedRoute) return
   router.push({ query: { ...route.query, zotero: '1' } })
@@ -781,6 +784,11 @@ if (props.projectId) {
               @batch="onImportBatch"
               @settled="onImportSettled"
             />
+            <!-- 「从已有文献开始」不只有上传 PDF 一条路：本机 Zotero 里的条目也是已有文献。 -->
+            <div class="le32-import-options" data-v32-import-options>
+              <p class="muted">{{ t('或者：把本机 Zotero 里的条目直接导进来。','Or: import items straight from your local Zotero library.') }}</p>
+              <button type="button" class="le32-action" data-v32-zotero-import-start @click="openZotero">{{ t('从 Zotero 导入文献', 'Import literature from Zotero') }}</button>
+            </div>
           </section>
           <section v-else class="le32-anchor" data-v32-anchor>
             <h2>{{ t('文献检索', 'Literature search') }}</h2>
@@ -1032,6 +1040,7 @@ if (props.projectId) {
         :project-id="projectId"
         :revision="project?.revision ?? 1"
         :lang="lang"
+        :preselect="zoteroPreselect"
         @imported="onZoteroImported"
       />
     </aside>

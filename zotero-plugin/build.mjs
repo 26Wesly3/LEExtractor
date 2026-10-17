@@ -7,7 +7,7 @@ import { deflateRawSync } from "node:zlib";
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, resolve, relative } from "node:path";
 
-const ENTRIES = ["manifest.json", "bootstrap.js", "lib", "locale"];
+const ENTRIES = ["manifest.json", "bootstrap.js", "lib", "locale", "icon.png"];
 const DIST = resolve("dist");
 const TARGET = resolve(DIST, "LEExtractor.xpi");
 
