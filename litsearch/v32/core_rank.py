@@ -910,7 +910,7 @@ def starter_list(
     roles: Mapping[str, str] | None = None,
     pool: Iterable[str] | None = None,
 ) -> list[str]:
-    """The first-reading list: MMR over the candidate pool, at most 10 of 50.
+    """The first-reading list: MMR over the recommended pool, at most 10 of 50.
 
     Relevance is the linear percentile of the final pool order, redundancy is
     ``max(0, cosine)`` when vectors exist and the normalised title-token
@@ -924,8 +924,11 @@ def starter_list(
     lam = float(cfg["mmr_lambda"])
 
     items = list(getattr(result, "items", result) or [])
+    # Only recommended papers are eligible: doc 04 "不为填满清单扩大到明显不相关
+    # 论文" -- exploration (below the topic gate) and excluded papers never pad
+    # the list, even when they are named in ``pool``.
     non_excluded = [
-        item for item in items if str(getattr(item, "eligibility", "")) != str(Eligibility.EXCLUDED)
+        item for item in items if str(getattr(item, "eligibility", "")) == str(Eligibility.RECOMMENDED)
     ]
 
     order = [str(item.paper_id) for item in non_excluded]

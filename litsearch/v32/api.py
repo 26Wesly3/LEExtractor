@@ -34,11 +34,12 @@ from typing import Annotated, Any, Literal, Mapping
 
 from fastapi import APIRouter, File, Form, Header, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, ConfigDict, Field
 
 from litsearch.v32 import external_match
 from litsearch.v32 import contracts
+from litsearch.v32 import export as v32_export
 from litsearch.v32.errors import (
     CAPABILITY_UNAVAILABLE,
     CURSOR_STALE,
@@ -50,6 +51,7 @@ from litsearch.v32.errors import (
 from litsearch.v32.jobs import JobManager
 from litsearch.v32.pipeline import (
     V32State,
+    citation_edges as pipeline_citation_edges,
     config_hash,
     import_batch_dto,
     overview_payload,
@@ -984,6 +986,27 @@ def build_router(state: V32State) -> APIRouter:
         session = _session(state, request)
         project = _owned_project(state, session, pid)
         return _project("Overview", overview_payload(state, project, session))
+
+    # -- export (doc 16 "导出与工具衔接", AC-30) ---------------------------
+
+    @router.get("/projects/{pid}/export")
+    def export_project(request: Request, pid: str, format: str | None = None) -> Response:
+        session = _session(state, request)
+        project = _owned_project(state, session, pid)
+        if format not in v32_export.EXPORT_FORMATS:
+            raise V32Error(
+                422, UNPROCESSABLE, "导出格式非法，可选 ris、bibtex、csv、evidence_pack、prisma"
+            )
+        with project.lock:
+            current = project.doc.get("current_snapshot_id")
+            snapshot = state.store.load_snapshot(project, current) if current else None
+            edges = pipeline_citation_edges(state.store, project) if format == "evidence_pack" else []
+            body, filename, media = v32_export.export_document(project, format, snapshot, edges)
+        return Response(
+            content=body,
+            media_type=media,
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
 
     # -- access and venue -------------------------------------------------
 

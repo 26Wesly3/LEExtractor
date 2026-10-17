@@ -507,7 +507,12 @@ def test_graph_parameters_come_from_the_contract():
 # --------------------------------------------------------------------------
 
 
-def _starter_fixture(count=300):
+def _starter_fixture(count=300, *, all_recommended=False):
+    # The starter list draws only from recommended papers (doc 04).  The small
+    # selection fixtures tie every topic so the whole set passes the topic gate
+    # (ties across the gate are admitted together) and the order stays p000..
+    if all_recommended:
+        return core_rank([CandidateSignals(f"p{i:03d}", topic=1.0) for i in range(count)])
     return core_rank([CandidateSignals(f"p{i:03d}", topic=1.0 - i * 0.001) for i in range(count)])
 
 
@@ -542,7 +547,7 @@ def test_starter_list_never_exceeds_the_contract_pool_cap():
 
 
 def test_starter_list_picks_one_paper_per_evidenced_role_first():
-    result = _starter_fixture(6)
+    result = _starter_fixture(6, all_recommended=True)
     roles = {"p003": "review", "p004": "foundational", "p005": "representative"}
     picked = starter_list(result, roles=roles)
     assert picked[:3] == ["p003", "p004", "p005"]
@@ -554,7 +559,7 @@ def test_starter_list_picks_one_paper_per_evidenced_role_first():
 
 
 def test_starter_list_redundancy_uses_cosine_when_vectors_exist():
-    result = _starter_fixture(6)
+    result = _starter_fixture(6, all_recommended=True)
     vectors = {
         "p000": [1.0, 0.0],
         "p001": [1.0, 0.0],  # a duplicate of p000
@@ -569,7 +574,7 @@ def test_starter_list_redundancy_uses_cosine_when_vectors_exist():
 
 
 def test_starter_list_redundancy_falls_back_to_title_tokens():
-    result = _starter_fixture(6)
+    result = _starter_fixture(6, all_recommended=True)
     titles = {
         "p000": "graph neural networks for citation recommendation",
         "p001": "graph neural networks for citation recommendation",
@@ -578,3 +583,24 @@ def test_starter_list_redundancy_falls_back_to_title_tokens():
     picked = starter_list(result, titles=titles)
     assert picked[0] == "p000"
     assert picked[1] == "p002"
+
+
+def test_starter_list_draws_only_from_recommended_papers():
+    # Doc 04 "阅读清单": the list is not padded with papers outside the
+    # recommendation.  Ten candidates, so the 0.60 topic gate admits six; the
+    # four below the gate are exploration and must never be picked, even when
+    # the list could otherwise be filled to its full size or they are named
+    # in an explicit pool.
+    result = core_rank([CandidateSignals(f"p{i:03d}", topic=1.0 - i * 0.1) for i in range(10)])
+    recommended = {item.paper_id for item in result.items if item.eligibility == "recommended"}
+    exploration = {item.paper_id for item in result.items if item.eligibility == "exploration"}
+    assert len(recommended) == 6 and len(exploration) == 4
+
+    picked = starter_list(result)
+    assert set(picked) == recommended
+    assert not set(picked) & exploration
+    assert result.starter_paper_ids == picked
+
+    roles = {pid: "review" for pid in exploration}
+    assert not set(starter_list(result, roles=roles)) & exploration
+    assert not set(starter_list(result, pool=sorted(exploration))) & exploration

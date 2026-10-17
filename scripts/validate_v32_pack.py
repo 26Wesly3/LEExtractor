@@ -245,6 +245,7 @@ spec_documents = [item['path'] for item in manifest['files'] if item['path'].end
 CONTENT_DIFFERS_FROM_PACK = {
     'handoff/IMPLEMENTATION_STATUS.md': 'implementer-filled status record',
     'scripts/validate_pack.py': 'adapted to the repository path mapping',
+    'fixtures/acceptance_cases.json': 'implementer-filled status and implementation_test per case',
 }
 
 checksum_verified = 0

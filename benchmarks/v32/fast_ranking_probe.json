@@ -1,0 +1,33 @@
+{
+  "ai_provider_used": false,
+  "cold_start_seconds": 0.038472,
+  "corpus_papers": 300,
+  "fast_ranking_p95_target_seconds": 2,
+  "fast_ranking_seconds": {
+    "max": 0.048532,
+    "min": 0.031021,
+    "p50": 0.033399,
+    "p95": 0.039006,
+    "repetitions": 20
+  },
+  "host": "local host, not the reference host",
+  "machine": {
+    "cpu_logical": 16,
+    "memory_total_mib": null,
+    "platform": "Windows-11-10.0.22631-SP0",
+    "python": "3.13.1"
+  },
+  "measured_at": "2026-10-17T05:43:55Z",
+  "measured_on_reference_host": false,
+  "measured_path": "fast_ranking: rank_project + build_snapshot (lexical, no semantic model, no AI)",
+  "network_used": false,
+  "probe": "scripts/v32_fast_rank_probe.py",
+  "ranked_items": 300,
+  "reference_host": {
+    "memory_mib": 2048,
+    "vcpu": 2
+  },
+  "repetitions": 20,
+  "semantic_model_used": false,
+  "target_status": "not_assessed: measured on the local host, not the reference host"
+}

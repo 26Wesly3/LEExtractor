@@ -4,10 +4,13 @@
     {
       "id": "AC-01",
       "title": "零标记主题闭环",
-      "status": "not_run",
+      "status": "implemented",
       "required_this_release": true,
       "expected": "无需人工标记获得列表与初始概览",
-      "implementation_test": null,
+      "implementation_test": [
+        "tests/test_v32_pipeline_gaps.py::test_discover_performs_exactly_one_automatic_neighbour_round_and_never_a_second",
+        "tests/test_v32_api.py::test_overview_is_non_empty_with_zero_user_marks"
+      ],
       "evidence": null
     },
     {
@@ -22,10 +25,12 @@
     {
       "id": "AC-03",
       "title": "无DOI文本种子",
-      "status": "not_run",
+      "status": "implemented",
       "required_this_release": true,
       "expected": "本地种子使用题名摘要继续发现",
-      "implementation_test": null,
+      "implementation_test": [
+        "tests/test_v32_wave2.py::test_a_pdf_only_project_seeds_discovery_and_gets_candidates_beyond_its_pdfs"
+      ],
       "evidence": null
     },
     {
@@ -40,28 +45,35 @@
     {
       "id": "AC-05",
       "title": "批量部分失败恢复",
-      "status": "not_run",
+      "status": "implemented",
       "required_this_release": true,
       "expected": "成功项保留，仅重试失败项",
-      "implementation_test": null,
+      "implementation_test": [
+        "tests/test_v32_pipeline_gaps.py::test_retrying_one_failed_item_leaves_a_matched_item_byte_identical"
+      ],
       "evidence": null
     },
     {
       "id": "AC-06",
       "title": "RRF固定算例",
-      "status": "not_run",
+      "status": "implemented",
       "required_this_release": true,
       "expected": "结果符合ranking_cases.json",
-      "implementation_test": null,
+      "implementation_test": [
+        "tests/test_v32_core_rank.py::test_ranking_fixture_case"
+      ],
       "evidence": null
     },
     {
       "id": "AC-07",
       "title": "缺失数据降级",
-      "status": "not_run",
+      "status": "implemented",
       "required_this_release": true,
       "expected": "未知为null，不产生NaN或虚构0",
-      "implementation_test": null,
+      "implementation_test": [
+        "tests/test_v32_core_rank.py::test_unknown_values_are_null_not_zero_and_the_result_is_json_safe",
+        "tests/test_v32_core_rank.py::test_explicit_zero_is_a_real_value_not_unknown"
+      ],
       "evidence": null
     },
     {
@@ -76,10 +88,13 @@
     {
       "id": "AC-09",
       "title": "最新上下文胜出",
-      "status": "not_run",
+      "status": "implemented",
       "required_this_release": true,
       "expected": "旧任务完成不得覆盖新快照",
-      "implementation_test": null,
+      "implementation_test": [
+        "tests/test_v32_jobs.py::test_a_superseded_result_is_dropped_not_merged",
+        "tests/test_v32_api.py::test_a_stale_computation_is_superseded_and_never_overwrites_the_snapshot"
+      ],
       "evidence": null
     },
     {
@@ -121,37 +136,49 @@
     {
       "id": "AC-14",
       "title": "无Key与AI失败",
-      "status": "not_run",
+      "status": "implemented",
       "required_this_release": true,
       "expected": "基础排名仍有效，失败不破坏会话",
-      "implementation_test": null,
+      "implementation_test": [
+        "tests/test_v32_ai_rerank.py::test_default_path_without_ai_key_is_skipped_and_local_order_stands",
+        "tests/test_v32_pipeline_gaps.py::test_the_ai_window_is_recommended_only_and_runs_after_the_local_commit"
+      ],
       "evidence": null
     },
     {
       "id": "AC-15",
       "title": "AI未知重复遗漏ID",
-      "status": "not_run",
+      "status": "implemented",
       "required_this_release": true,
       "expected": "严格拒绝整批不合格AI输出",
-      "implementation_test": null,
+      "implementation_test": [
+        "tests/test_v32_ai_rerank.py::test_invalid_output_rejects_whole_batch_and_keeps_local_order"
+      ],
       "evidence": null
     },
     {
       "id": "AC-16",
       "title": "隐私与凭据",
-      "status": "not_run",
+      "status": "implemented",
       "required_this_release": true,
       "expected": "日志DTO导出无秘密且默认不发PDF",
-      "implementation_test": null,
+      "implementation_test": [
+        "tests/test_v32_credentials.py::test_a_failed_call_leaks_no_secret_into_the_exception_or_the_log",
+        "tests/test_v32_api.py::test_credentials_round_trip_and_never_echo_the_secret",
+        "tests/test_v32_export.py::test_the_evidence_pack_contains_no_key_token_or_path",
+        "tests/test_v32_zotero.py::test_run_export_writes_only_the_needed_items_and_reports_per_item"
+      ],
       "evidence": null
     },
     {
       "id": "AC-17",
       "title": "AI窗口边界",
-      "status": "not_run",
+      "status": "implemented",
       "required_this_release": true,
       "expected": "窗口外相对顺序不变，基础分不改变",
-      "implementation_test": null,
+      "implementation_test": [
+        "tests/test_v32_ai_rerank.py::test_apply_window_keeps_out_of_window_order_and_scores_untouched"
+      ],
       "evidence": null
     },
     {
@@ -166,64 +193,82 @@
     {
       "id": "AC-19",
       "title": "稀疏图降级",
-      "status": "not_run",
+      "status": "implemented",
       "required_this_release": true,
       "expected": "返回文本或文献概览并说明关系不足",
-      "implementation_test": null,
+      "implementation_test": [
+        "tests/test_v32_mapping.py::test_fewer_nodes_than_minimum_degrades_without_communities",
+        "tests/test_v32_mapping.py::test_isolate_fraction_above_the_maximum_degrades"
+      ],
       "evidence": null
     },
     {
       "id": "AC-20",
       "title": "证据化趋势及线索",
-      "status": "not_run",
+      "status": "implemented",
       "required_this_release": true,
       "expected": "每条结论有证据范围与核查建议",
-      "implementation_test": null,
+      "implementation_test": [
+        "tests/test_v32_overview.py::test_leads_from_two_evidenced_branches_are_checkable_hypotheses",
+        "tests/test_v32_overview.py::test_leads_are_empty_when_evidence_is_insufficient"
+      ],
       "evidence": null
     },
     {
       "id": "AC-21",
       "title": "Zotero选择性导入",
-      "status": "not_run",
+      "status": "implemented",
       "required_this_release": true,
       "expected": "仅选择项导入且保留外部键",
-      "implementation_test": null,
+      "implementation_test": [
+        "tests/test_v32_zotero.py::test_import_keeps_the_users_selection_and_skips_unsupported_types"
+      ],
       "evidence": null
     },
     {
       "id": "AC-22",
       "title": "Zotero写入冲突",
-      "status": "not_run",
+      "status": "implemented",
       "required_this_release": true,
       "expected": "逐项结果、版本冲突不覆盖、不重复新增",
-      "implementation_test": null,
+      "implementation_test": [
+        "tests/test_v32_zotero.py::test_each_item_reports_its_own_outcome_and_a_version_conflict_does_not_overwrite",
+        "tests/test_v32_zotero.py::test_a_timeout_is_reconciled_before_anything_is_written_again"
+      ],
       "evidence": null
     },
     {
       "id": "AC-23",
       "title": "CARSI出版社官方跳转",
-      "status": "not_run",
+      "status": "implemented",
       "required_this_release": true,
       "expected": "只打开注册表官方链接，返回不自动标认证成功",
-      "implementation_test": null,
+      "implementation_test": [
+        "tests/test_v32_access_gateway.py::test_auth_required_and_verified_are_reported_without_claiming_entitlement"
+      ],
       "evidence": null
     },
     {
       "id": "AC-24",
       "title": "官方期刊指标未知",
-      "status": "not_run",
+      "status": "implemented",
       "required_this_release": true,
       "expected": "无来源或许可不展示JIF，不阻塞排序",
-      "implementation_test": null,
+      "implementation_test": [
+        "tests/test_v32_venue_metrics.py::test_official_metrics_are_unavailable_without_a_licensed_source",
+        "tests/test_v32_venue_metrics.py::test_citation_proxy_is_labelled_an_internal_metric_not_an_impact_factor"
+      ],
       "evidence": null
     },
     {
       "id": "AC-25",
       "title": "项目访问隔离",
-      "status": "not_run",
+      "status": "implemented",
       "required_this_release": true,
       "expected": "越权无法读取项目任务附件或凭据",
-      "implementation_test": null,
+      "implementation_test": [
+        "tests/test_v32_api.py::test_a_foreign_owner_sees_404_and_never_data"
+      ],
       "evidence": null
     },
     {
@@ -265,28 +310,36 @@
     {
       "id": "AC-30",
       "title": "导出PRISMA兼容",
-      "status": "not_run",
+      "status": "implemented",
       "required_this_release": true,
       "expected": "探索判断不改PRISMA，导出含来源",
-      "implementation_test": null,
+      "implementation_test": [
+        "tests/test_v32_export.py::test_core_relevant_and_excluded_judgements_leave_prisma_unchanged",
+        "tests/test_v32_export.py::test_the_evidence_pack_carries_provenance"
+      ],
       "evidence": null
     },
     {
       "id": "AC-31",
       "title": "图谱视图折叠",
-      "status": "not_run",
+      "status": "implemented",
       "required_this_release": true,
       "expected": "折叠不删规范文献和证据",
-      "implementation_test": null,
+      "implementation_test": [
+        "tests/test_v32_mapping.py::test_fold_view_never_removes_an_identity_or_an_edge"
+      ],
       "evidence": null
     },
     {
       "id": "AC-32",
       "title": "有限自动扩展",
-      "status": "not_run",
+      "status": "implemented",
       "required_this_release": true,
       "expected": "自动最多1轮，达到时间/数量预算即停止",
-      "implementation_test": null,
+      "implementation_test": [
+        "tests/test_v32_pipeline_gaps.py::test_discover_performs_exactly_one_automatic_neighbour_round_and_never_a_second",
+        "tests/test_v32_pipeline_gaps.py::test_the_round_budget_actually_stops_a_stalled_provider"
+      ],
       "evidence": null
     }
   ]

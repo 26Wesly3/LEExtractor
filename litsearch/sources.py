@@ -285,6 +285,25 @@ class BaseSource(ABC):
         #: ``available``, error text). Kept because existing callers read it;
         #: it is *derived from* the retrieval, never the source of truth.
         self.last_retrieval_meta: dict = {}
+        #: ``(connect, read)`` for this instance only; ``None`` keeps the
+        #: process-wide :func:`http_timeouts`.  Set by :meth:`apply_limits`.
+        self.timeouts_override: tuple[float, float] | None = None
+
+    def _timeouts(self) -> tuple[float, float]:
+        """This instance's ``(connect, read)`` HTTP timeouts."""
+        override = getattr(self, "timeouts_override", None)
+        return override if override is not None else http_timeouts()
+
+    def apply_limits(self, *, timeouts: tuple[float, float] | None = None, retries: int | None = None) -> None:
+        """Per-instance HTTP limits (the v3.2 path uses the contract's values).
+
+        The class defaults and the process-wide environment overrides are left
+        alone, so a manager built without limits behaves exactly as before.
+        """
+        if timeouts is not None:
+            self.timeouts_override = (float(timeouts[0]), float(timeouts[1]))
+        if retries is not None:
+            self.MAX_HTTP_RETRIES = max(0, int(retries))
 
     def set_cancel_check(self, predicate) -> None:
         """Install a ``() -> bool`` polled between pages/retries.
@@ -684,7 +703,7 @@ class BaseSource(ABC):
         final answer — retrying it wastes the caller's budget and hides the
         real problem.
         """
-        kwargs.setdefault("timeout", http_timeouts())
+        kwargs.setdefault("timeout", self._timeouts())
         last_exc = None
         for attempt in range(self.MAX_HTTP_RETRIES + 1):
             if self.is_canceled():
@@ -989,7 +1008,7 @@ class SemanticScholarSource(BaseSource):
             self._session.headers["x-api-key"] = api_key
         else:
             self._session.headers.pop("x-api-key", None)
-        kwargs.setdefault("timeout", http_timeouts())
+        kwargs.setdefault("timeout", self._timeouts())
         self._pace()
         if self.is_canceled():
             raise RetrievalCanceled("semantic_scholar: canceled before request")
@@ -1044,7 +1063,7 @@ class SemanticScholarSource(BaseSource):
                     f"{S2_BASE}/paper/batch",
                     params={"fields": fields},
                     json={"ids": chunk},
-                    timeout=http_timeouts(),
+                    timeout=self._timeouts(),
                 )
                 raise_for_data(resp, "semantic_scholar")
                 chunk_results = resp.json()
@@ -1120,7 +1139,7 @@ class SemanticScholarSource(BaseSource):
                         "year": f"{year_from}-{year_to}",
                         "fields": S2_SEARCH_FIELDS,
                     },
-                    timeout=http_timeouts(),
+                    timeout=self._timeouts(),
                 )
                 raise_for_data(resp, "semantic_scholar")
                 payload = resp.json() or {}
@@ -1180,7 +1199,7 @@ class SemanticScholarSource(BaseSource):
             resp = self._request("GET",
                 url,
                 params={"fields": S2_PAPER_FIELDS},
-                timeout=http_timeouts(),
+                timeout=self._timeouts(),
             )
             if resp.status_code == 404:
                 return None
@@ -1265,7 +1284,7 @@ class SemanticScholarSource(BaseSource):
                         "offset": offset,
                         "fields": S2_CITATION_FIELDS,
                     },
-                    timeout=http_timeouts(),
+                    timeout=self._timeouts(),
                 )
                 raise_for_data(resp, "semantic_scholar")
                 payload = resp.json() or {}
@@ -1524,7 +1543,7 @@ class OpenAlexSource(BaseSource):
                     "GET",
                     f"{OA_BASE}/works/https://doi.org/{doi}",
                     params={"select": "id"},
-                    timeout=http_timeouts(),
+                    timeout=self._timeouts(),
                 )
                 if resp.status_code == 200:
                     return normalize_openalex(resp.json().get("id"))
@@ -1590,7 +1609,7 @@ class OpenAlexSource(BaseSource):
                         "per_page": min(len(chunk), OA_PAGE_SIZE_LIMIT),
                         "select": OA_SELECT_MIN,
                     },
-                    timeout=http_timeouts(),
+                    timeout=self._timeouts(),
                 )
                 raise_for_data(resp, "openalex")
                 for d in resp.json().get("results") or []:
@@ -1721,7 +1740,7 @@ class CrossrefSource(BaseSource):
                         "filter": f"from-pub-date:{year_from}-01-01,until-pub-date:{year_to}-12-31",
                         "select": "DOI,title,abstract,author,issued,container-title,is-referenced-by-count,references-count",
                     },
-                    timeout=http_timeouts(),
+                    timeout=self._timeouts(),
                 )
                 raise_for_data(resp, "crossref")
                 message = (resp.json() or {}).get("message") or {}
@@ -1769,7 +1788,7 @@ class CrossrefSource(BaseSource):
             return self._paper_from_cr(cached)
         try:
             resp = self._transport_request(
-                "GET", f"{CR_BASE}/works/{paper_id}", timeout=http_timeouts()
+                "GET", f"{CR_BASE}/works/{paper_id}", timeout=self._timeouts()
             )
             if resp.status_code == 404:
                 return None
@@ -1950,7 +1969,7 @@ class ArxivSource(BaseSource):
                     f"{ARXIV_BASE}/query",
                     params={"search_query": expression, "start": start, "max_results": page_size,
                             "sortBy": "relevance", "sortOrder": "descending"},
-                    timeout=http_timeouts(),
+                    timeout=self._timeouts(),
                 )
                 raise_for_data(resp, "arxiv", "search")
                 root = ET.fromstring(resp.text)
@@ -2006,7 +2025,7 @@ class ArxivSource(BaseSource):
         encoded_id = urllib.parse.quote(paper_id)
         url = f"{ARXIV_BASE}/query?id_list={encoded_id}&max_results=1"
         try:
-            resp = self._transport_request("GET", url, timeout=http_timeouts())
+            resp = self._transport_request("GET", url, timeout=self._timeouts())
             raise_for_data(resp, "arxiv")
             root = ET.fromstring(resp.text)
             ns = {"atom": "http://www.w3.org/2005/Atom"}
@@ -2347,6 +2366,44 @@ class SourceManager:
         #: Per-provider RetrievalResults of the most recent
         #: :meth:`search_all_sources_result` call, in provider order.
         self.last_retrieval_results: list[RetrievalResult] = []
+        #: Limits set through :meth:`apply_limits`; ``None`` keeps the legacy defaults.
+        self.provider_concurrency_override: int | None = None
+        self._source_limits: dict = {}
+
+    def all_sources(self) -> tuple:
+        """Every provider client this manager owns."""
+        return (self.s2, self.oa, self.cr, self.arxiv, self.openreview, self.dblp, self.scholar)
+
+    def apply_limits(
+        self,
+        *,
+        concurrency: int | None = None,
+        timeouts: tuple[float, float] | None = None,
+        retries: int | None = None,
+    ) -> "SourceManager":
+        """Provider fan-out and per-request HTTP limits for this manager only.
+
+        The v3.2 pipeline calls this with ``contracts/defaults.json``
+        ``discovery`` values (doc 15: 3 sources at once, 3 s connect, 10 s per
+        request, 1 retry).  A manager that is never given limits keeps the
+        legacy defaults and environment overrides unchanged.
+        """
+        if concurrency is not None:
+            self.provider_concurrency_override = max(1, min(int(concurrency), MAX_PROVIDER_CONCURRENCY))
+        if timeouts is not None:
+            self._source_limits["timeouts"] = timeouts
+        if retries is not None:
+            self._source_limits["retries"] = retries
+        for source in self.all_sources():
+            source.apply_limits(**self._source_limits)
+        return self
+
+    def effective_provider_concurrency(self) -> int:
+        """The fan-out one retrieval actually uses."""
+        override = getattr(self, "provider_concurrency_override", None)
+        if override is not None:
+            return override
+        return provider_concurrency()
 
     @property
     def cache(self) -> Cache:
@@ -2366,6 +2423,7 @@ class SourceManager:
         ``keys`` keep the deployment's own configuration.
         """
         scoped = SourceManager(self._cache, search_providers=self.search_providers)
+        scoped.apply_limits(concurrency=self.provider_concurrency_override, **self._source_limits)
         for provider, source in (("semantic_scholar", scoped.s2), ("openalex", scoped.oa)):
             value = str((keys or {}).get(provider) or "").strip()
             if value:
@@ -2555,7 +2613,7 @@ class SourceManager:
                 )
             return outcome, duration
 
-        workers = min(provider_concurrency(), max(1, len(plan_rows)))
+        workers = min(self.effective_provider_concurrency(), max(1, len(plan_rows)))
         if workers <= 1 or len(plan_rows) <= 1:
             # 单来源或显式关闭并发时保持原路径，行为与 v0.9.11 完全一致。
             collected = [fetch_one(source, size, source_query) for source, size, source_query in plan_rows]

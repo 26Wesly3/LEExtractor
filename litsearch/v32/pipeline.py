@@ -163,6 +163,7 @@ class V32State:
             else:
                 workflow = self.workflow_factory(False)
                 self.source_manager = getattr(workflow, "sources", None)
+            apply_contract_limits(self.source_manager)
             return self.source_manager
 
     def retrieval_for(self, job: Any) -> Any:
@@ -240,6 +241,30 @@ class V32State:
     def zotero_ready(self) -> bool:
         adapter = self.zotero()
         return bool(adapter is not None and getattr(adapter, "configured", False))
+
+
+def apply_contract_limits(client: Any) -> Any:
+    """Give a provider client built for v3.2 the contract's discovery limits.
+
+    Doc 15 / ``defaults.json`` ``discovery``: at most ``provider_concurrency``
+    sources at once, ``provider_connect_timeout_seconds`` to connect,
+    ``provider_total_timeout_seconds`` per request (connect plus read, so the
+    read timeout is the remainder) and ``provider_retries`` retries.  Only the
+    client the v3.2 state owns is changed; the legacy workflow keeps its own
+    defaults.  An injected client without ``apply_limits`` is left as is.
+    """
+    apply = getattr(client, "apply_limits", None)
+    if not callable(apply):
+        return client
+    budget = contracts.discovery()
+    connect = float(budget["provider_connect_timeout_seconds"])
+    total = float(budget["provider_total_timeout_seconds"])
+    apply(
+        concurrency=int(budget["provider_concurrency"]),
+        timeouts=(connect, max(0.1, total - connect)),
+        retries=int(budget["provider_retries"]),
+    )
+    return client
 
 
 def resolve_ai(state: V32State, session: Any, mode: Any) -> Any:

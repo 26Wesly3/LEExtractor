@@ -53,8 +53,10 @@ def test_the_validator_actually_exercises_the_fixed_algorithm_cases():
 def test_every_manifest_file_is_checksum_verified_or_explicitly_explained():
     """A file that legitimately differs must be named with its reason.
 
-    Two files are expected to differ: the implementer-filled status record, which
-    the pack ships blank, and the validator itself, which was adapted to the
+    Three files are expected to differ: the implementer-filled status record, which
+    the pack ships blank, the acceptance fixture, whose per-case ``status`` and
+    ``implementation_test`` the pack ships as ``not_run``/``null`` for the
+    implementer to fill, and the validator itself, which was adapted to the
     repository's path mapping. Everything else must match the pack byte for byte.
     """
     code, report = _run()
@@ -62,6 +64,7 @@ def test_every_manifest_file_is_checksum_verified_or_explicitly_explained():
     differing = {item["path"]: item for item in report["manifest_files_content_differs_from_pack"]}
     assert set(differing) == {
         "handoff/IMPLEMENTATION_STATUS.md",
+        "fixtures/acceptance_cases.json",
         "scripts/validate_pack.py",
     }, differing
     for path, item in differing.items():
