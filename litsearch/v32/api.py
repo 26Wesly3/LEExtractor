@@ -402,6 +402,34 @@ def _module_available(name: str) -> bool:
         return False
 
 
+def _resolve_model_adapter(state: Any, session: Any) -> Any:
+    """Build a real model adapter from this session's stored model credential.
+
+    Returns ``None`` when nothing is configured, the profile is unknown, or the
+    key is unusable — the caller then keeps the local ranking and the UI can say
+    「已使用基础排序」 honestly instead of pretending a model ran.
+
+    The secret lives only in this function's locals and inside the adapter; it is
+    never logged, never returned, and never put in an error message.
+    """
+    try:
+        credential = state.credentials.model_credential(session.session_id)
+        if not credential:
+            return None
+        from litsearch.v32 import contracts
+        from litsearch.v32.ai_providers import create_adapter
+
+        timeout = float(contracts.ai_defaults().get("call_budget_seconds") or 20)
+        return create_adapter(
+            credential.get("endpoint_profile_id") or "openai",
+            credential["secret"],
+            model=credential.get("model"),
+            timeout=timeout,
+        )
+    except Exception:  # noqa: BLE001 - a bad profile must not break the request
+        return None
+
+
 def _capability(capability_id: str, status: str, reason_code: str | None) -> dict[str, Any]:
     return {
         "id": str(capability_id),
@@ -477,7 +505,13 @@ def capabilities_payload(state: V32State, session: Any) -> dict[str, Any]:
                 f"embedding_status:{runtime.get('embedding_status') or 'unknown'}",
             )
         )
-    ai_ready = state.ai() is not None
+    # A configured model credential makes AI rerank usable even before an adapter
+    # has been constructed for a request; without one it stays not_configured.
+    try:
+        model_configured = bool(state.credentials.model_credential(session.session_id))
+    except Exception:  # noqa: BLE001
+        model_configured = False
+    ai_ready = state.ai() is not None or model_configured
     items.append(
         _capability(
             "ai:rerank",
@@ -739,6 +773,10 @@ def build_router(state: V32State) -> APIRouter:
         anchor["context_version"] = project.context_version + 1
         state.store.set_anchor(project, anchor, seeds=resolved_seeds)
         pinned = _submit_config(state, project)
+        # AI 增强且有模型凭据时，先按本会话配置构造真实适配器，让任务真的用上；
+        # 没有凭据则保持 None，界面如实显示「已使用基础排序」。
+        if str(body.mode) == "ai_enhanced":
+            state.ai_adapter = _resolve_model_adapter(state, session)
         job = state.jobs.submit(
             project,
             "discover",
@@ -773,6 +811,8 @@ def build_router(state: V32State) -> APIRouter:
             return _project("JobAccepted", replay)
         state.store.check_revision(project, body.expected_revision)
         pinned = _submit_config(state, project)
+        # 判断触发的局部重排也要用同一个已配置的模型适配器。
+        state.ai_adapter = _resolve_model_adapter(state, session)
         job = state.jobs.submit(project, "rerank", stage=str(JobStage.QUEUED), priority=True, **pinned)
         accepted = _accepted(state, project, job)
         _remember(
@@ -966,7 +1006,23 @@ def build_router(state: V32State) -> APIRouter:
         body: CredentialWriteBody,
     ) -> dict[str, Any]:
         session = _mutate(state, request)
-        status = state.credentials.put(session.session_id, provider_id, body.kind, body.secret)
+        status = state.credentials.put(
+            session.session_id,
+            provider_id,
+            body.kind,
+            body.secret,
+            model=body.model,
+            endpoint_profile_id=body.endpoint_profile_id,
+        )
+        # Store the adapter's non-secret companions on the capability path too, so
+        # GET /api/capabilities can say which model service is configured without
+        # ever reading the secret back out.
+        if str(body.kind) == "model":
+            state.ai_profile = {
+                "provider_id": provider_id,
+                "endpoint_profile_id": body.endpoint_profile_id,
+                "model": body.model,
+            }
         return _project("CredentialStatus", status.as_dict())
 
     @router.delete("/settings/credentials/{provider_id}", status_code=204)

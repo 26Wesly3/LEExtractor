@@ -224,6 +224,12 @@ class _Entry:
     kind: str
     updated_at: datetime
     last_used: datetime
+    #: Optional, non-secret companions from ``$defs/CredentialWrite``: which
+    #: endpoint profile (openai / deepseek / anthropic, ...) and which model name
+    #: the user picked. They are configuration, not credentials, so they may be
+    #: reported back — the secret never is.
+    model: str | None = None
+    endpoint_profile_id: str | None = None
 
     def __repr__(self) -> str:  # pragma: no cover - defensive
         return f"_Entry(kind={self.kind!r}, updated_at={self.updated_at.isoformat()!r})"
@@ -282,8 +288,22 @@ class CredentialStore:
 
     # -- writes -----------------------------------------------------------
 
-    def put(self, session_id: str, provider_id: str, kind: str, secret: str) -> CredentialStatus:
+    def put(
+        self,
+        session_id: str,
+        provider_id: str,
+        kind: str,
+        secret: str,
+        *,
+        model: str | None = None,
+        endpoint_profile_id: str | None = None,
+    ) -> CredentialStatus:
         """Store ``secret`` for one session and provider.
+
+        ``model`` and ``endpoint_profile_id`` are the non-secret companions the
+        contract already declares on ``CredentialWrite``: which provider dialect
+        (openai / deepseek / anthropic) and which model name the user chose. The
+        secret itself is still only reachable through :meth:`get`.
 
         Raises:
             V32Error: 400 when the provider is not allowlisted, when ``kind``
@@ -330,7 +350,14 @@ class CredentialStore:
 
         now = self._clock()
         self._entries[(session, provider)] = _Entry(
-            secret=secret, kind=expected, updated_at=now, last_used=now
+            secret=secret,
+            kind=expected,
+            updated_at=now,
+            last_used=now,
+            model=(str(model).strip() or None) if model is not None else None,
+            endpoint_profile_id=(
+                str(endpoint_profile_id).strip() or None
+            ) if endpoint_profile_id is not None else None,
         )
         logger.info(
             "credential_stored",
@@ -381,6 +408,43 @@ class CredentialStore:
         """
         entry = self._live_entry(session_id, provider_id, touch=True)
         return entry.secret if entry is not None else None
+
+    def profile(self, session_id: str, provider_id: str) -> dict[str, Any]:
+        """The non-secret half of a stored credential.
+
+        Which endpoint profile (``openai`` / ``deepseek`` / ``anthropic``) and
+        which model name the user configured, plus whether a secret is present.
+        Safe to return from an HTTP route: the secret is not part of this dict.
+        """
+        entry = self._live_entry(session_id, provider_id, touch=False)
+        if entry is None:
+            return {"configured": False, "model": None, "endpoint_profile_id": None}
+        return {
+            "configured": True,
+            "model": entry.model,
+            "endpoint_profile_id": entry.endpoint_profile_id,
+        }
+
+    def model_credential(self, session_id: str) -> dict[str, Any] | None:
+        """The live ``kind == "model"`` credential for a session, if any.
+
+        Returns ``{provider_id, secret, model, endpoint_profile_id}``. Callers are
+        the model adapters only; the ``secret`` key must never reach a DTO, a log
+        line or an error message.
+        """
+        for (session, provider), entry in list(self._entries.items()):
+            if session != str(session_id) or entry.kind != "model":
+                continue
+            live = self._live_entry(session_id, provider, touch=True)
+            if live is None:
+                continue
+            return {
+                "provider_id": provider,
+                "secret": live.secret,
+                "model": live.model,
+                "endpoint_profile_id": live.endpoint_profile_id,
+            }
+        return None
 
     def status(self, session_id: str, provider_id: str) -> CredentialStatus:
         """The safe status of one provider for this session."""

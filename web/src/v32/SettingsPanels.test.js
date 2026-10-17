@@ -49,7 +49,11 @@ describe('SettingsPanels', () => {
     expect(modes.map(node => node.getAttribute('data-settings-mode'))).toEqual(['basic', 'ai_enhanced'])
     expect(text('[data-settings-mode="basic"]')).toContain('基础模式')
     expect(text('[data-settings-mode="ai_enhanced"]')).toContain('AI 增强')
-    expect(document.body.textContent.toLowerCase()).not.toContain('deep')
+    // 没有语义未定义的 "deep 模式"。注意不能扫整个 body 的 "deep"：模型供应商
+    // DeepSeek 是正当出现的，要断言的是「没有 deep 这个模式」。
+    expect(all('[data-settings-mode]').map(node => node.getAttribute('data-settings-mode')))
+      .not.toContain('deep')
+    expect(document.body.textContent.toLowerCase()).not.toContain('deep mode')
     expect(text('[data-settings-mode-note]')).toContain('不调用任何远程模型')
 
     click('[data-settings-mode="ai_enhanced"]')
@@ -79,16 +83,28 @@ describe('SettingsPanels', () => {
     mounted.unmount()
   })
 
-  it('sends the model kind and never a secret in the URL', async () => {
+  it('sends the model kind, the chosen provider and never a secret in the URL', async () => {
     const client = fakeClient()
     const mounted = mountComponent(SettingsPanels, { lang: 'zh', client })
     await settle()
+    // 必须能选供应商：只有一个笼统的凭据槽时，填了 Key 也不知道发去哪家。
+    const profile = document.querySelector('[data-settings-profile="ai_model"]')
+    expect(profile, 'the model area must offer a provider choice').toBeTruthy()
+    expect([...profile.options].map(option => option.value)).toEqual(['openai', 'deepseek', 'anthropic'])
+    setValue('[data-settings-profile="ai_model"]', 'deepseek')
+    // v-model on a <select> listens to `change`, not `input`.
+    profile.dispatchEvent(new Event('change', { bubbles: true }))
     setValue('[data-settings-secret="ai_model"]', 'placeholder-model-credential')
     setValue('[data-settings-model="ai_model"]', 'gpt-local')
     await settle()
     click('[data-settings-area="model"] [data-settings-save]')
     await settle()
-    expect(client.saveCredential.mock.calls[0][1]).toEqual({ kind: 'model', secret: 'placeholder-model-credential', model: 'gpt-local' })
+    expect(client.saveCredential.mock.calls[0]).toEqual(['ai_model', {
+      kind: 'model',
+      secret: 'placeholder-model-credential',
+      model: 'gpt-local',
+      endpoint_profile_id: 'deepseek',
+    }])
     expect(document.body.textContent).not.toContain('placeholder-model-credential')
     mounted.unmount()
   })

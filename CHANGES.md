@@ -5,6 +5,14 @@
 > v0.9.12 起新增三级记录体系：面向使用者的本文件、面向开发者的 [DevLog 约定](docs/devlog/README.md)（含 Before/After 数据）
 > 与记录架构决策的 [ADR](docs/decisions/ADR-004-provider-concurrency.md)。同时新增 [CHANGELOG.md](CHANGELOG.md)（结构化 Changelog）。
 
+## v0.9.21（2026-10-17）M3：LEExtractor v3.2 分阶段实施
+
+- AI 模型配置入口：/v32/settings「AI 模型」区新增供应商下拉（OpenAI / DeepSeek / Anthropic Claude）＋模型名（留空用默认）＋Key
+- 模型名按官方文档更新到当前版本：gpt-5.5、deepseek-flash、claude-opus-5-5（deepseek-chat 与 claude-3-5-sonnet-latest 已停用）
+- AI 增强接上调用链：按会话配置构造真实适配器；未配置则保留本地排序并如实显示「已使用基础排序」
+- OpenAI 推理族不发送 temperature（会被拒），DeepSeek/Claude 发送最低确定性值；均已记录
+
+本阶段按 `docs/v3.2/` 规范实施；验收状态见 `handoff/IMPLEMENTATION_STATUS.md`。
 ## v0.9.20（2026-10-17）M5：LEExtractor v3.2 分阶段实施
 
 - 首页恢复为基线原样（封面高度、转子、入场动效、三个原有动作按钮）

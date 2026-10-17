@@ -22,7 +22,7 @@ const emptyDrafts = () => ({
   semantic_scholar: { secret: '', model: '' },
   openalex: { secret: '', model: '' },
   crossref: { secret: '', model: '' },
-  ai_model: { secret: '', model: '' },
+  ai_model: { secret: '', model: '', profile: 'openai' },
   zotero: { secret: '', model: '' },
 })
 const drafts = reactive(emptyDrafts())
@@ -52,6 +52,13 @@ const AREAS = [
       en: 'Basic mode uses the local ranking only and calls no remote model. AI enhanced sends metadata such as titles and abstracts to the configured model service.',
     },
     providers: [{ id: 'ai_model', label: { zh: '模型服务凭据', en: 'Model service credential' } }],
+    // 契约里的 endpoint_profile_id 就是「用哪一家」，model 是模型名。
+    // 之前只有一个笼统的凭据槽，填了 Key 也不知道该发去哪家服务。
+    profiles: [
+      { value: 'openai', label: 'OpenAI', model: 'gpt-5.5' },
+      { value: 'deepseek', label: 'DeepSeek', model: 'deepseek-flash' },
+      { value: 'anthropic', label: 'Anthropic Claude', model: 'claude-opus-5-5' },
+    ],
   },
   {
     kind: 'zotero',
@@ -102,7 +109,10 @@ async function save(area) {
   error.value = ''
   try {
     const body = { kind: area.kind, secret: draft.secret }
-    if (area.kind === 'model' && draft.model) body.model = draft.model
+    if (area.kind === 'model') {
+      if (draft.profile) body.endpoint_profile_id = draft.profile
+      if (draft.model && draft.model.trim()) body.model = draft.model.trim()
+    }
     const saved = await props.client.saveCredential(provider.id, body)
     // 提交后立即清空输入：明文不再保留在页面状态里。
     draft.secret = ''
@@ -192,11 +202,20 @@ defineExpose({ load })
               :placeholder="t('输入后保存，明文不会回显','Enter and save; the plaintext is never echoed')"
               :data-settings-secret="provider.id"
             />
+            <label v-if="area.kind === 'model'" class="field-label" :for="`v32-profile-${provider.id}`">{{ t('模型服务', 'Model service') }}</label>
+            <select
+              v-if="area.kind === 'model'"
+              :id="`v32-profile-${provider.id}`"
+              v-model="drafts[provider.id].profile"
+              :data-settings-profile="provider.id"
+            >
+              <option v-for="option in area.profiles" :key="option.value" :value="option.value">{{ option.label }} · {{ option.model }}</option>
+            </select>
             <input
               v-if="area.kind === 'model'"
               v-model="drafts[provider.id].model"
               type="text"
-              :placeholder="t('模型名称（可选）','Model name (optional)')"
+              :placeholder="t('模型名称（可选，留空用上面的默认值）','Model name (optional; blank uses the default above)')"
               :data-settings-model="provider.id"
             />
             <button type="submit" class="le32-primary" :disabled="busy === provider.id" :data-settings-save="provider.id">{{ t('保存', 'Save') }}</button>
@@ -220,6 +239,7 @@ defineExpose({ load })
 .le32-settings-state { display: flex; justify-content: space-between; align-items: center; gap: var(--s-3); }
 .le32-settings-form { display: flex; flex-direction: column; gap: var(--s-2); margin-top: var(--s-3); }
 .le32-settings-form input { min-height: 38px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); font-size: 13px; }
+.le32-settings-form select { min-height: 38px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); font-size: 13px; }
 .le32-primary { min-height: 38px; padding: 8px 16px; border: 1px solid var(--ink); border-radius: 8px; background: var(--ink); color: #fff; font-size: 13px; font-weight: 550; }
 .le32-primary[disabled] { opacity: .55; cursor: not-allowed; }
 .le32-action { min-height: 36px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--text-2); font-size: 13px; }

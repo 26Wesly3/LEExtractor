@@ -52,40 +52,57 @@ class ProviderSpec:
     base_url: str
     default_model: str
     key_env: str
-    #: Lowest temperature the provider documents; recorded with every call.
-    temperature: float = 0.0
+    #: Lowest temperature the provider documents. ``None`` means "do not send the
+    #: parameter at all": OpenAI's GPT-5 family is a reasoning family and rejects a
+    #: non-default temperature, so omitting it is the only safe choice there. The
+    #: real value sent (or its absence) is recorded with every call.
+    temperature: float | None = 0.0
     #: Whether the provider documents a JSON object response mode.
     json_mode: bool = True
+    #: Current model ids, as published by the provider. The UI offers these and
+    #: still accepts a free-text override, so a new model never needs a release.
+    known_models: tuple[str, ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
+#: Model ids verified against the providers' own documentation on 2026-10-17:
+#:  * OpenAI   https://developers.openai.com/api/docs/changelog  (GPT-5.5 flagship, Apr 2026)
+#:  * DeepSeek https://api-docs.deepseek.com/quick_start/pricing  (`deepseek-chat` is
+#:             no longer listed; the current names are deepseek-flash / deepseek-v4-pro)
+#:  * Anthropic https://platform.claude.com/docs/en/models/overview  (5.5 generation;
+#:             the docs recommend Opus 5.5 as the default for most workloads)
 PROVIDERS: dict[str, ProviderSpec] = {
     "openai": ProviderSpec(
         id="openai",
         label="OpenAI",
         dialect="openai_compatible",
         base_url="https://api.openai.com/v1",
-        default_model="gpt-4o-mini",
+        default_model="gpt-5.5",
         key_env="OPENAI_API_KEY",
+        temperature=None,
+        known_models=("gpt-5.5", "gpt-5.5-pro", "gpt-5", "gpt-5-mini", "gpt-5-nano", "gpt-4.1", "gpt-4o"),
     ),
     "deepseek": ProviderSpec(
         id="deepseek",
         label="DeepSeek",
         dialect="openai_compatible",
-        base_url="https://api.deepseek.com/v1",
-        default_model="deepseek-chat",
+        # Documented OpenAI-format base URL. The old `deepseek-chat` name is gone.
+        base_url="https://api.deepseek.com",
+        default_model="deepseek-flash",
         key_env="DEEPSEEK_API_KEY",
+        known_models=("deepseek-flash", "deepseek-v4-pro"),
     ),
     "anthropic": ProviderSpec(
         id="anthropic",
         label="Anthropic Claude",
         dialect="anthropic",
         base_url="https://api.anthropic.com/v1",
-        default_model="claude-3-5-sonnet-latest",
+        default_model="claude-opus-5-5",
         key_env="ANTHROPIC_API_KEY",
         json_mode=False,   # Claude has no response_format flag; prompt for JSON only.
+        known_models=("claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-5-5", "claude-fable-5-1"),
     ),
 }
 
@@ -241,14 +258,12 @@ class ModelAdapter:
             body = {
                 "model": self.model,
                 "max_tokens": max_tokens,
-                "temperature": self.spec.temperature,
                 "system": system,
                 "messages": [{"role": "user", "content": user}],
             }
         else:
             body = {
                 "model": self.model,
-                "temperature": self.spec.temperature,
                 "messages": [
                     {"role": "system", "content": system},
                     {"role": "user", "content": user},
@@ -256,6 +271,11 @@ class ModelAdapter:
             }
             if self.spec.json_mode:
                 body["response_format"] = {"type": "json_object"}
+        # Only send temperature where the provider documents it. A reasoning model
+        # that rejects a non-default value would turn one bad parameter into a failed
+        # rerank, so "provider default" is expressed by leaving the key out.
+        if self.spec.temperature is not None:
+            body["temperature"] = self.spec.temperature
         return self._endpoint(), body
 
     # -- calls ------------------------------------------------------------

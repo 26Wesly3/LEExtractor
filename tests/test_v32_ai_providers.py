@@ -80,7 +80,12 @@ def test_openai_compatible_wire_shape(provider_id):
     assert call["headers"]["authorization"] == "Bearer sk-test-secret-value"
     body = call["body"]
     assert body["model"] == P.PROVIDERS[provider_id].default_model
-    assert body["temperature"] == 0.0, "lowest deterministic setting"
+    if P.PROVIDERS[provider_id].temperature is None:
+        # OpenAI's GPT-5 family is a reasoning family: a non-default temperature is
+        # rejected, so the parameter must be absent rather than set to 0.
+        assert "temperature" not in body
+    else:
+        assert body["temperature"] == 0.0
     assert body["response_format"] == {"type": "json_object"}
     assert [m["role"] for m in body["messages"]] == ["system", "user"]
     # The user turn carries exactly the facts the model may use.
@@ -161,11 +166,31 @@ def test_no_representation_of_the_adapter_contains_the_key():
     assert secret in adapter._headers()["authorization"]
 
 
-def test_the_real_value_of_temperature_is_recorded():
-    for provider_id in P.provider_ids():
-        spec = P.PROVIDERS[provider_id]
+def test_temperature_is_only_sent_where_the_provider_documents_it():
+    for provider_id, spec in P.PROVIDERS.items():
+        if spec.temperature is None:
+            # OpenAI's reasoning family rejects a non-default temperature.
+            assert provider_id == "openai"
+            continue
         assert spec.temperature == 0.0, provider_id
         assert 0.0 <= spec.temperature <= 2.0
+
+
+def test_the_default_models_are_the_current_published_names():
+    """Guards against re-introducing a retired model id.
+
+    Verified against the providers' own docs on 2026-10-17; `deepseek-chat` and
+    `claude-3-5-sonnet-latest` are gone, and gpt-5.5 is the current flagship.
+    """
+    assert P.PROVIDERS["openai"].default_model == "gpt-5.5"
+    assert P.PROVIDERS["deepseek"].default_model == "deepseek-flash"
+    assert P.PROVIDERS["anthropic"].default_model == "claude-opus-5-5"
+    for spec in P.PROVIDERS.values():
+        assert spec.default_model in spec.known_models, spec.id
+    # Retired ids must not come back as a default.
+    assert P.PROVIDERS["deepseek"].default_model != "deepseek-chat"
+    assert "3-5-sonnet" not in P.PROVIDERS["anthropic"].default_model
+    assert P.PROVIDERS["deepseek"].base_url == "https://api.deepseek.com"
 
 
 def test_capability_rows_never_read_a_secret():
