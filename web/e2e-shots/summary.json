@@ -7,7 +7,7 @@
     },
     {
       "step": "create project + enter workspace",
-      "path": "/v32/projects/39076429e06f4d469054d6878ec01cfc/anchors"
+      "path": "/v32/projects/9e0d92681b1e4ee1a3ea8ed50c41ef76/anchors"
     },
     {
       "step": "workspace stage tabs",
@@ -28,23 +28,42 @@
     {
       "step": "papers stage",
       "cards": 20,
-      "first_title": "An explainable vision transformer with transfer learning based efficient drought",
+      "first_title": "Preliminary assessment of an integrated SMOS and MODIS application for global ag",
       "coverage": "已获取部分文献，部分来源暂不可用。 查看详情"
     },
     {
+      "step": "drawer 获取全文",
+      "options": [
+        {
+          "kind": "fulltext_link",
+          "text": "出版社原文 · arXiv未核实打开后可在目标页面用题名或 DOI 查找。"
+        },
+        {
+          "kind": "institution_link",
+          "text": "机构访问入口 · CARSI 联邦门户仅提供检索入口打开后在门户里自行选择学校并登录，再用题名或 DOI 查找。本应用不代你登录，也不读取学校的登录状态。"
+        },
+        {
+          "kind": "institution_link",
+          "text": "机构访问入口 · 浙江大学图书馆数据库导航仅提供检索入口打开后在门户里自行选择学校并登录，再用题名或 DOI 查找。本应用不代你登录，也不读取学校的登录状态。"
+        }
+      ],
+      "note": "按顺序尝试：先看出版社原文或 DOI 官方解析，再走机构入口。打开链接只代表进入入口页，不代表已获得授权；本应用不会代你登录，也不会读取学校的登录状态。"
+    },
+    {
       "step": "insight stage",
-      "text_length": 933
+      "text_length": 1479
     }
   ],
   "problems": [],
   "shots": [
-    "e2e-shots-2/01-entries.png",
-    "e2e-shots-2/02-workspace.png",
-    "e2e-shots-2/03-typed.png",
-    "e2e-shots-2/04-progress.png",
-    "e2e-shots-2/05-finished.png",
-    "e2e-shots-2/06-papers.png",
-    "e2e-shots-2/07-insight.png"
+    "e2e-shots-3/01-entries.png",
+    "e2e-shots-3/02-workspace.png",
+    "e2e-shots-3/03-typed.png",
+    "e2e-shots-3/04-progress.png",
+    "e2e-shots-3/05-finished.png",
+    "e2e-shots-3/06-papers.png",
+    "e2e-shots-3/08-drawer.png",
+    "e2e-shots-3/09-insight.png"
   ],
   "ok": true
 }

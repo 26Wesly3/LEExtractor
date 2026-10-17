@@ -101,10 +101,31 @@ try {
   })
   if (cards === 0) problems.push('the papers stage shows zero cards after a completed discovery')
 
-  // 8. the insight stage must render the overview
+  // 8. open the first record's drawer and check the "获取全文" block
+  try {
+    await page.locator('.le32-card-open').first().click()
+    await page.waitForSelector('[data-v32-drawer]', { timeout: 15000 })
+    const accessOptions = await page.locator('[data-v32-access-option]').evaluateAll(nodes =>
+      nodes.map(node => ({
+        kind: node.getAttribute('data-v32-access-option'),
+        text: node.textContent.replace(/\s+/g, ' ').trim(),
+      })))
+    const note = (await page.locator('[data-v32-access-note]').textContent().catch(() => '')) || ''
+    summary.steps.push({
+      step: 'drawer 获取全文',
+      options: accessOptions,
+      note: note.replace(/\s+/g, ' ').trim().slice(0, 80),
+    })
+    await page.locator('[data-v32-drawer]').screenshot({ path: `${OUT}/08-drawer.png` })
+    shots.push(`${OUT}/08-drawer.png`)
+  } catch (error) {
+    problems.push(`drawer: ${error.message}`)
+  }
+
+  // 9. the insight stage must render the overview
   await page.click('[data-v32-stage="insight"]')
   await page.waitForTimeout(3000)
-  await shot('07-insight')
+  await shot('09-insight')
   const insightText = ((await page.textContent('[data-v32-workspace]')) || '').length
   summary.steps.push({ step: 'insight stage', text_length: insightText })
 

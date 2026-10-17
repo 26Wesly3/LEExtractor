@@ -149,15 +149,74 @@ function branchLabel(branch) {
 
 const ACCESS_KINDS = Object.freeze({
   fulltext_link: { zh: '出版社原文', en: 'Publisher full text' },
-  institution_link: { zh: '通过学校访问 CARSI', en: 'Campus access via CARSI' },
-  resolver: { zh: '图书馆数据库导航', en: 'Library database navigation' },
+  resolver: { zh: 'DOI 官方解析', en: 'Official DOI resolver' },
+  institution_link: { zh: '机构访问入口', en: 'Institutional entry' },
   metadata_api: { zh: '元数据来源', en: 'Metadata source' },
+})
+
+// provider_id -> 人话。之前直接把 provider id（carsi / zju_library / doi）打到界面上；
+// 更糟的是 kind 映射把 resolver 写成「图书馆数据库导航」，又把**所有** institution_link
+// 都写成「通过学校访问 CARSI」——于是 DOI 解析页和图书馆导航都被说成 CARSI 认证入口，
+// 看上去就像一个坏的浙大登录跳转。
+const ACCESS_PROVIDERS = Object.freeze({
+  doi: { zh: 'DOI 官方解析', en: 'Official DOI resolver' },
+  carsi: { zh: 'CARSI 联邦门户', en: 'CARSI federation portal' },
+  zju_library: { zh: '浙江大学图书馆数据库导航', en: 'ZJU library database navigation' },
+  zju_sciencedirect: { zh: 'ScienceDirect 学校访问说明', en: 'ScienceDirect institutional access guide' },
+})
+
+// doc 11：如实说明可用性，不能把「仅提供入口」说成「已授权」。
+const ACCESS_AVAILABILITY = Object.freeze({
+  public: { zh: '公开获取', en: 'Open access' },
+  requires_institution: { zh: '需要机构权限', en: 'Institutional access required' },
+  entry_only: { zh: '仅提供检索入口', en: 'Entry point only' },
+  unavailable: { zh: '暂不可用', en: 'Unavailable' },
+  unknown: { zh: '未核实', en: 'Not verified' },
 })
 
 function accessKindLabel(kind) {
   const row = ACCESS_KINDS[kind]
   return row ? (props.lang === 'zh' ? row.zh : row.en) : kind
 }
+
+function accessProviderLabel(provider) {
+  const row = ACCESS_PROVIDERS[provider]
+  return row ? (props.lang === 'zh' ? row.zh : row.en) : (provider || '')
+}
+
+function accessAvailabilityLabel(value) {
+  const row = ACCESS_AVAILABILITY[value]
+  return row ? (props.lang === 'zh' ? row.zh : row.en) : (value || '')
+}
+
+/**
+ * 「入口类型 · 提供方」，两者相同时只显示一次。
+ * DOI 解析的 kind 与 provider 都是「DOI 官方解析」，直接拼会变成
+ * 「DOI 官方解析 · DOI 官方解析」。未知 provider 回退成原值，宁可露出原始
+ * 标识，也不为了好看把信息藏掉。
+ */
+function accessTitle(option) {
+  const kind = accessKindLabel(option.kind)
+  const provider = accessProviderLabel(option.provider)
+  if (!provider || provider === kind) return kind
+  return `${kind} · ${provider}`
+}
+
+function accessHint(option) {
+  if (option.kind === 'institution_link') {
+    return t(
+      '打开后在门户里自行选择学校并登录，再用题名或 DOI 查找。本应用不代你登录，也不读取学校的登录状态。',
+      'Choose your institution and sign in on that portal, then find the article by title or DOI. This app does not sign in for you and never reads the campus login state.',
+    )
+  }
+  return t('打开后可在目标页面用题名或 DOI 查找。', 'Find the article on the target page by title or DOI.')
+}
+
+/** 出版社原文 → DOI 解析 → 机构入口，顺序稳定，便于用户按序尝试。 */
+const orderedAccessOptions = computed(() => {
+  const order = { fulltext_link: 0, resolver: 1, institution_link: 2, metadata_api: 3 }
+  return [...accessOptions.value].sort((a, b) => (order[a.kind] ?? 9) - (order[b.kind] ?? 9))
+})
 
 function paperTitle(paperId) {
   const row = items.value.find(item => item?.paper?.paper_id === paperId)
@@ -655,11 +714,15 @@ if (props.projectId) {
       <p v-else class="badge badge--system" data-v32-drawer-system>{{ t('算法推荐核心', 'Recommended by the ranking') }}</p>
       <p class="muted">{{ snapshot }}</p>
 
-      <h4>{{ t('校园资源访问', 'Campus resource access') }}</h4>
-      <p class="muted" data-v32-access-note>{{ t('校园资源访问是独立动作，打开链接只代表进入入口，不代表已获得授权。','Campus resource access is an independent action. Opening a link only opens an entry point and does not mean access was granted.') }}</p>
+      <h4>{{ t('获取全文', 'Get the full text') }}</h4>
+      <p class="muted" data-v32-access-note>{{ t('按顺序尝试：先看出版社原文或 DOI 官方解析，再走机构入口。打开链接只代表进入入口页，不代表已获得授权；本应用不会代你登录，也不会读取学校的登录状态。','Try in order: the publisher page or the official DOI resolver first, then an institutional entry. Opening a link only opens an entry point and does not mean access was granted; this app does not sign in for you and never reads the campus login state.') }}</p>
       <ul v-if="accessOptions.length" class="le32-access" data-v32-access>
-        <li v-for="option in accessOptions" :key="option.url" :data-v32-access-option="option.kind">
-          <a :href="safeUrl(option.url)" target="_blank" rel="noopener noreferrer">{{ accessKindLabel(option.kind) }} · {{ option.provider }}</a>
+        <li v-for="option in orderedAccessOptions" :key="option.url" :data-v32-access-option="option.kind">
+          <div class="le32-access-head">
+            <a :href="safeUrl(option.url)" target="_blank" rel="noopener noreferrer">{{ accessTitle(option) }}</a>
+            <span class="le32-access-badge" :data-access-availability="option.availability">{{ accessAvailabilityLabel(option.availability) }}</span>
+          </div>
+          <p class="muted le32-access-hint">{{ accessHint(option) }}</p>
         </li>
       </ul>
       <p v-else class="muted" data-v32-access-empty>{{ t('尚未取得可用的访问入口。','No access entry point is available yet.') }}</p>
@@ -723,8 +786,14 @@ if (props.projectId) {
 .le32-drawer { position: fixed; top: var(--topbar-h); right: 0; bottom: 0; width: min(560px, 96vw); overflow-y: auto; background: var(--surface); border-left: 1px solid var(--border); box-shadow: -18px 0 32px #1b1c2014; padding: var(--s-6); z-index: 102; }
 .le32-drawer-head { display: flex; justify-content: space-between; align-items: center; gap: var(--s-3); }
 .le32-drawer h4 { margin-top: var(--s-5); font-size: 15px; }
-.le32-access { list-style: none; margin: var(--s-3) 0; padding: 0; font-size: 13.5px; }
-.le32-access li { padding: 4px 0; }
+.le32-access { list-style: none; margin: var(--s-3) 0; padding: 0; font-size: 13.5px; display: flex; flex-direction: column; gap: var(--s-2); }
+.le32-access li { padding: var(--s-3) var(--s-4); border: 1px solid var(--border); border-radius: 8px; background: var(--surface-2); }
+.le32-access-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-3); }
+.le32-access-head a { font-weight: 550; }
+.le32-access-badge { flex: none; padding: 2px 8px; border: 1px solid var(--line); border-radius: 999px; font-size: 12px; color: var(--text-2); white-space: nowrap; }
+.le32-access-badge[data-access-availability="public"] { border-color: #2f7d4f; color: #2f7d4f; }
+.le32-access-badge[data-access-availability="requires_institution"] { border-color: #9a6100; color: #9a6100; }
+.le32-access-hint { margin: 6px 0 0; font-size: 12.5px; }
 .le32-upload-inline { margin-top: var(--s-6); }
 @media (max-width: 959px) { .le32-branch-grid { grid-template-columns: minmax(0, 1fr); } }
 </style>

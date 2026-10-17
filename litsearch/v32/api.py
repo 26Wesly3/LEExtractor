@@ -448,13 +448,35 @@ def capabilities_payload(state: V32State, session: Any) -> dict[str, Any]:
             "parser:pdf", parser_status, None if parser_status == "available" else "parser_missing"
         )
     )
-    items.append(
-        _capability(
-            "semantic_model:embedding",
-            "not_configured",
-            f"embedding_status:{runtime.get('embedding_status') or 'unknown'}",
+    # Models are DISCOVERED, never assumed: a pinned model that is already on disk
+    # (often outside FastEmbed's default caches) must be reported as available
+    # instead of "not configured", and nothing is downloaded from here.
+    try:
+        from litsearch.v32.models import discover_local_models
+
+        models = discover_local_models()
+    except Exception:  # noqa: BLE001 - discovery must never break capabilities
+        models = None
+
+    # NOTE: reason_code is a short stable code, NOT a filesystem path. A full
+    # absolute path blows past the schema's 128-char limit (the contract test
+    # caught exactly that) and doc 10 forbids leaking absolute paths through the
+    # API. The concrete location is reported by scripts/v32_models.py instead.
+    if models is not None and models.translation_ready:
+        items.append(_capability("translation_model:zh_en", "available", "local_model_found"))
+    else:
+        items.append(_capability("translation_model:zh_en", "not_configured", "no_local_translation_model"))
+
+    if models is not None and models.semantic_ready:
+        items.append(_capability("semantic_model:embedding", "available", "local_model_found"))
+    else:
+        items.append(
+            _capability(
+                "semantic_model:embedding",
+                "not_configured",
+                f"embedding_status:{runtime.get('embedding_status') or 'unknown'}",
+            )
         )
-    )
     ai_ready = state.ai() is not None
     items.append(
         _capability(

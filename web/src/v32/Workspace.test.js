@@ -189,9 +189,9 @@ describe('Workspace', () => {
   it('keeps the open drawer pinned by paper_id and renders the campus access entry points', async () => {
     const client = fakeClient({
       accessItems: [
-        { provider: 'publisher', kind: 'fulltext_link', url: 'https://example.org/full', auth_required: false, institution: null, availability: 'public', verified: true, checked_at: '2026-10-17T00:00:00Z', source_url: null, granularity: 'article' },
-        { provider: 'cars', kind: 'institution_link', url: 'https://example.org/carsi', auth_required: true, institution: 'Zhejiang University', availability: 'entry_only', verified: false, checked_at: '2026-10-17T00:00:00Z', source_url: null, granularity: 'portal' },
-        { provider: 'library', kind: 'resolver', url: 'https://example.org/guide', auth_required: false, institution: null, availability: 'entry_only', verified: false, checked_at: '2026-10-17T00:00:00Z', source_url: null, granularity: 'database_guide' },
+        { provider: 'Elsevier', kind: 'fulltext_link', url: 'https://example.org/full', auth_required: false, institution: null, availability: 'public', verified: true, checked_at: '2026-10-17T00:00:00Z', source_url: null, granularity: 'article' },
+        { provider: 'carsi', kind: 'institution_link', url: 'https://example.org/carsi', auth_required: true, institution: 'Zhejiang University', availability: 'entry_only', verified: false, checked_at: '2026-10-17T00:00:00Z', source_url: null, granularity: 'portal' },
+        { provider: 'doi', kind: 'resolver', url: 'https://doi.org/10.1/x', auth_required: false, institution: null, availability: 'entry_only', verified: false, checked_at: '2026-10-17T00:00:00Z', source_url: null, granularity: 'database_guide' },
       ],
     })
     const mounted = mountComponent(Workspace, { client, projectId: 'p1', stage: 'papers', lang: 'zh' })
@@ -204,10 +204,25 @@ describe('Workspace', () => {
     expect(text('[data-v32-drawer] h3')).toBe('Second record')
     expect(text('[data-v32-access-note]')).toContain('不代表已获得授权')
     const kinds = all('[data-v32-access-option]').map(node => node.getAttribute('data-v32-access-option'))
-    expect(kinds).toEqual(['fulltext_link', 'institution_link', 'resolver'])
-    expect(text('[data-v32-access]')).toContain('出版社原文')
-    expect(text('[data-v32-access]')).toContain('通过学校访问 CARSI')
-    expect(text('[data-v32-access]')).toContain('图书馆数据库导航')
+    // 出版社原文 → DOI 解析 → 机构入口：顺序稳定，用户按序尝试。
+    expect(kinds).toEqual(['fulltext_link', 'resolver', 'institution_link'])
+    const accessText = text('[data-v32-access]')
+    expect(accessText).toContain('出版社原文 · Elsevier')
+    // 三种入口必须各说各的：DOI 解析不是「图书馆数据库导航」，CARSI 也不是全部机构入口的统称。
+    expect(accessText).toContain('机构访问入口 · CARSI 联邦门户')
+    // DOI 解析的 kind 与 provider 同名，只显示一次，不要「× · ×」。
+    expect(accessText).toContain('DOI 官方解析')
+    expect(accessText).not.toMatch(/DOI 官方解析 · DOI 官方解析/)
+    expect(accessText).not.toContain('图书馆数据库导航')
+    expect(accessText).not.toContain('通过学校访问 CARSI')
+    // provider id 不能原样出现在界面上。
+    expect(accessText).not.toContain('cars')
+    expect(accessText).not.toContain(' · doi')
+    // 可用性如实标注，不能把「仅提供入口」写成已授权。
+    expect(accessText).toContain('公开获取')
+    expect(accessText).toContain('仅提供检索入口')
+    // 机构入口必须说明「不代你登录」。
+    expect(accessText).toContain('本应用不代你登录')
     expect(document.querySelector('[data-v32-copy-citation]')).toBeTruthy()
     // 抽屉按 paper_id 保持：列表顺序变化后仍是同一条记录。
     expect(mounted.instance.pinned()).toBe('w2')
