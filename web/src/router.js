@@ -28,9 +28,9 @@ export const LEGACY_STAGE = {
   'project-questions': 'insight',
 }
 
-// /projects 的项目列表组件在 S6 从 App.vue 迁出；在那之前它只是占位，
-// 真正渲染仍由 AppRoot.vue 按 meta 决定。
-const ProjectListPlaceholder = { template: '<span />' }
+// 项目列表仍由 App.vue 渲染：S6 会把它迁出成 shell/ProjectList.vue。
+// 在迁移完成前必须挂 App，否则 /projects 会是一张空白页（S2 曾经就是这样）。
+const ProjectListPlaceholder = App
 
 const toWorkspace = (to, stage) => ({ name: 'workspace', params: { projectId: to.params.projectId, stage } })
 const queryOf = (to, extra) => ({ ...to.query, ...extra })
@@ -53,7 +53,20 @@ export function createAppRoutes() {
     { path: '/projects/:projectId/papers/:paperKey', name: 'paper', redirect: to => ({ ...toWorkspace(to, 'papers'), query: queryOf(to, { paper: String(to.params.paperKey) }) }) },
 
     // 阶段路由：唯一的工作区入口。
-    { path: '/projects/:projectId/:stage(anchors|papers|threads|insight)', name: 'workspace', component: Workspace, meta: { v32: true } },
+    // 组件直接由 router-view 渲染，所以参数必须显式映射成 props（S2 之后不再有
+    // AppRoot 替它传参）；否则 projectId 为空，工作区会一直停在入口页。
+    {
+      path: '/projects/:projectId/:stage(anchors|papers|threads|insight)',
+      name: 'workspace',
+      component: Workspace,
+      meta: { v32: true },
+      props: route => ({
+        projectId: String(route.params.projectId || ''),
+        stage: String(route.params.stage || 'anchors'),
+        view: String(route.meta?.v32View || ''),
+        lang: route.query.lang === 'en' ? 'en' : 'zh',
+      }),
+    },
     { path: '/projects/:projectId', name: 'project', redirect: to => toWorkspace(to, 'anchors') },
 
     // v3.2 旧入口保留为重定向，书签与 e2e-check.mjs 不失效。

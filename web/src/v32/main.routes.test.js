@@ -87,4 +87,15 @@ describe('one route table', () => {
     expect(route.name).toBe('home')
     expect(route.meta.v32).toBeFalsy()
   })
+
+  it('hands the route parameters to the workspace as props (S2 regression)', () => {
+    // S2 之后 Workspace 由 <router-view/> 直接渲染，不再有 AppRoot 替它传参；
+    // 少了这条映射，工作区会因为 projectId 为空而一直停在入口页。
+    const workspace = createAppRoutes().find(route => route.name === 'workspace')
+    expect(typeof workspace.props).toBe('function')
+    const props = workspace.props({ params: { projectId: 'p1', stage: 'papers' }, meta: { v32: true }, query: {} })
+    expect(props).toMatchObject({ projectId: 'p1', stage: 'papers', view: '', lang: 'zh' })
+    const english = workspace.props({ params: { projectId: 'p1', stage: 'papers' }, meta: {}, query: { lang: 'en' } })
+    expect(english.lang).toBe('en')
+  })
 })
