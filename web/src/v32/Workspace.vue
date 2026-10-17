@@ -518,8 +518,9 @@ async function onZoteroImported(result) {
   await loadOverview()
 }
 
-/** S11：Zotero 用侧栏接入，开关写在 URL 里（和 ?paper= 同一套做法）。 */
-const zoteroOpen = computed(() => Boolean(injectedRoute && route.query.zotero === '1'))
+/** S11：Zotero 用侧栏接入，开关写在 URL 里（和 ?paper= 同一套做法）。
+ *  入口页没有项目，侧栏无从导入，所以只在项目里展开。 */
+const zoteroOpen = computed(() => Boolean(props.projectId) && Boolean(injectedRoute && route.query.zotero === '1'))
 
 /** Zotero 插件点过来时带 ?item=<条目键>，侧栏加载完自动勾上它。 */
 const zoteroPreselect = computed(() => String((injectedRoute && route.query.item) || ''))
@@ -661,7 +662,16 @@ async function openEntry(payload) {
         : t('研究方向项目', 'Research direction project'),
       entry_mode: chosen,
     })
-    await router.push(`/projects/${encodeURIComponent(created.project_id)}/anchors`)
+    // 带着入口页的 query 进项目：从 Zotero 插件点过来时会带 ?zotero=1&item=<键>，
+    // 丢了它侧栏就不会自动打开、条目也不会预选。
+    const carried = {}
+    if (injectedRoute) {
+      for (const key of ['zotero', 'item']) {
+        const value = route.query[key]
+        if (value !== undefined) carried[key] = value
+      }
+    }
+    await router.push({ path: `/projects/${encodeURIComponent(created.project_id)}/anchors`, query: carried })
   } catch (failure) {
     // 失败只显示一行状态，不阻断页面其余内容。
     error.value = errorLine(
