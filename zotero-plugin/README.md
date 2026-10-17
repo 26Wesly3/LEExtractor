@@ -1,30 +1,39 @@
-# LEExtractor Zotero 插件（MVP）
+# LEExtractor Zotero 插件（v0.2.0）
 
-在 Zotero 7 的条目面板里增加一个"LEExtractor"区块，点击"找核心文献"，把所选条目的题名和 DOI 发给本机的 LEExtractor 服务，显示排序结果。原有面板、菜单和设置不改动。
+在 Zotero 的**条目面板**里增加一个 LEExtractor 区块：显示本机服务是否在跑，
+并把你选中的条目题名与 DOI 复制到剪贴板、打开检索页。原有面板、菜单和设置一律不改。
 
-## 状态（请先读这一节）
+## 这一版做了什么（以及为什么变小了）
 
-| 项目 | 状态 |
-|---|---|
-| 纯逻辑（元数据裁剪、幂等键、CSRF 调用、错误处理） | 已通过 Node 单元测试（5 项） |
-| 调用的接口（/session、/projects、/discover、/jobs、/papers） | 已对照 `litsearch/v32/api.py` 核实存在 |
-| Zotero 7 中的 `ItemPaneManager.registerSection`、`startup`/`shutdown` 用法 | **未核实**：官方文档站点本次无法访问，需对照 Zotero 7 开发文档和 zotero-plugin-template |
-| 插件在真实 Zotero 中运行 | **未验证**：本环境没有 Zotero，需要你在本机安装后测试 |
-| 本机服务接受 Zotero 发出的请求（origin 检查） | **未验证**：服务有 Host/Origin 检查，Zotero 的请求来源可能被拒绝 |
-| 响应字段名（project_id、job_id、items[].title/year） | **未逐字段核对**：按接口代码推断，需用真实响应确认 |
-| 写回 Zotero（导入候选） | **未做**：下一步，先做预览再确认 |
+上一版（0.1.0）想在 Zotero 里直接建项目、跑发现、拉排序结果。改版的原因很具体：
+Zotero 进程里的 `fetch` **不共享浏览器的会话 cookie**，而 `/api/v3` 的写接口要
+会话 + CSRF，所以在插件里调 `POST /projects` / `POST /discover` 会 403。
+0.2.0 只保留确定能跑的两件事：
+
+| 能力 | 实现 | 状态 |
+|---|---|---|
+| 显示本机服务状态 | 读取公开的 `GET /api/v3/capabilities`（无需会话） | 已实现 |
+| 复制题名与 DOI | `Zotero.Utilities.Internal.copyTextToClipboard` | 已实现 |
+| 打开检索页 | `Zotero.launchURL('http://127.0.0.1:8000/search')` | 已实现 |
+| 在 Zotero 里直接建项目/看排序 | 需要鉴权通道（见下） | 未做 |
+
+要"直接把 Zotero 条目写进项目"，请用**网页侧的「从本机 Zotero 导入」侧栏**——
+那边有完整的会话与 CSRF，读的是同一个本地只读接口 `127.0.0.1:23119`。
 
 ## 安装（开发）
 
-1. 启动本机服务（默认 `127.0.0.1:8000`），例如在仓库根目录运行 `python -m litsearch.web --port 8000`。
-2. `npm run build` 生成 `dist/LEExtractor.xpi`。
-3. Zotero 7：工具 → 附加组件 → 齿轮 → 从文件安装，选择该 xpi。
-4. 选中一条文献，在条目面板找到"LEExtractor"区块。
+1. 启动本机服务：仓库根目录 `python -m litsearch.web --port 8000`。
+2. `cd zotero-plugin && npm run build` → 生成 `dist/LEExtractor.xpi`。
+3. Zotero 7/8/9：工具 → 插件 → 齿轮 → **从文件安装插件…**，选择该 xpi。
+4. 选中一条文献，在右侧条目面板里找到 **LEExtractor** 区块。
 
-## 隐私
+## 隐私与边界
 
-只发送题名、DOI、年份和摘要（最多 1500 字符）。不读取附件、笔记和本地文件路径，不上传 PDF。
+- 只读：不新建、不修改 Zotero 条目或分类；不读附件和笔记。
+- 只发元数据：题名与 DOI（复制时由你决定粘贴到哪）。
+- 不读 `zotero.sqlite`：插件用 Zotero 自己的 API；网页侧用本地只读 HTTP 接口。
 
-## 测试
+## 已知限制
 
-`npm test`（Node 内置测试，无依赖）。
+- 鉴权通道尚未打通，所以插件内不能直接写项目（这是后续工作，不是匹配失败）。
+- 本地化文案只有 `locale/en-US` 与 `locale/zh-CN`，区块标题显示 LEExtractor。

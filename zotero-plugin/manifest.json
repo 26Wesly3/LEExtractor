@@ -1,9 +1,10 @@
 {
   "manifest_version": 2,
   "name": "LEExtractor",
-  "version": "0.1.0",
-  "description": "在 Zotero 条目面板中查找核心文献（调用本机 LEExtractor 服务）。",
+  "version": "0.2.0",
+  "description": "在 Zotero 条目面板里连接本机 LEExtractor：查看服务状态，把题名与 DOI 带到检索页。只读元数据，不修改你的 Zotero 库。",
   "author": "LEExtractor",
+  "homepage_url": "http://127.0.0.1:8000/",
   "applications": {
     "zotero": {
       "id": "leextractor@local",
