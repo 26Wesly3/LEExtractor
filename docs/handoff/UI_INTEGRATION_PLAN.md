@@ -121,11 +121,13 @@
 | S4 | ✅ 完成 | `b657ff2` | 阶段由路由驱动，阶段条进 AppNav（roving tabindex）；109 passed |
 | S5 | ✅ 完成 | `d791114` | `?paper=` 详情态 + 抽屉 A8 + `?export=1`；110 passed；比较器改为逐像素 + 0.01% 预算 |
 | 回归修复 | ✅ 完成 | `8be9fae` | `<router-view/>` 未传参导致工作区落回入口页；`/projects` 曾是空白页 |
-| S6 | ⬜ 未开始 | — | 删除 App.vue 旧工作区分支与 CSS、迁出 `ProjectList.vue`、App.dom.test.js 只留首页 |
-| S7 | ⬜ 未开始 | — | token 收口，挂上 `.theme-v32`（接受标题字号变化） |
-| S8 | ⬜ 未开始 | — | `GET /projects` 与演示项目接口，首页三按钮换内部调用 |
+| S6 | ✅ 完成 | `a2ef693` | App.vue 只剩首页；`shell/ProjectList.vue`（旧版只读 + RIS 导出）；App.dom 只留 5 条首页用例；死 CSS 清理 |
+| S7 | ✅ 完成 | `68cba49` | `.theme-v32` 已生效（S2 绑定），最后一处 `var(--ink, #…)` 回退色清除，`styles.css :root` 是唯一色彩来源 |
+| S8 | ✅ 完成（演示接口除外） | `81b31cc` | `GET /api/v3/projects`（owner 隔离、最新在前）+ 3 条后端用例；项目页并列显示 v3（可打开）与旧版（只读）。`POST /api/v3/demo/projects` **未做**，理由见下 |
 
-当前测试账：前端 `npx vitest run` → 17 文件 / 110 passed；后端全量 `python -m pytest -q` → 1347 passed, 2 failed（均为基线既有的发布文档链接检查，见 `handoff/IMPLEMENTATION_STATUS.md`）。
+S8 的边界：演示项目必须是真实的 v3 语料加一次已提交的快照；为了"点一下有东西"而造一个空项目或假的 demo 标记，正是交接文档禁止的假完工。所以首页「创建离线演示项目」继续走旧接口，等演示语料准备好再接（D3 的第二半）。
+
+当前测试账：前端 `npx vitest run` → 18 文件 / 102 passed；后端全量 `python -m pytest -q` → **1350 passed, 2 failed**（两项均为基线既有的发布文档链接检查）；首页像素门禁 → 7/7 张通过（0 差异像素）。
 
 
 | 步 | 目标 | 改动文件 | 证明它成立的测试 | 回滚 | 规模 |
