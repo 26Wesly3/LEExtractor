@@ -1,6 +1,9 @@
 """AI reading of the research intent before ranking (doc 02 / 10 / 17).
 
-Opt-in: runs only when ``LEEXTRACTOR_AI_INTENT=1`` and a model adapter is configured.
+Opt-in: runs only when ``LEEXTRACTOR_AI_INTENT=1``, the job is in ``ai_enhanced``
+mode and a model adapter is configured.  The reading is produced by its own
+``intent`` job after the local snapshot is committed; ranking only reads the
+cache (:func:`cached`).
 Only the research direction text is sent (never PDFs, titles or judgements). The
 reply must match a strict shape; anything else returns ``None`` and the caller keeps
 the rule-based query. The model may organise the user's own words. It may not add
@@ -87,12 +90,28 @@ def topic_text(fields: dict[str, Any]) -> str:
     return " ".join(part for part in parts if part)
 
 
+def _key(source: str) -> str:
+    return hashlib.sha256(source.encode("utf-8")).hexdigest()
+
+
+def cached(text: str) -> dict[str, Any] | None:
+    """An already-produced reading of ``text``, or ``None``. Never calls a model.
+
+    Local ranking uses only this (doc 17: the local snapshot never waits on a
+    model); a new reading is produced by the separate ``intent`` job.
+    """
+    source = (text or "").strip()
+    if not source or len(source) > MAX_TEXT_CHARS or not switch_on():
+        return None
+    return _CACHE.get(_key(source))
+
+
 def interpret(text: str, adapter: Any) -> dict[str, Any] | None:
     """Validated reading of ``text``, or ``None``. Never raises; cached per text."""
     source = (text or "").strip()
     if not source or len(source) > MAX_TEXT_CHARS or adapter is None or not switch_on():
         return None
-    key = hashlib.sha256(source.encode("utf-8")).hexdigest()
+    key = _key(source)
     if key in _CACHE:
         return _CACHE[key]
     try:

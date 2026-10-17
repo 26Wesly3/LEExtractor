@@ -291,18 +291,33 @@ class V32Store:
             self._verify_integrity(raw)
             return raw
 
-        working = json.loads(json.dumps(raw))  # deep copy, never mutate the caller's
-        while version < SCHEMA_VERSION:
-            migration = _MIGRATIONS.get(version)
-            if migration is None:
-                raise V32Error(422, UNPROCESSABLE, f"缺少 schema_version={version} 的迁移链")
-            working = migration(working)
-            version = int(working["schema_version"])
+        # The backup is taken BEFORE anything runs, so every later failure can
+        # be rolled back to the exact original bytes (doc 14 §持久化升级, AC-12).
+        backup = self._backup(source) if source is not None else None
+        if source is not None and source.is_file() and backup is None:
+            raise V32Error(422, UNPROCESSABLE, "无法备份项目文件，迁移已取消，原文件保留")
+        try:
+            working = json.loads(json.dumps(raw))  # deep copy, never mutate the caller's
+            while version < SCHEMA_VERSION:
+                migration = _MIGRATIONS.get(version)
+                if migration is None:
+                    raise V32Error(422, UNPROCESSABLE, f"缺少 schema_version={version} 的迁移链")
+                working = migration(working)
+                version = int(working["schema_version"])
 
-        working["contract_version"] = CONTRACT_VERSION
-        self._verify_integrity(working)
+            working["contract_version"] = CONTRACT_VERSION
+            self._verify_integrity(working)
+            if source is not None:
+                atomic_json(source, working)
+        except Exception as exc:
+            if source is not None and backup is not None:
+                self._restore(backup, source)
+            if isinstance(exc, V32Error):
+                raise
+            raise V32Error(
+                422, UNPROCESSABLE, f"迁移失败（{type(exc).__name__}），已从备份恢复原文件"
+            ) from exc
         if source is not None:
-            backup = self._backup(source)
             self.migrations_applied.append(
                 {
                     "file": source.name,
@@ -312,8 +327,17 @@ class V32Store:
                     "at": now(),
                 }
             )
-            atomic_json(source, working)
         return working
+
+    @staticmethod
+    def _restore(backup: Path, source: Path) -> None:
+        """Put the backed-up original back, unless the file is already identical."""
+        try:
+            if source.is_file() and source.read_bytes() == backup.read_bytes():
+                return
+            shutil.copy2(backup, source)
+        except OSError:  # pragma: no cover - the backup itself stays for manual recovery
+            pass
 
     def _backup(self, source: Path) -> Path | None:
         if not source.is_file():

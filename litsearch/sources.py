@@ -275,6 +275,9 @@ class BaseSource(ABC):
         self._session.headers.update({"User-Agent": "LEExtractor/0.3"})
         self._cancel_check = None
         self._request_budget = self.MAX_REQUESTS_PER_RETRIEVAL
+        #: A per-session key that replaces the deployment's environment key
+        #: for this instance only (v3.2 doc 10: keys are session scoped).
+        self.api_key_override: str | None = None
         #: Result of the most recent logical retrieval, for callers that need
         #: more than the legacy list: status, completeness, statistics.
         self.last_retrieval_result: RetrievalResult | None = None
@@ -291,9 +294,15 @@ class BaseSource(ABC):
         """
         self._cancel_check = predicate
 
+    def api_key(self) -> str:
+        """This instance's key: the session override, else the deployment's own."""
+        if self.api_key_override:
+            return str(self.api_key_override)
+        return (semantic_scholar_api_key() if self.name == "semantic_scholar"
+                else openalex_api_key() if self.name == "openalex" else "")
+
     def _quota_identity(self) -> tuple[str, str]:
-        credential = (semantic_scholar_api_key() if self.name == "semantic_scholar"
-                      else openalex_api_key() if self.name == "openalex" else "")
+        credential = self.api_key()
         return self.name, hashlib.sha256(credential.encode("utf-8")).hexdigest()
 
     def cooldown_remaining(self) -> float:
@@ -963,7 +972,7 @@ class SemanticScholarSource(BaseSource):
 
     def _pace(self) -> None:
         interval = (
-            self.PACE_WITH_KEY if semantic_scholar_api_key() else self.PACE_WITHOUT_KEY
+            self.PACE_WITH_KEY if self.api_key() else self.PACE_WITHOUT_KEY
         )
         elapsed = time.time() - self._last_request_at
         if elapsed < interval:
@@ -975,7 +984,7 @@ class SemanticScholarSource(BaseSource):
         self.ensure_available()
         if self.is_canceled():
             raise RetrievalCanceled("semantic_scholar: canceled before request")
-        api_key = semantic_scholar_api_key()
+        api_key = self.api_key()
         if api_key:
             self._session.headers["x-api-key"] = api_key
         else:
@@ -1329,8 +1338,12 @@ OA_BASE = "https://api.openalex.org"
 
 
 class _OpenAlexAuth(requests.auth.AuthBase):
+    def __init__(self, source=None):
+        self._source = source
+
     def __call__(self, request):
-        if key := openalex_api_key():
+        key = self._source.api_key() if self._source is not None else openalex_api_key()
+        if key:
             request.headers["Authorization"] = f"Bearer {key}"
         else:
             request.headers.pop("Authorization", None)
@@ -1345,7 +1358,7 @@ class OpenAlexSource(BaseSource):
     def __init__(self, cache: Cache | None = None):
         super().__init__(cache)
         # Bearer auth avoids placing the key in URLs and exception messages.
-        self._session.auth = _OpenAlexAuth()
+        self._session.auth = _OpenAlexAuth(self)
 
     def _paper_from_oa(self, data: dict) -> Paper:
         doi = (data.get("doi") or "").replace("https://doi.org/", "")
@@ -2344,6 +2357,20 @@ class SourceManager:
         if not values or len(values) != len(set(values)) or any(value not in AVAILABLE_SEARCH_PROVIDERS for value in values):
             raise ValueError("Select one or more known search providers without duplicates")
         self.search_providers = tuple(values)
+
+    def with_api_keys(self, keys) -> "SourceManager":
+        """A manager for one job that sends these session keys (doc 10).
+
+        The cache is shared; the provider clients are new, so a key set here can
+        never leak into another session's requests.  Providers without a key in
+        ``keys`` keep the deployment's own configuration.
+        """
+        scoped = SourceManager(self._cache, search_providers=self.search_providers)
+        for provider, source in (("semantic_scholar", scoped.s2), ("openalex", scoped.oa)):
+            value = str((keys or {}).get(provider) or "").strip()
+            if value:
+                source.api_key_override = value
+        return scoped
 
     # -- cancellation ---------------------------------------------------
 

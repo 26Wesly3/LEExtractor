@@ -61,6 +61,10 @@ class JobRecord:
     event: threading.Event = field(default_factory=threading.Event, repr=False)
     lock: threading.RLock = field(default_factory=threading.RLock, repr=False)
     thread: threading.Thread | None = field(default=None, repr=False)
+    #: The submitting session, held in memory only (never written to the job
+    #: file).  Credentials are resolved from it when the job runs (doc 10:
+    #: "任务只保存凭据引用，在执行时解析").
+    session_ref: str | None = field(default=None, repr=False)
 
     # -- accessors ---------------------------------------------------------
 
@@ -209,6 +213,7 @@ class JobManager:
         checkpoint: dict[str, Any] | None = None,
         priority: bool = False,
         submitted_revision: int | None = None,
+        session_ref: str | None = None,
         **extra: Any,
     ) -> JobRecord:
         """Create a queued job.  The caller has already validated the revision.
@@ -243,6 +248,7 @@ class JobManager:
                 "priority": bool(priority),
                 **extra,
             })
+            job.session_ref = str(session_ref) if session_ref else None
         with self.lock:
             self.jobs[job.job_id] = job
             project.active_job_ids.append(job.job_id)
@@ -250,7 +256,14 @@ class JobManager:
         self._wake.set()
         return job
 
-    def schedule_rerank(self, project: V32Project, *, debounce_ms: int | None = None) -> JobRecord:
+    def schedule_rerank(
+        self,
+        project: V32Project,
+        *,
+        debounce_ms: int | None = None,
+        session_ref: str | None = None,
+        mode: str | None = None,
+    ) -> JobRecord:
         """Collapse a burst of judgements into one pending rerank (doc 14).
 
         The newest request supersedes the previous *pending* one; a job that has
@@ -271,6 +284,8 @@ class JobManager:
             project, "rerank",
             debounce_until=time.monotonic() + delay / 1000.0,
             priority=True,
+            session_ref=session_ref,
+            mode=mode or "basic",
         )
         with self.lock:
             self._pending_rerank[project.project_id] = job.job_id

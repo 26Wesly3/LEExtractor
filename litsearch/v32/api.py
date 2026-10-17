@@ -772,18 +772,19 @@ def build_router(state: V32State) -> APIRouter:
         anchor["seed_paper_ids"] = resolved_seeds
         anchor["query_variants"] = query_variants(anchor["original_text"])
         anchor["context_version"] = project.context_version + 1
+        # The chosen mode is remembered on the project so the reranks that
+        # follow (judgements, rerank) stay in it; basic never calls a model.
+        project.doc["ai_mode"] = str(body.mode)
         state.store.set_anchor(project, anchor, seeds=resolved_seeds)
         pinned = _submit_config(state, project)
-        # AI 增强且有模型凭据时，先按本会话配置构造真实适配器，让任务真的用上；
-        # 没有凭据则保持 None，界面如实显示「已使用基础排序」。
-        if str(body.mode) == "ai_enhanced":
-            state.ai_adapter = _resolve_model_adapter(state, session)
+        # 模型适配器不再挂在共享状态上：任务执行时按本会话凭据与模式解析（doc 10）。
         job = state.jobs.submit(
             project,
             "discover",
             stage=str(JobStage.QUEUED),
             priority=True,
             mode=body.mode,
+            session_ref=session.session_id,
             **pinned,
         )
         accepted = _accepted(state, project, job)
@@ -812,9 +813,16 @@ def build_router(state: V32State) -> APIRouter:
             return _project("JobAccepted", replay)
         state.store.check_revision(project, body.expected_revision)
         pinned = _submit_config(state, project)
-        # 判断触发的局部重排也要用同一个已配置的模型适配器。
-        state.ai_adapter = _resolve_model_adapter(state, session)
-        job = state.jobs.submit(project, "rerank", stage=str(JobStage.QUEUED), priority=True, **pinned)
+        # 适配器在任务执行时按本会话凭据与项目模式解析，不写入共享状态。
+        job = state.jobs.submit(
+            project,
+            "rerank",
+            stage=str(JobStage.QUEUED),
+            priority=True,
+            mode=str(project.doc.get("ai_mode") or "basic"),
+            session_ref=session.session_id,
+            **pinned,
+        )
         accepted = _accepted(state, project, job)
         _remember(
             state, session, project_id=pid, endpoint="rerank", key=idempotency_key,
@@ -843,7 +851,10 @@ def build_router(state: V32State) -> APIRouter:
         if not project.doc.get("papers"):
             raise V32Error(422, UNPROCESSABLE, "请先完成一次检索或导入，再进行引文扩展")
         pinned = _submit_config(state, project)
-        job = state.jobs.submit(project, "expand", stage=str(JobStage.QUEUED), priority=True, **pinned)
+        job = state.jobs.submit(
+            project, "expand", stage=str(JobStage.QUEUED), priority=True,
+            session_ref=session.session_id, **pinned,
+        )
         accepted = _accepted(state, project, job)
         _remember(
             state, session, project_id=pid, endpoint="expand", key=idempotency_key,
@@ -878,7 +889,11 @@ def build_router(state: V32State) -> APIRouter:
             exclusion_reason=body.exclusion_reason or "unspecified",
             reason=body.reason or "",
         )
-        job = state.jobs.schedule_rerank(project)
+        job = state.jobs.schedule_rerank(
+            project,
+            session_ref=session.session_id,
+            mode=str(project.doc.get("ai_mode") or "basic"),
+        )
         payload = _project(
             "JudgementSaved",
             {
@@ -968,7 +983,7 @@ def build_router(state: V32State) -> APIRouter:
     def get_overview(request: Request, pid: str) -> dict[str, Any]:
         session = _session(state, request)
         project = _owned_project(state, session, pid)
-        return _project("Overview", overview_payload(state, project))
+        return _project("Overview", overview_payload(state, project, session))
 
     # -- access and venue -------------------------------------------------
 
@@ -1110,7 +1125,8 @@ def build_router(state: V32State) -> APIRouter:
         project.doc.setdefault("imports", {})[import_id] = record
         state.store.save(project)
         job = state.jobs.submit(
-            project, "import", stage=str(JobStage.PARSING), import_id=import_id, priority=True
+            project, "import", stage=str(JobStage.PARSING), import_id=import_id, priority=True,
+            session_ref=session.session_id,
         )
         record["job_id"] = job.job_id
         state.store.save(project)
@@ -1217,7 +1233,8 @@ def build_router(state: V32State) -> APIRouter:
             record["items"][item_id]["status"] = "uploaded"
             record["items"][item_id]["error_code"] = None
         job = state.jobs.submit(
-            project, "import", stage=str(JobStage.PARSING), import_id=import_id, priority=True
+            project, "import", stage=str(JobStage.PARSING), import_id=import_id, priority=True,
+            session_ref=session.session_id,
         )
         record["job_id"] = job.job_id
         record["updated_at"] = iso_now()

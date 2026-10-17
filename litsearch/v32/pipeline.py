@@ -165,6 +165,52 @@ class V32State:
                 self.source_manager = getattr(workflow, "sources", None)
             return self.source_manager
 
+    def retrieval_for(self, job: Any) -> Any:
+        """The provider client for one job, with that job's session keys.
+
+        Doc 10: retrieval keys are scoped by provider plus session and resolved
+        when the job runs, never stored on this shared object.  A client that
+        can scope itself (``with_api_keys``) gets the session's stored keys; a
+        provider without a session key keeps the deployment's own
+        configuration (environment).  Without a session key the shared client
+        is used unchanged.
+        """
+        client = self.retrieval()
+        keys = self.session_retrieval_keys(job)
+        scope = getattr(client, "with_api_keys", None)
+        if client is None or not keys or not callable(scope):
+            return client
+        return scope(keys)
+
+    def job_session(self, job: Any) -> Any:
+        """The live session a job was submitted from, or ``None``."""
+        ref = getattr(job, "session_ref", None)
+        if not ref or self.sessions is None:
+            return None
+        try:
+            return self.sessions.get(ref)
+        except Exception:  # noqa: BLE001 - an expired session simply has no keys
+            return None
+
+    def session_retrieval_keys(self, job: Any) -> dict[str, str]:
+        """``provider -> secret`` for the job's session (retrieval kind only)."""
+        session = self.job_session(job)
+        credentials = self.credentials
+        if session is None or credentials is None:
+            return {}
+        out: dict[str, str] = {}
+        allowlist = getattr(credentials, "allowlist", {}) or {}
+        for provider, kind in allowlist.items():
+            if str(kind) != "retrieval":
+                continue
+            try:
+                secret = credentials.get(session.session_id, provider)
+            except Exception:  # noqa: BLE001
+                secret = None
+            if secret:
+                out[str(provider)] = secret
+        return out
+
     def match_candidates(self, project: V32Project, parsed: Any) -> list[dict[str, Any]]:
         """Candidate records an uploaded PDF is matched against.
 
@@ -180,6 +226,7 @@ class V32State:
     # -- optional stages ---------------------------------------------------
 
     def ai(self) -> Any:
+        """The deployment's own adapter (injected at install), never a session's."""
         return self.ai_adapter
 
     def zotero(self) -> Any:
@@ -193,6 +240,31 @@ class V32State:
     def zotero_ready(self) -> bool:
         adapter = self.zotero()
         return bool(adapter is not None and getattr(adapter, "configured", False))
+
+
+def resolve_ai(state: V32State, session: Any, mode: Any) -> Any:
+    """The model adapter for one session and mode, built at call time.
+
+    Doc 05/10: basic mode never calls a remote model, so anything but
+    ``ai_enhanced`` gets ``None``.  In AI mode the session's own model
+    credential is used; the deployment's injected adapter is the fallback.
+    The adapter is returned to the caller only; it is never stored on the
+    shared state, so one session's key cannot serve another session.
+    """
+    if str(mode or "basic") != "ai_enhanced":
+        return None
+    if session is not None:
+        from litsearch.v32 import api as api_mod
+
+        adapter = api_mod._resolve_model_adapter(state, session)
+        if adapter is not None:
+            return adapter
+    return state.ai()
+
+
+def job_ai(state: V32State, job: Any) -> Any:
+    """:func:`resolve_ai` for a job: its session reference and its mode."""
+    return resolve_ai(state, state.job_session(job), job.doc.get("mode"))
 
 
 # ---------------------------------------------------------------------------
@@ -370,7 +442,12 @@ def ranking_query_text(project: V32Project) -> str:
     translated = str(translation.get("translated") or "").strip()
     if translated:
         return translated
-    return str((project.doc.get("anchor") or {}).get("original_text") or "").strip()
+    original = str((project.doc.get("anchor") or {}).get("original_text") or "").strip()
+    if original:
+        return original
+    # A PDF-only project has no typed direction: its seeds' titles/abstracts
+    # (recorded by the import) are the text discovery searched with.
+    return str(project.doc.get("seed_research_text") or "").strip()
 
 
 def citation_edges(store: V32Store, project: V32Project) -> list[dict[str, Any]]:
@@ -440,7 +517,9 @@ def rank_project(
     paper_ids = [str(row["paper_id"]) for row in records]
 
     query_text = ranking_query_text(project)
-    reading = intent_ai.interpret(query_text, state.ai_adapter) if state.ai_adapter is not None else None
+    # Only an already-produced reading is used here: local ranking never calls a
+    # model (doc 17).  New readings come from the separate ``intent`` job.
+    reading = intent_ai.cached(query_text)
     if reading:
         query_text = intent_ai.topic_text(reading)
     scores = topic_scores(query_text, records)
@@ -521,7 +600,8 @@ def _max_cosine(
         return out
     for paper_id in paper_ids:
         vector = vectors.get(paper_id)
-        if not vector:
+        # ``len`` rather than truthiness: a semantic vector may be a numpy array.
+        if vector is None or len(vector) == 0:
             continue
         best = None
         for seed in seeds:
@@ -535,7 +615,7 @@ def _max_cosine(
 
 
 def _cosine(left: Sequence[float], right: Sequence[float]) -> float | None:
-    if not left or not right or len(left) != len(right):
+    if left is None or right is None or len(left) == 0 or len(left) != len(right):
         return None
     dot = sum(float(a) * float(b) for a, b in zip(left, right))
     left_norm = sum(float(a) ** 2 for a in left) ** 0.5
@@ -826,7 +906,23 @@ def _round_robin(per_provider: Mapping[str, Sequence[Any]]) -> list[tuple[str, A
     return out
 
 
+#: Provider statuses surfaced in ``coverage.stop_reasons`` as ``<status>:<provider>``
+#: so the user sees a quota (429) or a rejected personal key (doc 08/10).
+_QUOTA_STATUSES = frozenset({"rate_limited", "auth_error"})
+
+
+def _note_quota(outcome: RetrievalOutcome, provider: str, result: Any) -> None:
+    status = getattr(result, "status", None)
+    status = str(getattr(status, "value", status) or "")
+    stats = getattr(result, "stats", None)
+    if status not in _QUOTA_STATUSES and int(getattr(stats, "rate_limited", 0) or 0) > 0:
+        status = "rate_limited"
+    if status in _QUOTA_STATUSES:
+        outcome.stop_reasons.append(f"{status}:{provider}")
+
+
 def _note_provider(outcome: RetrievalOutcome, provider: str, result: Any, returned: int) -> None:
+    _note_quota(outcome, provider, result)
     stats = outcome.provider_stats.setdefault(provider, {"returned": 0, "kept": 0, "cursor": None})
     stats["returned"] += int(returned)
     cursor = getattr(result, "next_cursor", None)
@@ -883,7 +979,7 @@ def retrieve_candidates(
     if not text.strip():
         outcome.stop_reasons.append("no_research_text")
         return outcome
-    client = state.retrieval()
+    client = state.retrieval_for(job)
     if client is None:
         outcome.unavailable = True
         outcome.raised = "retrieval_unavailable"
@@ -994,7 +1090,7 @@ def retrieve_neighbours(
     only what is left of the round budget.
     """
     outcome = RetrievalOutcome()
-    client = state.retrieval()
+    client = state.retrieval_for(job)
     if client is None:
         outcome.unavailable = True
         outcome.raised = "retrieval_unavailable"
@@ -1100,7 +1196,10 @@ def run_discover(state: V32State, project: V32Project, job: Any) -> dict[str, An
     """Retrieve, save candidates, rank locally, commit a snapshot."""
     state.jobs.set_stage(job, str(JobStage.RETRIEVING), progress=0.1)
     anchor = project.doc.get("anchor") or {}
-    original_text = str(anchor.get("original_text") or "").strip()
+    # An import-started discovery carries its seed-derived text on the job; the
+    # user's own anchor text is never overwritten with it.
+    seed_text = str(job.doc.get("research_text") or "").strip()
+    original_text = seed_text or str(anchor.get("original_text") or "").strip()
     # 中文研究方向必须先译成英文再检索：直接把中文发给 OpenAlex/Crossref 只会
     # 拿回无关的英文记录，随后词法主题信号又近乎全 0，列表等于无序。原文保留在
     # anchor 里不被覆盖，译文与所用模型版本一并记录。
@@ -1111,7 +1210,7 @@ def run_discover(state: V32State, project: V32Project, job: Any) -> dict[str, An
         source="translation" if translation["translated"] else "original",
         generator_version=translation["revision"] or None,
     )
-    if translation["translated"]:
+    if translation["translated"] and not seed_text:
         # 派生检索文本，不属于用户意图，因此不改变 context_version；
         # 后续由判断触发的重排也要用它，否则重排会再次退回中文打分。
         project.doc["query_translation"] = {
@@ -1188,8 +1287,72 @@ def run_discover(state: V32State, project: V32Project, job: Any) -> dict[str, An
     }
     mode = str(job.doc.get("mode") or "basic")
     if mode == "ai_enhanced":
-        result["ai_status"] = "skipped"
-        result["ai_detail"] = "本轮无可用模型适配器：本地排序已提交，未被改写。"
+        intent_job = schedule_intent(state, project, job)
+        if intent_job is not None:
+            result["ai_status"] = "queued"
+            result["ai_job_id"] = intent_job.job_id
+            result["ai_detail"] = "本地排序已提交；研究意图解读在独立任务中进行。"
+        else:
+            result["ai_status"] = "skipped"
+            result["ai_detail"] = "本轮无可用模型适配器：本地排序已提交，未被改写。"
+    return result
+
+
+def schedule_intent(state: V32State, project: V32Project, job: Any) -> Any:
+    """Queue the AI intent reading as its own job, after the local commit.
+
+    Only when the switch is on, the job is ``ai_enhanced``, a model is
+    available for its session and no reading of this text is cached yet.
+    """
+    if not intent_ai.switch_on() or str(job.doc.get("mode") or "basic") != "ai_enhanced":
+        return None
+    text = ranking_query_text(project)
+    if not text or intent_ai.cached(text) is not None or job_ai(state, job) is None:
+        return None
+    try:
+        return state.jobs.submit(
+            project,
+            "intent",
+            stage=str(JobStage.QUEUED),
+            parent_job_id=getattr(job, "job_id", None),
+            mode=job.doc.get("mode"),
+            config_hash=job.doc.get("config_hash"),
+            model_revision=job.doc.get("model_revision"),
+            session_ref=getattr(job, "session_ref", None),
+        )
+    except V32Error:
+        return None
+
+
+def run_intent(state: V32State, project: V32Project, job: Any) -> dict[str, Any]:
+    """Produce the intent reading, then re-rank locally with it (doc 17 staging)."""
+    result: dict[str, Any] = {"outcome": "succeeded", "error_codes": [], "rerank_job_id": None}
+    adapter = job_ai(state, job)
+    text = ranking_query_text(project)
+    if adapter is None or not intent_ai.switch_on() or not text:
+        result.update(ai_status="skipped", ai_error_code="ai_not_configured")
+        return result
+    if intent_ai.cached(text) is not None:
+        result.update(ai_status="cached", ai_error_code=None)
+        return result
+    state.jobs.set_stage(job, str(JobStage.ENHANCING), progress=0.4)
+    reading = intent_ai.interpret(text, adapter)
+    if reading is None:
+        # Malformed reply or provider error: the lexical/semantic query stays.
+        result.update(ai_status="failed", ai_error_code="intent_unavailable")
+        return result
+    rerank_job = state.jobs.submit(
+        project,
+        "rerank",
+        stage=str(JobStage.QUEUED),
+        priority=True,
+        parent_job_id=job.job_id,
+        mode=job.doc.get("mode"),
+        config_hash=job.doc.get("config_hash"),
+        model_revision=job.doc.get("model_revision"),
+        session_ref=getattr(job, "session_ref", None),
+    )
+    result.update(ai_status="applied", ai_error_code=None, rerank_job_id=rerank_job.job_id)
     return result
 
 
@@ -1421,7 +1584,9 @@ def run_rerank(state: V32State, project: V32Project, job: Any) -> dict[str, Any]
         return {"superseded": True}
 
     ai_status, ai_error, ai_job_id = "skipped", "ai_not_configured", None
-    if state.ai() is not None and local_order:
+    if str(job.doc.get("mode") or "basic") != "ai_enhanced":
+        ai_error = "basic_mode"
+    elif job_ai(state, job) is not None and local_order:
         try:
             ai_job = schedule_ai_rerank(state, project, job, snapshot)
             ai_status, ai_error, ai_job_id = "queued", None, ai_job.job_id
@@ -1481,6 +1646,7 @@ def schedule_ai_rerank(state: V32State, project: V32Project, job: Any, snapshot:
         config_hash=job.doc.get("config_hash"),
         model_revision=job.doc.get("model_revision"),
         mode=job.doc.get("mode"),
+        session_ref=getattr(job, "session_ref", None),
     )
 
 
@@ -1501,12 +1667,13 @@ def run_ai_rerank(state: V32State, project: V32Project, job: Any) -> dict[str, A
         "ranking_stage": parent.get("ranking_stage"),
         "error_codes": [],
     }
-    if state.ai() is None:
+    adapter = job_ai(state, job)
+    if adapter is None:
         result.update(ai_status="skipped", ai_error_code="ai_not_configured")
         return result
     state.jobs.set_stage(job, str(JobStage.ENHANCING), progress=0.4)
     items = [dict(item) for item in parent.get("items") or []]
-    report = _apply_ai(state, project, job, items, parent_id)
+    report = _apply_ai(state, project, job, items, parent_id, adapter)
     result.update(ai_status=report.get("status"), ai_error_code=report.get("error_code"))
     order = report.get("applied_order")
     if not order:
@@ -1543,7 +1710,12 @@ def ai_window_ids(items: Sequence[Mapping[str, Any]]) -> list[str]:
 
 
 def _apply_ai(
-    state: V32State, project: V32Project, job: Any, items: Sequence[Mapping[str, Any]], parent: str
+    state: V32State,
+    project: V32Project,
+    job: Any,
+    items: Sequence[Mapping[str, Any]],
+    parent: str,
+    adapter: Any,
 ) -> dict[str, Any]:
     """Run the AI stage over a committed snapshot's order; any failure keeps it."""
     try:
@@ -1599,7 +1771,7 @@ def _apply_ai(
         parent_snapshot_id=parent,
         config=dict(ai_cfg),
     )
-    outcome = rerank(window, state.ai(), parent_snapshot_id=parent, config=dict(ai_cfg))
+    outcome = rerank(window, adapter, parent_snapshot_id=parent, config=dict(ai_cfg))
     report = {
         "status": str(outcome.status),
         "error_code": outcome.error_code,
@@ -1636,7 +1808,9 @@ def run_import(state: V32State, project: V32Project, job: Any) -> dict[str, Any]
     item_ids = [str(value) for value in record.get("item_ids") or []]
     succeeded = 0
     failed = 0
+    pending = 0
     added: list[str] = []
+    seeds: list[str] = []
     for index, item_id in enumerate(item_ids):
         item = (record.get("items") or {}).get(item_id) or {}
         if str(item.get("status") or ImportStatus.UPLOADED) != str(ImportStatus.UPLOADED):
@@ -1664,12 +1838,28 @@ def run_import(state: V32State, project: V32Project, job: Any) -> dict[str, Any]
             continue
         candidates = state.match_candidates(project, outcome.parsed)
         match = match_parsed(outcome.parsed, candidates)
+        status = str(match.status)
         paper_id = state.store.resolve_paper_id(project, str(match.paper_id or ""))
-        if str(match.status) == str(PdfImportStatus.LOCAL_SEED) or (
-            str(match.status) == str(PdfImportStatus.MATCHED) and not paper_id
+        if status == str(PdfImportStatus.LOCAL_SEED) or (
+            status == str(PdfImportStatus.MATCHED) and not paper_id
         ):
             paper_id = state.store.upsert_paper(project, _parsed_record(outcome.parsed))
             added.append(paper_id)
+        elif status == str(PdfImportStatus.NEEDS_CONFIRMATION):
+            # Doc 02/16: an uncertain match continues as a local seed; it is
+            # held WITHOUT identifier aliases, so no doubtful external entity
+            # (or a second front-matter DOI) is adopted until the user decides.
+            paper_id = state.store.upsert_paper(
+                project, _parsed_record(outcome.parsed, identifiers=False)
+            )
+            added.append(paper_id)
+            pending += 1
+        if paper_id and status in {
+            str(PdfImportStatus.MATCHED),
+            str(PdfImportStatus.LOCAL_SEED),
+            str(PdfImportStatus.NEEDS_CONFIRMATION),
+        }:
+            seeds.append(paper_id)
         row = build_import_item(
             item_id=item_id,
             attachment=Attachment(
@@ -1683,7 +1873,11 @@ def run_import(state: V32State, project: V32Project, job: Any) -> dict[str, Any]
             display_name=display_name,
             status=PdfImportStatus(match.status),
             match=match,
-            error_code=None if paper_id else (match.conflicts[0] if match.conflicts else None),
+            error_code=(
+                None
+                if paper_id and status != str(PdfImportStatus.NEEDS_CONFIRMATION)
+                else (match.conflicts[0] if match.conflicts else None)
+            ),
         )
         # ``match.paper_id`` is only the candidate's id for a *matched* item;
         # a local seed's identity is the record this import just created.
@@ -1703,21 +1897,109 @@ def run_import(state: V32State, project: V32Project, job: Any) -> dict[str, Any]
     state.store.save(project)
     with job.lock:
         job.doc["import_id"] = import_id
+    seeds = list(dict.fromkeys(seeds))
+    discover_job = record_import_seeds(state, project, job, seeds) if seeds else None
+
+    # Doc 16 批次边界: success and pending confirmation together are partial;
+    # nothing parsed and no usable seed is failed.
+    stop_reasons: list[str] = []
+    if failed:
+        stop_reasons.append("import_items_failed")
+    if pending:
+        stop_reasons.append("import_needs_confirmation")
+    batch_seeds = [
+        row.get("paper_id")
+        for row in (record.get("items") or {}).values()
+        if row.get("paper_id")
+        and str(row.get("status")) in {"matched", "local_seed", "needs_confirmation"}
+    ]
+    if not succeeded and not seeds and not batch_seeds and not _seed_paper_ids(project):
+        outcome_name, coverage_status = "failed", CoverageStatus.FAILED
+    elif failed or pending:
+        outcome_name, coverage_status = "partial", CoverageStatus.PARTIAL
+    else:
+        outcome_name, coverage_status = "succeeded", CoverageStatus.WITHIN_BUDGET
     coverage = coverage_dto(
-        status=str(CoverageStatus.WITHIN_BUDGET if not failed else CoverageStatus.PARTIAL),
+        status=str(coverage_status),
         candidate_count=len(project.doc.get("papers", {})),
-        stop_reasons=[] if not failed else ["import_items_failed"],
+        stop_reasons=stop_reasons,
         scope="pdf_import",
     )
     return {
-        "outcome": "succeeded" if not failed else "partial",
+        "outcome": outcome_name,
         "coverage": coverage,
         "import_id": import_id,
         "items_ok": succeeded,
         "items_failed": failed,
+        "items_pending": pending,
         "paper_ids": added,
+        "seed_paper_ids": seeds,
+        "discover_job_id": discover_job.job_id if discover_job is not None else None,
         "error_codes": [] if not failed else ["import_items_failed"],
     }
+
+
+#: Per-seed abstract budget in the import-derived research text.
+_SEED_ABSTRACT_CHARS = 300
+#: Same ceiling ``DiscoverRequest.research_text`` has.
+_SEED_TEXT_MAX_CHARS = 3000
+
+
+def seed_research_text(project: V32Project, seeds: Sequence[str]) -> str:
+    """Research text for discovery built from the seeds' titles and abstracts."""
+    parts: list[str] = []
+    papers = project.doc.get("papers") or {}
+    for paper_id in seeds:
+        record = papers.get(str(paper_id)) or {}
+        title = re.sub(r"\s+", " ", str(record.get("title") or "")).strip()
+        abstract = re.sub(r"\s+", " ", str(record.get("abstract") or "")).strip()[:_SEED_ABSTRACT_CHARS]
+        text = ". ".join(part for part in (title, abstract) if part)
+        if text:
+            parts.append(text)
+    return "\n".join(parts)[:_SEED_TEXT_MAX_CHARS].strip()
+
+
+def record_import_seeds(state: V32State, project: V32Project, job: Any, seeds: Sequence[str]) -> Any:
+    """Make imported papers the project's seeds and start discovery from them.
+
+    Doc 02 「从已有文献开始」: matched files become seeds and local seeds continue
+    discovery by title/abstract.  The seed origin is ``upload`` (the contract's
+    enum value for an imported file); the user's own anchor text is never
+    overwritten.  Returns the queued ``discover`` job, or ``None``.
+    """
+    for paper_id in seeds:
+        row = (project.doc.get("project_papers") or {}).get(str(paper_id))
+        if row is not None and row.get("seed_origin") in (None, "", "none"):
+            row["seed_origin"] = "upload"
+    anchor = dict(project.doc.get("anchor") or {})
+    existing = [str(pid) for pid in (anchor.get("seed_paper_ids") or []) if pid]
+    merged = list(dict.fromkeys(existing + [str(pid) for pid in seeds]))
+    anchor["context_version"] = project.context_version + 1
+    state.store.set_anchor(project, anchor, seeds=merged)
+    text = seed_research_text(project, seeds)
+    project.doc["seed_research_text"] = text
+    model_revision = state.ai_model_revision
+    digest = config_hash(as_of_year(), model_revision)
+    state.store.set_config_hash(project, digest, model_revision)
+    state.store.save(project)
+    if not text:
+        return None
+    try:
+        return state.jobs.submit(
+            project,
+            "discover",
+            stage=str(JobStage.QUEUED),
+            priority=True,
+            parent_job_id=getattr(job, "job_id", None),
+            mode=str(project.doc.get("ai_mode") or "basic"),
+            research_text=text,
+            config_hash=digest,
+            model_revision=model_revision,
+            session_ref=getattr(job, "session_ref", None),
+        )
+    except V32Error:
+        # Queue full: the seeds are recorded; the user can start discovery.
+        return None
 
 
 def _item_failure(item: Mapping[str, Any], code: str) -> dict[str, Any]:
@@ -1730,17 +2012,22 @@ def _item_failure(item: Mapping[str, Any], code: str) -> dict[str, Any]:
     }
 
 
-def _parsed_record(parsed: Any) -> dict[str, Any]:
-    """A local seed built from parsed PDF metadata (identifiers stay aliases)."""
-    aliases = {str(value) for value in [parsed.doi, *(parsed.doi_candidates or [])] if value}
+def _parsed_record(parsed: Any, *, identifiers: bool = True) -> dict[str, Any]:
+    """A local seed built from parsed PDF metadata.
+
+    Only the parsed DOI becomes an alias (doc 16/AC-27): another DOI seen in the
+    first pages may be a cited work, and aliasing it would merge identities.
+    ``identifiers=False`` holds an uncertain item with no identifier at all.
+    """
+    doi = parsed.doi if identifiers else None
     return {
         "paper_id": None,
         "title": parsed.title or "",
         "authors": list(parsed.authors or []),
         "year": parsed.year,
         "abstract": parsed.abstract,
-        "doi": parsed.doi,
-        "aliases": sorted(aliases),
+        "doi": doi,
+        "aliases": [str(doi)] if doi else [],
     }
 
 
@@ -1914,7 +2201,7 @@ def import_batch_dto(project: V32Project, import_id: str) -> dict[str, Any]:
     }
 
 
-def overview_payload(state: V32State, project: V32Project) -> dict[str, Any]:
+def overview_payload(state: V32State, project: V32Project, session: Any = None) -> dict[str, Any]:
     """The ``$defs/Overview`` for a project, built with or without a model.
 
     Doc 17 and AC-01: with zero user marks the page is still real — it is built
@@ -1970,9 +2257,11 @@ def overview_payload(state: V32State, project: V32Project) -> dict[str, Any]:
             }
             for entry in community.communities
         ]
+    # Basic mode never calls a model; AI mode uses this session's own adapter.
+    adapter = resolve_ai(state, session, project.doc.get("ai_mode"))
     leads: list[dict[str, Any]] = []
     if branch_list:
-        leads = derive_leads(view, communities=branch_list, edges=edges, adapter=state.ai())
+        leads = derive_leads(view, communities=branch_list, edges=edges, adapter=adapter)
     return build_overview(
         view,
         branches=branch_list,
@@ -1980,7 +2269,7 @@ def overview_payload(state: V32State, project: V32Project) -> dict[str, Any]:
         trends=trends,
         leads=leads,
         coverage=coverage,
-        adapter=state.ai(),
+        adapter=adapter,
     )
 
 
@@ -1990,6 +2279,7 @@ def register_handlers(state: V32State) -> None:
     state.jobs.register("expand", lambda project, job: run_expand(state, project, job))
     state.jobs.register("rerank", lambda project, job: run_rerank(state, project, job))
     state.jobs.register("ai_rerank", lambda project, job: run_ai_rerank(state, project, job))
+    state.jobs.register("intent", lambda project, job: run_intent(state, project, job))
     state.jobs.register("import", lambda project, job: run_import(state, project, job))
     state.jobs.register("zotero_import", lambda project, job: run_zotero_import(state, project, job))
     state.jobs.register("zotero_export", lambda project, job: run_zotero_export(state, project, job))

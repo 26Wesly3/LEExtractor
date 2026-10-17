@@ -131,11 +131,11 @@ def _result(state, body):
     return state.jobs.jobs[body["job_id"]].doc["result"]
 
 
-def _discover(client, state, csrf, pid, key="discover-01"):
+def _discover(client, state, csrf, pid, key="discover-01", mode="basic"):
     response = client.post(
         f"/api/v3/projects/{pid}/discover",
         json={"expected_revision": 1, "research_text": "plant learning", "seed_paper_ids": [],
-              "mode": "basic"},
+              "mode": mode},
         headers=_headers(csrf, key),
     )
     assert response.status_code == 202, response.text
@@ -412,7 +412,8 @@ def test_the_ai_window_is_recommended_only_and_runs_after_the_local_commit(env, 
     client, state = env(sources)
     csrf = _csrf(client)
     pid = _project(client, csrf)
-    _discover(client, state, csrf, pid)
+    # Doc 05: only AI-enhanced mode may call a model; basic mode never does.
+    _discover(client, state, csrf, pid, mode="ai_enhanced")
     adapter = RecordingAdapter(state, pid)
     # The rerank route resolves the session's model adapter; inject the fake there.
     monkeypatch.setattr(api_mod, "_resolve_model_adapter", lambda state, session: adapter)

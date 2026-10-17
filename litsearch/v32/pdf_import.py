@@ -1425,9 +1425,19 @@ def match_parsed(
 
     parsed_doi = _normalize_doi_value(parsed.doi) if parsed.doi else ""
     top_conflicts = _candidate_conflicts(parsed, scored[0][2]) if scored else []
-    doi_agrees = bool(parsed_doi) and any(
-        parsed_doi == (_candidate_doi(row[2]) or "") for row in scored
+    # The candidate whose DOI agrees with the parsed one (not merely the top row).
+    doi_row = next(
+        (row for row in scored if parsed_doi and parsed_doi == (_candidate_doi(row[2]) or "")),
+        None,
     )
+    doi_agrees = doi_row is not None
+    # AC-27: more than one distinct DOI in the front matter is an identity the
+    # user must confirm; it never auto-matches and never becomes two aliases.
+    front_dois = {
+        normalized
+        for value in [parsed.doi, *(parsed.doi_candidates or [])]
+        if value and (normalized := _normalize_doi_value(str(value)))
+    }
 
     public_candidates = [
         MatchCandidate(
@@ -1452,15 +1462,32 @@ def match_parsed(
         and strong_margin
         and not top_conflicts
     )
+    # Doc 16: DOI agreement plus title similarity >= doi_title_similarity is
+    # sufficient on its own; no overall score floor applies to it.
     auto_doi_ok = (
-        doi_agrees
-        and top_score is not None
-        and top_score >= candidate_min
-        and top_title >= doi_title_min
-        and not top_conflicts
+        doi_row is not None
+        and doi_row[1] >= doi_title_min
+        and not _candidate_conflicts(parsed, doi_row[2])
     )
 
-    if scored and (auto_score_ok or auto_doi_ok):
+    if len(front_dois) > 1:
+        return MatchOutcome(
+            status=ImportStatus.NEEDS_CONFIRMATION,
+            paper_id=None,
+            candidates=public_candidates,
+            match_score=top_score,
+            conflicts=[ERROR_IDENTIFIER_CONFLICT],
+        )
+
+    if scored and auto_doi_ok:
+        return MatchOutcome(
+            status=ImportStatus.MATCHED,
+            paper_id=_candidate_id(doi_row[2]) or None,
+            candidates=public_candidates,
+            match_score=doi_row[0],
+            conflicts=[],
+        )
+    if scored and auto_score_ok:
         return MatchOutcome(
             status=ImportStatus.MATCHED,
             paper_id=_candidate_id(scored[0][2]) or None,
@@ -1469,7 +1496,7 @@ def match_parsed(
             conflicts=[],
         )
 
-    if top_score is not None and top_score >= candidate_min:
+    if doi_row is not None or (top_score is not None and top_score >= candidate_min):
         # A conflicting strong identifier, a DOI whose title disagrees, an
         # ambiguous margin or a merely similar title: the user decides.
         if top_conflicts:
