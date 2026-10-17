@@ -909,7 +909,7 @@ if (props.projectId) {
 .le32-progress { margin: 14px 0 6px; }
 .le32-progress-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 6px; font-size: 13px; color: var(--text-2); }
 .le32-progress-track { position: relative; height: 4px; border-radius: 999px; background: rgba(0, 0, 0, .08); overflow: hidden; }
-.le32-progress-fill { height: 100%; width: 0; border-radius: 999px; background: var(--ink, #18181b); transition: width .35s ease; }
+.le32-progress-fill { height: 100%; width: 0; border-radius: 999px; background: var(--ink); transition: width .35s ease; }
 .le32-progress-track.is-indeterminate .le32-progress-fill { width: 35%; animation: le32-progress-slide 1.2s ease-in-out infinite; }
 @keyframes le32-progress-slide {
   0% { transform: translateX(-100%); }
