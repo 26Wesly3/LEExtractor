@@ -94,7 +94,7 @@ const AREAS = [
       zh: '基础模式只使用本地排序，不调用远程模型；AI 增强会把题名与摘要等元数据发送给所配置的模型服务。',
       en: 'Basic mode uses the local ranking only and calls no remote model. AI enhanced sends metadata such as titles and abstracts to the configured model service.',
     },
-    providers: [{ id: 'ai_model', label: { zh: '模型服务凭据', en: 'Model service credential' } }],
+    providers: [{ id: 'ai_model', label: { zh: 'API-key', en: 'API key' } }],
     // 契约里的 endpoint_profile_id 就是「用哪一家」，model 是模型名。
     // 之前只有一个笼统的凭据槽，填了 Key 也不知道该发去哪家服务。
     profiles: [

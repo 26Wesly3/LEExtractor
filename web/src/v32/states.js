@@ -150,10 +150,10 @@ export function resolvePinned(pinnedId, items) {
 }
 
 export const STAGES = Object.freeze([
-  { key: 'anchors', zh: '研究起点', en: 'Research anchors' },
-  { key: 'papers', zh: '核心文献', en: 'Core literature' },
-  { key: 'threads', zh: '研究脉络', en: 'Research threads' },
-  { key: 'insight', zh: '研究洞察', en: 'Research insight' },
+  { key: 'anchors', zh: '文献检索', en: 'Literature search' },
+  { key: 'papers', zh: '核心文献筛选推荐', en: 'Core literature: screening and recommendations' },
+  { key: 'threads', zh: '研究领域概述', en: 'Field overview' },
+  { key: 'insight', zh: '创新点探索', en: 'Innovation exploration' },
 ])
 
 export function stageLabel(key, lang = 'zh') {

@@ -62,7 +62,7 @@ describe('v3.2 entry choice', () => {
     unmount()
   })
 
-  it('opens a session, creates a topic project and routes to its 研究起点', async () => {
+  it('opens a session, creates a topic project and routes to its 文献检索', async () => {
     const { api, router, unmount } = await mountEntries()
 
     click('[data-v32-entry-action="topic"]')

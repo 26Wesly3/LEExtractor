@@ -1,5 +1,5 @@
 <script setup>
-// v3.2 工作区：研究起点 → 核心文献 → 研究脉络 → 研究洞察。
+// v3.2 工作区：文献检索 → 核心文献筛选推荐 → 研究领域概述 → 创新点探索。
 // 依据 docs/v3.2/05_UX_UI_SPEC.md「页面结构」「文献卡片」「上传与异常」与
 // docs/v3.2/02_USER_WORKFLOW.md。
 //
@@ -35,7 +35,7 @@ const api = props.client || createV32Client()
 
 const page = ref(props.view === 'settings' ? 'settings' : 'workspace')
 // S4：阶段由路由驱动。组件不再自己记住阶段，刷新、前进后退和直接粘贴链接都
-// 落到同一个阶段；未知阶段（例如旧书签）回落到研究起点。
+// 落到同一个阶段；未知阶段（例如旧书签）回落到文献检索。
 const activeStage = computed(() => (STAGES.some(stage => stage.key === props.stage) ? props.stage : 'anchors'))
 const entryMode = ref('')
 const researchText = ref('')
@@ -104,7 +104,7 @@ const JOB_STAGE_COPY = {
   retrieving: ['正在检索来源', 'Retrieving from sources'],
   fast_ranking: ['正在快速排序', 'Fast ranking'],
   enhancing: ['正在完善排序', 'Enhancing the ranking'],
-  mapping: ['正在构建研究脉络', 'Building the research map'],
+  mapping: ['正在生成研究领域概述', 'Building the research map'],
   exporting: ['正在导出', 'Exporting'],
   finished: ['已结束', 'Finished'],
 }
@@ -520,7 +520,7 @@ async function continueDiscovery() {
   }
 }
 
-// 入口选择：**先创建项目，再进入研究起点**。
+// 入口选择：**先创建项目，再进入文献检索**。
 //
 // 这里曾经只写 `entryMode.value = mode; activeStage.value = 'anchors'`：在
 // /v32（路由里没有 projectId）下 Workspace 会渲染入口选择，于是两个主入口
@@ -669,7 +669,7 @@ if (props.projectId) {
 
         <template v-if="activeStage === 'anchors'">
           <section v-if="project?.entry_mode === 'pdf'" class="le32-anchor" data-v32-anchor data-v32-anchor-import>
-            <h2>{{ t('研究起点', 'Research anchors') }}</h2>
+            <h2>{{ t('文献检索', 'Literature search') }}</h2>
             <p class="muted">{{ t('上传的 PDF 逐文件解析与匹配；已识别或已确认为本地文献的文件作为种子继续发现。','Each uploaded PDF is parsed and matched; files that matched or continued as local seeds become discovery seeds.') }}</p>
             <UploadPanel
               :client="client"
@@ -681,7 +681,7 @@ if (props.projectId) {
             />
           </section>
           <section v-else class="le32-anchor" data-v32-anchor>
-            <h2>{{ t('研究起点', 'Research anchors') }}</h2>
+            <h2>{{ t('文献检索', 'Literature search') }}</h2>
             <template v-if="project?.anchor?.original_text">
               <p class="muted">{{ t('已保存的研究意图','The saved research intent') }}</p>
               <p data-v32-anchor-text>{{ project.anchor.original_text }}</p>
@@ -719,7 +719,7 @@ if (props.projectId) {
         <template v-else-if="activeStage === 'papers'">
           <section class="le32-papers" data-v32-papers>
             <div class="le32-papers-head">
-              <h2>{{ t('核心文献', 'Core literature') }}</h2>
+              <h2>{{ t('核心文献筛选推荐', 'Core literature: screening and recommendations') }}</h2>
               <span class="muted" data-v32-snapshot>{{ snapshot }}</span>
               <ExportMenu :client="client" :project-id="projectId" :lang="lang" />
             </div>
@@ -767,7 +767,7 @@ if (props.projectId) {
 
         <template v-else-if="activeStage === 'threads'">
           <section class="le32-threads" data-v32-threads>
-            <h2>{{ t('研究脉络', 'Research threads') }}</h2>
+            <h2>{{ t('研究领域概述', 'Field overview') }}</h2>
             <p v-if="!insight" class="muted">{{ t('研究工作区尚未生成分支结构。','No branch structure has been generated for this project yet.') }}</p>
             <template v-else>
               <div v-if="insight.branches.length" class="le32-branch-grid">
@@ -797,7 +797,7 @@ if (props.projectId) {
         <template v-else>
           <section class="le32-insight" data-v32-insight>
             <div class="le32-papers-head">
-              <h2>{{ t('研究洞察', 'Research insight') }}</h2>
+              <h2>{{ t('创新点探索', 'Innovation exploration') }}</h2>
               <ExportMenu :client="client" :project-id="projectId" :lang="lang" />
             </div>
             <p v-if="!insight" class="muted">{{ t('概览尚未生成。','The overview has not been generated yet.') }}</p>

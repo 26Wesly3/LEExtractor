@@ -80,7 +80,7 @@ describe('AppNav', () => {
     const items = [...document.querySelectorAll('.navmap__item')]
     expect(items).toHaveLength(9)
     expect(items.map(node => node.querySelector('.navmap__name').textContent.trim())).toEqual([
-      '首页', '新研究', '研究起点', '核心文献', '研究脉络', '研究洞察', '导出', '全部项目', '设置',
+      '首页', '新研究', '文献检索', '核心文献筛选推荐', '研究领域概述', '创新点探索', '导出', '全部项目', '设置',
     ])
     expect(items[0].querySelector('.navmap__idx').textContent).toBe('01')
     expect(items[0].querySelector('.navmap__desc').textContent.length).toBeGreaterThan(4)
@@ -91,7 +91,7 @@ describe('AppNav', () => {
     await openMenu()
     const current = document.querySelector('.navmap__item.current')
     expect(current, 'exactly one current item').toBeTruthy()
-    expect(current.querySelector('.navmap__name').textContent.trim()).toBe('研究脉络')
+    expect(current.querySelector('.navmap__name').textContent.trim()).toBe('研究领域概述')
     expect(current.getAttribute('aria-current')).toBe('page')
   })
 
@@ -159,12 +159,12 @@ describe('AppNav', () => {
     const bar = document.querySelector('.le-nav-stages')
     expect(bar, 'a workspace route must show the stage bar').toBeTruthy()
     const links = [...bar.querySelectorAll('.le-nav-stage')]
-    expect(links.map(node => node.textContent.trim())).toEqual(['研究起点', '核心文献', '研究脉络', '研究洞察'])
+    expect(links.map(node => node.textContent.trim())).toEqual(['文献检索', '核心文献筛选推荐', '研究领域概述', '创新点探索'])
     expect(links.map(node => node.getAttribute('href'))).toEqual([
       `/projects/${PROJECT}/anchors`, `/projects/${PROJECT}/papers`, `/projects/${PROJECT}/threads`, `/projects/${PROJECT}/insight`,
     ])
     const current = links.find(node => node.getAttribute('aria-current') === 'step')
-    expect(current.textContent.trim()).toBe('研究脉络')
+    expect(current.textContent.trim()).toBe('研究领域概述')
     // roving tabindex：只有当前项在 Tab 序列里，左右键在项之间移动焦点。
     expect(links.map(node => node.getAttribute('tabindex'))).toEqual(['-1', '-1', '0', '-1'])
     links[2].focus()

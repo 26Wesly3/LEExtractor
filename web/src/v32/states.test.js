@@ -83,7 +83,8 @@ describe('workspace states', () => {
 
   it('names the four stages in order', () => {
     expect(STAGES.map(stage => stage.key)).toEqual(['anchors', 'papers', 'threads', 'insight'])
-    expect(stageLabel('papers')).toBe('核心文献')
-    expect(stageLabel('insight', 'en')).toBe('Research insight')
+    expect(STAGES.map(stage => stage.zh)).toEqual(['文献检索', '核心文献筛选推荐', '研究领域概述', '创新点探索'])
+    expect(stageLabel('papers')).toBe('核心文献筛选推荐')
+    expect(stageLabel('insight', 'en')).toBe('Innovation exploration')
   })
 })

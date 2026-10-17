@@ -6,10 +6,10 @@
 import { STAGES } from '../v32/states.js'
 
 const STAGE_DESC = {
-  anchors: { zh: '研究方向与检索起点', en: 'Research direction and starting points' },
-  papers: { zh: '核心文献与判断', en: 'Core literature and decisions' },
-  threads: { zh: '引文脉络与证据版图', en: 'Citation threads and the evidence landscape' },
-  insight: { zh: '研究概况与切入点', en: 'Overview and entry points' },
+  anchors: { zh: '输入方向或 PDF，检索真实来源', en: 'Search real sources from a direction or PDFs' },
+  papers: { zh: '排序推荐与人工筛选', en: 'Ranked recommendations and screening' },
+  threads: { zh: '领域版图、主题与时间线', en: 'Field map, topics and timeline' },
+  insight: { zh: '可检验的创新点与线索', en: 'Testable innovation points and leads' },
 }
 
 export function buildMenu({ t, lang, hasProject }) {
