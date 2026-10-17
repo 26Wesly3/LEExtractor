@@ -278,6 +278,12 @@ class ModelConfigBody(_Body):
     persist: bool = False
 
 
+class ZoteroLocalImportBody(RevisionBody):
+    """S11：把本机 Zotero 里选中的条目导入当前项目。"""
+
+    item_keys: list[str] = Field(min_length=1, max_length=500)
+
+
 class ZoteroImportBody(RevisionBody):
     library_type: _literal("ZoteroImportRequest", "library_type")
     library_id: _Id
@@ -1146,6 +1152,65 @@ def build_router(state: V32State) -> APIRouter:
 
         rows = venue_cache.summary(state.data_dir, limit=max(1, min(int(limit), 200)))
         return {"items": rows, "total": len(rows)}
+
+    # -- local Zotero (S11) ----------------------------------------------
+    # 只读本机 Zotero 的本地 API（127.0.0.1:23119），不写库、不需要 Web API Key。
+
+    @router.get("/zotero/local/status")
+    def zotero_local_status(request: Request) -> dict[str, Any]:
+        _session(state, request)
+        from litsearch.v32 import zotero_local
+
+        return zotero_local.status()
+
+    @router.get("/zotero/local/collections")
+    def zotero_local_collections(request: Request) -> dict[str, Any]:
+        _session(state, request)
+        from litsearch.v32 import zotero_local
+
+        return {"items": zotero_local.collections()}
+
+    @router.get("/zotero/local/items")
+    def zotero_local_items(
+        request: Request, q: str = "", collection: str = "", limit: int = 25, offset: int = 0
+    ) -> dict[str, Any]:
+        _session(state, request)
+        from litsearch.v32 import zotero_local
+
+        rows = zotero_local.items(query=q, collection=collection, limit=limit, offset=offset)
+        return {"items": rows, "total": len(rows)}
+
+    @router.post("/projects/{pid}/zotero-local/import", status_code=201)
+    def import_from_local_zotero(
+        request: Request, pid: str, body: ZoteroLocalImportBody
+    ) -> dict[str, Any]:
+        session = _mutate(state, request)
+        project = _owned_project(state, session, pid)
+        state.store.check_revision(project, body.expected_revision)
+        from litsearch.v32 import zotero_local
+
+        rows = zotero_local.fetch_many(body.item_keys)
+        before = len(project.doc.get("papers", {}))
+        paper_ids: list[str] = []
+        for row in rows:
+            paper_ids.append(state.store.upsert_paper(project, zotero_local.to_paper(row)))
+        created = len(project.doc.get("papers", {})) - before
+        if paper_ids:
+            state.store.save(project, touch_corpus=True)
+            # 导入的条目是本项目真实持有的记录，重排一次，列表才有排序可用。
+            try:
+                from litsearch.v32.pipeline import rank_project
+
+                rank_project(state, project)
+            except Exception:  # noqa: BLE001 - 排序失败不该丢掉已导入的记录
+                pass
+        return {
+            "imported": len(paper_ids),
+            "created": max(0, created),
+            "paper_ids": paper_ids,
+            "revision": project.revision,
+            "corpus_version": project.corpus_version,
+        }
 
     # -- model endpoint (S9) ----------------------------------------------
     # 常见供应商预设 + 中转站 + 拉模型列表 + 「记住在本机」。

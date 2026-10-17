@@ -21,6 +21,7 @@ import EntryChoice from './EntryChoice.vue'
 import PaperCard from './PaperCard.vue'
 import SettingsPanels from './SettingsPanels.vue'
 import UploadPanel from './UploadPanel.vue'
+import ZoteroLocalPanel from './ZoteroLocalPanel.vue'
 
 const props = defineProps({
   client: { type: Object, default: null },
@@ -499,6 +500,32 @@ async function onImportSettled() {
   await loadOverview()
 }
 
+/** S11：从本机 Zotero 导入完成后，语料和概览都要跟着刷新。 */
+async function onZoteroImported(result) {
+  notice.value = t(
+    `已从本机 Zotero 导入 ${result?.imported ?? 0} 条。`,
+    `Imported ${result?.imported ?? 0} items from the local Zotero.`,
+  )
+  await loadProject()
+  await loadPapers({ keepAnchor: false })
+  await loadOverview()
+}
+
+/** S11：Zotero 用侧栏接入，开关写在 URL 里（和 ?paper= 同一套做法）。 */
+const zoteroOpen = computed(() => Boolean(injectedRoute && route.query.zotero === '1'))
+
+function openZotero() {
+  if (!injectedRoute) return
+  router.push({ query: { ...route.query, zotero: '1' } })
+}
+
+function closeZotero() {
+  if (!injectedRoute) return
+  const query = { ...route.query }
+  delete query.zotero
+  router.push({ query })
+}
+
 async function judge({ paperId, value, reason, exclusionReason }) {
   if (!paperId) return
   const before = judged[paperId]
@@ -788,6 +815,8 @@ if (props.projectId) {
               <p class="muted" data-v32-mode-note>{{ modelMode === 'ai_enhanced' ? t('将把题名与摘要等元数据发送给配置的模型服务。','Titles and abstracts are sent to the configured model service.') : t('不调用任何远程模型。','No remote model is called.') }}</p>
               <button type="button" class="le32-primary" :disabled="busy || !researchText.trim()" data-v32-discover @click="startDiscovery">{{ t('开始发现核心文献', 'Discover core literature') }}</button>
             </template>
+            <!-- S11：本机 Zotero 以侧栏方式接入，不占正文版面。 -->
+            <button type="button" class="le32-action" data-v32-zotero-open @click="openZotero">{{ t('从本机 Zotero 导入', 'Import from local Zotero') }}</button>
           </section>
         </template>
 
@@ -796,6 +825,7 @@ if (props.projectId) {
             <div class="le32-papers-head">
               <h2>{{ t('核心文献筛选推荐', 'Core literature: screening and recommendations') }}</h2>
               <span class="muted" data-v32-snapshot>{{ snapshot }}</span>
+              <button type="button" class="le32-action" data-v32-zotero-open="papers" @click="openZotero">{{ t('从本机 Zotero 导入', 'Import from local Zotero') }}</button>
               <ExportMenu :client="client" :project-id="projectId" :lang="lang" />
             </div>
             <div class="le32-view-row">
@@ -983,11 +1013,30 @@ if (props.projectId) {
       <h4>{{ t('排序依据', 'Ranking basis') }}</h4>
       <p class="muted" data-v32-detail-score>{{ detailScore }}</p>
     </aside>
+
+    <!-- S11：本机 Zotero 侧栏。与文献详情用同一个抽屉外观，状态在 URL 里（?zotero=1），
+         刷新与分享链接都能回到同一个侧栏。 -->
+    <aside v-if="zoteroOpen" class="le32-drawer is-open" data-v32-zotero-drawer role="dialog" :aria-label="t('本机 Zotero', 'Local Zotero')">
+      <div class="le32-drawer-head">
+        <span class="eyebrow">{{ t('本机 Zotero', 'Local Zotero') }}</span>
+        <button type="button" class="le32-action" data-v32-zotero-drawer-close @click="closeZotero">{{ t('关闭', 'Close') }}</button>
+      </div>
+      <ZoteroLocalPanel
+        :client="client"
+        :project-id="projectId"
+        :revision="project?.revision ?? 1"
+        :lang="lang"
+        @imported="onZoteroImported"
+      />
+    </aside>
   </div>
 </template>
 
 <style scoped>
 .le32-workspace { max-width: 1180px; margin: 0 auto; padding: var(--s-6) var(--gutter) var(--s-16); }
+/* 侧栏开关不占整行：它是动作，不是表单。 */
+.le32-anchor > .le32-action { width: auto; justify-self: start; align-self: flex-start; margin-top: var(--s-3); }
+.le32-papers-head > .le32-action { width: auto; }
 .le32-thread-facts { margin: var(--s-2) 0 var(--s-4); }
 .le32-venue-note { font-size: 12.5px; margin: var(--s-2) 0 var(--s-5); }
 /* S4：阶段条移到 shell/AppNav.vue（.le-nav-*），这里不再保留 .le32-stage-* 规则。 */

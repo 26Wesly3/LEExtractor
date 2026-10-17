@@ -296,6 +296,15 @@ export function createV32Client({
     // S10：本地期刊缓存（出现次数 + 本地 CCF 分区）。
     venueCache: (limit = 50) => read('/venues', { limit }),
 
+    // S11：本机 Zotero（只读本地 API）。
+    zoteroLocalStatus: () => read('/zotero/local/status'),
+
+    zoteroLocalCollections: () => read('/zotero/local/collections'),
+
+    zoteroLocalItems: ({ q = '', collection = '', limit = 30 } = {}) => read('/zotero/local/items', { q, collection, limit }),
+
+    importZoteroLocal: (pid, body) => write('POST', `${project(pid)}/zotero-local/import`, { body, idempotencyRequired: false }),
+
     zoteroImport: (pid, body, options = {}) => write('POST', `${project(pid)}/zotero/import`, { body, action: 'import', scope: 'zotero', retry: options.retry }),
 
     zoteroExportPreview: (pid, body) => write('POST', `${project(pid)}/zotero/export-preview`, { body, idempotencyRequired: false }),
