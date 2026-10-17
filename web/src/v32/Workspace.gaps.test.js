@@ -40,7 +40,7 @@ describe('Workspace gaps', () => {
   // (loadProject -> resume the last active_job_ids entry through pollJob) was
   // refused twice by the permission system in this session, so it is not in the
   // component yet. Remove .skip once that change is applied; the test fails today.
-  it.skip('resumes the last active job after a page refresh and keeps polling it (AC-11)', async () => {
+  it('resumes the last active job after a page refresh and keeps polling it (AC-11)', async () => {
     vi.useFakeTimers()
     const client = fakeClient({ active_job_ids: ['j-old', 'j-live'] })
     const mounted = mountComponent(Workspace, { client, projectId: 'p1', stage: 'papers', lang: 'zh' })

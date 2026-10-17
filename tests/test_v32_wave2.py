@@ -517,3 +517,35 @@ def test_source_manager_scopes_session_keys_without_touching_the_shared_one(monk
     assert shared.s2.api_key() == ""
     # A provider without a session key keeps the deployment's configuration.
     assert scoped.oa.api_key() == "deployment-openalex"
+
+
+def test_confirming_a_candidate_folds_the_placeholder_into_it(env, monkeypatch):
+    """Resolve 'match' on an uncertain file: the local placeholder must not stay as a duplicate."""
+    application, state = env(Sources())
+    title = "Phenotyping mint drought tolerance with imaging"
+    _fake_parser(monkeypatch, {
+        "two-dois.pdf": _parsed(title, doi="10.7777/first", doi_candidates=["10.7777/first", "10.7777/second"]),
+    })
+    with TestClient(application) as client:
+        csrf = _csrf(client)
+        pid = _project(client, csrf, "merge", entry_mode="pdf")
+        project = state.store.projects[pid]
+        existing = state.store.upsert_paper(project, {"paper_id": None, "title": title,
+                                                      "doi": "10.7777/first", "aliases": ["10.7777/first"],
+                                                      "authors": ["A. Researcher"], "year": 2022})
+        state.store.save(project, touch_corpus=True)
+        batch = _import(client, csrf, pid, ["two-dois.pdf"], "import-merge")
+        _wait(client, state, pid, batch["job_id"])
+        item = client.get(f"/api/v3/projects/{pid}/imports/{batch['import_id']}").json()["items"][0]
+        placeholder = item["paper_id"]
+        assert placeholder and placeholder != existing
+        response = client.post(
+            f"/api/v3/projects/{pid}/imports/{batch['import_id']}/resolve",
+            json={"item_id": item["item_id"], "action": "match", "candidate_id": existing,
+                  "expected_revision": project.revision},
+            headers=_headers(csrf, "resolve-merge-1"),
+        )
+        assert response.status_code == 200, response.text
+        assert state.store.resolve_paper_id(project, placeholder) == existing
+        assert placeholder not in project.doc["papers"]
+        assert project.doc["redirects"][placeholder] == existing

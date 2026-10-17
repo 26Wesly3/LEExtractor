@@ -1197,9 +1197,29 @@ def build_router(state: V32State) -> APIRouter:
                 raise V32Error(422, UNPROCESSABLE, "选择匹配时必须提供候选文献")
             if body.candidate_id not in candidates:
                 raise V32Error(422, UNPROCESSABLE, "候选文献不属于该条目", {"item_ids": [str(body.item_id)]})
+            # The uncertain file already has a local placeholder record. Confirming a
+            # candidate must not leave the placeholder behind as a duplicate: attach the
+            # candidate as a paper, then fold the placeholder into it (aliases,
+            # attachments and judgements move, the old id stays a redirect).
+            candidate = candidates[body.candidate_id]
+            kept_id = state.store.resolve_paper_id(project, str(body.candidate_id))
+            if kept_id is None:
+                kept_id = state.store.upsert_paper(
+                    project,
+                    {
+                        "title": str(candidate.get("title") or ""),
+                        "authors": list(candidate.get("authors") or []),
+                        "year": candidate.get("year"),
+                        "doi": candidate.get("doi"),
+                        "aliases": [str(body.candidate_id)],
+                    },
+                )
+            placeholder = str(item.get("paper_id") or "")
+            if placeholder and placeholder != kept_id and placeholder in project.doc["papers"]:
+                kept_id = state.store.merge_identity(project, kept_id, placeholder)
             item["status"] = "matched"
-            item["paper_id"] = body.candidate_id
-            item["match_score"] = candidates[body.candidate_id].get("match_score")
+            item["paper_id"] = kept_id
+            item["match_score"] = candidate.get("match_score")
             item["error_code"] = None
             item["retryable"] = False
         else:

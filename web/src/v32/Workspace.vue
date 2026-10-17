@@ -283,6 +283,9 @@ async function loadProject() {
     const data = await api.getProject(props.projectId)
     project.value = data
     entryMode.value = data?.entry_mode || entryMode.value
+    // AC-11: a refresh resumes the most recent job that is still running.
+    const active = Array.isArray(data?.active_job_ids) ? data.active_job_ids : []
+    if (active.length) pollJob(active[active.length - 1])
   } catch (problem) {
     error.value = errorLine(problem, t('未能读取项目。', 'Could not read the project.'))
   }
@@ -370,7 +373,7 @@ function stopPolling() {
 function pollJob(jobId) {
   stopPolling()
   if (!jobId || typeof setInterval !== 'function') return
-  pollTimer = setInterval(async () => {
+  const tick = async () => {
     if (stopped) return
     try {
       const next = await api.job(props.projectId, jobId)
@@ -385,7 +388,10 @@ function pollJob(jobId) {
         await loadOverview()
       }
     } catch { /* 轮询失败保留既有结果，不打断阅读 */ }
-  }, 1200)
+  }
+  pollTimer = setInterval(tick, 1200)
+  // First check right away, so a refreshed page shows the running job at once.
+  tick()
 }
 
 async function loadOverview() {
