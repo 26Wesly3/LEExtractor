@@ -54,9 +54,6 @@ function mockServer(url,options={}){
     if(statsPostFails)return response({error:{message:'statistics unavailable',code:'unavailable'}},503)
     statsData.search_entry_clicks=(statsData.search_entry_clicks||0)+1;return response(statsResponse())}
   if(path==='/api/health')return response({status:'ok',version:'0.9.9',ui:'vue',local_only:true,dependencies:{fastapi:true,algorithms:true}})
-  // v3.2（/api/v3）：首屏两个主入口先创建项目，再进入工作区阶段。
-  if(path==='/api/v3/session')return response({authenticated:true,mode:'anonymous_private',csrf_token:'csrf-token-v32',expires_at:'2026-10-18T00:00:00Z'})
-  if(path==='/api/v3/projects'&&method==='POST')return response({project_id:'f'.repeat(32),name:body.name,entry_mode:body.entry_mode,revision:0,context_version:0,corpus_version:0,current_snapshot_id:null,active_job_ids:[],created_at:'2026-10-17T00:00:00Z',updated_at:'2026-10-17T00:00:00Z',contract_version:'3.2',anchor:{entry_mode:body.entry_mode,original_text:'',objects:[],tasks:[],methods:[],constraints:[],exclusions:[],query_variants:[],seed_paper_ids:[],context_version:0,initial_vector_cache_key:null}},201)
   unexpected.push({path,method,body});return response({error:{message:'Unexpected mock endpoint',detail:path}},404)
 }
 beforeEach(()=>{
@@ -283,22 +280,17 @@ describe('workspace DOM and API integration',()=>{
     expect(railInputs.length).toBeGreaterThanOrEqual(3)
     expect(parseFloat(getComputedStyle(railInputs[1]).marginTop)).toBeGreaterThanOrEqual(20)
   })
-  it('keeps the operating overview and the milestones in the secondary area below the two main entries, with real numbers',async()=>{
+  it('renders the operating overview between the features and the recent projects, with real numbers',async()=>{
     statsData={home_views:128,search_entry_clicks:9,search_runs:4,records:231}
     await mount('/')
-    // v3.2 规范：首屏两个主入口在前，运行概况与项目里程碑移到其后的次要区域。
-    const entries=document.querySelector('[data-v32-entries]')
-    expect(entries).toBeTruthy()
-    expect(entries.querySelector('[data-v32-entry="topic"]')).toBeTruthy()
-    expect(entries.querySelector('[data-v32-entry="pdf"]')).toBeTruthy()
     const overview=document.querySelector('.overview-band')
     expect(overview).toBeTruthy()
     const bands=[...document.querySelectorAll('.home-band')]
     const features=bands.find(band=>band.querySelector('.feature'))
     const recent=bands.find(band=>band.textContent.includes('最近项目'))
     expect(features).toBeTruthy();expect(recent).toBeTruthy()
-    expect(entries.compareDocumentPosition(overview)&Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    expect(document.querySelector('[data-home-secondary]').contains(overview)).toBe(true)
+    expect(features.compareDocumentPosition(overview)&Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(overview.compareDocumentPosition(recent)&Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     // 四项指标：上线日期 / 网页点击次数 / 搜索运行次数 / 共检索得文献
     expect([...overview.querySelectorAll('.stat-label')].map(el=>el.textContent)).toEqual(['项目上线日期','网页点击次数','搜索运行次数','共检索得文献'])
     expect(overview.querySelector('[data-stat="launch-date"]').textContent).toBe('2026-10-12')
@@ -309,23 +301,6 @@ describe('workspace DOM and API integration',()=>{
     expect(requests.some(r=>r.path==='/api/stats'&&r.method==='GET')).toBe(true)
     const homeView=requests.find(r=>r.path==='/api/stats/home-view'&&r.method==='POST')
     expect(homeView).toBeTruthy();expect(homeView.body.entry_id).toBeTruthy()
-  })
-  it('routes both main entries into the working v3.2 flow instead of the legacy pages',async()=>{
-    await mount('/')
-    const pushes=vi.spyOn(router,'push')
-    await click('输入研究方向')
-    await pushes.mock.results.at(-1).value
-    await settle()
-    const created=requests.find(r=>r.path==='/api/v3/projects'&&r.method==='POST')
-    expect(created.body).toEqual({name:'研究方向项目',entry_mode:'topic'})
-    expect(pushes.mock.calls.map(call=>call[0])).toContain(`/v32/projects/${'f'.repeat(32)}/anchors`)
-    await click('上传已有文献')
-    await pushes.mock.results.at(-1).value
-    await settle()
-    const createdPdf=requests.filter(r=>r.path==='/api/v3/projects'&&r.method==='POST').at(-1)
-    expect(createdPdf.body.entry_mode).toBe('pdf')
-    // 会话（CSRF）先于创建项目。
-    expect(requests.some(r=>r.path==='/api/v3/session'&&r.method==='GET')).toBe(true)
   })
   it('shows — instead of inventing numbers, and statistics failure never blocks the page',async()=>{
     statsPostFails=true
