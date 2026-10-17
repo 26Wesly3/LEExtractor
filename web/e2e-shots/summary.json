@@ -7,7 +7,7 @@
     },
     {
       "step": "create project + enter workspace",
-      "path": "/v32/projects/2371798719c4473bb38dff6e9c5dc157/anchors"
+      "path": "/v32/projects/39076429e06f4d469054d6878ec01cfc/anchors"
     },
     {
       "step": "workspace stage tabs",
@@ -27,24 +27,24 @@
     },
     {
       "step": "papers stage",
-      "cards": 19,
-      "first_title": "Variation in leaf anatomical traits of grassland plants in different vegetation ",
+      "cards": 20,
+      "first_title": "An explainable vision transformer with transfer learning based efficient drought",
       "coverage": "已获取部分文献，部分来源暂不可用。 查看详情"
     },
     {
       "step": "insight stage",
-      "text_length": 880
+      "text_length": 933
     }
   ],
   "problems": [],
   "shots": [
-    "e2e-shots/01-entries.png",
-    "e2e-shots/02-workspace.png",
-    "e2e-shots/03-typed.png",
-    "e2e-shots/04-progress.png",
-    "e2e-shots/05-finished.png",
-    "e2e-shots/06-papers.png",
-    "e2e-shots/07-insight.png"
+    "e2e-shots-2/01-entries.png",
+    "e2e-shots-2/02-workspace.png",
+    "e2e-shots-2/03-typed.png",
+    "e2e-shots-2/04-progress.png",
+    "e2e-shots-2/05-finished.png",
+    "e2e-shots-2/06-papers.png",
+    "e2e-shots-2/07-insight.png"
   ],
   "ok": true
 }

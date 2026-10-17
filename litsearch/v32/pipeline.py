@@ -236,34 +236,83 @@ def as_of_year() -> int:
     return int(utc_now().year)
 
 
-def query_variants(text: str, *, limit: int | None = None) -> list[dict[str, Any]]:
+def query_variants(
+    text: str,
+    *,
+    limit: int | None = None,
+    source: str = "original",
+    generator_version: str | None = None,
+) -> list[dict[str, Any]]:
     """The query strings this run will actually send, as ``QueryVariant`` rows.
 
-    Only rule-generated variants are produced (the original text plus a
-    keyword-only form); nothing is translated and nothing is invented, so the
-    recorded list is a truthful account of the search.
+    Only rule-generated variants are produced (the submitted text plus a
+    keyword-only form); nothing is invented, so the recorded list is a truthful
+    account of the search.  When a research direction had to be translated, the
+    caller passes ``source="translation"`` and the translation model's revision,
+    because doc 08 requires ``query_variants`` to record the generation rule and
+    the model version.
     """
     budget = int(contracts.discovery()["query_variants"] if limit is None else limit)
     original = str(text or "").strip()
     variants: list[dict[str, Any]] = []
 
-    def _row(value: str, source: str) -> dict[str, Any]:
+    def _row(value: str, origin: str) -> dict[str, Any]:
         return {
             "text": value,
             "language": "zh" if _CJK_RE.search(value) else "en",
-            "source": source,
-            "generator_version": contracts.document_version(),
+            "source": origin,
+            "generator_version": generator_version or contracts.document_version(),
             "confirmed_terms": [],
         }
 
     if original:
-        variants.append(_row(original, "original"))
+        variants.append(_row(original, source))
     tokens = _tokens(original)
     if len(tokens) > 3:
         keyword_form = " ".join(dict.fromkeys(tokens))
         if keyword_form != original:
             variants.append(_row(keyword_form, "rule"))
     return variants[: max(1, budget)]
+
+
+def retrieval_text(original: str) -> dict[str, Any]:
+    """The text actually sent to the sources, plus how it was produced.
+
+    A Chinese research direction cannot be sent to OpenAlex/Crossref/arXiv as-is:
+    they answer with unrelated English records, and the lexical topic signal then
+    scores ~0 for everything, so the list becomes effectively unordered.  The
+    legacy pinned translator is reused here (``litsearch.query_context``); the
+    ORIGINAL stays untouched in the anchor and the translation is recorded with
+    its engine and model revision.  Translation is best effort: when it is
+    unavailable the original text is used and the engine says so, rather than the
+    run silently pretending to have translated.
+    """
+    text = str(original or "").strip()
+    info: dict[str, Any] = {
+        "original": text,
+        "text": text,
+        "engine": "identity",
+        "revision": "",
+        "translated": False,
+    }
+    if not text or not _CJK_RE.search(text):
+        return info
+    try:
+        from litsearch.query_context import prepare_query
+
+        context = prepare_query("", text)
+        translated = str(context.get("translated") or "").strip()
+        if translated and not _CJK_RE.search(translated):
+            info.update(
+                text=translated,
+                engine=str(context.get("engine") or "translation"),
+                revision=str(context.get("revision") or ""),
+                translated=True,
+            )
+    except Exception as exc:  # noqa: BLE001 - translation is best effort, never fatal
+        info["engine"] = "unavailable"
+        info["error"] = type(exc).__name__
+    return info
 
 
 def _tokens(text: Any) -> list[str]:
@@ -294,6 +343,22 @@ def topic_scores(query: str, records: Iterable[Mapping[str, Any]]) -> dict[str, 
         overlap = wanted & set(haystack)
         scores[paper_id] = round_tie(len(overlap) / len(wanted)) or 0.0
     return scores
+
+
+def ranking_query_text(project: V32Project) -> str:
+    """The text the topic signal scores against: the translated query when there is one.
+
+    Scoring an English corpus against a Chinese phrase gives every paper a topic
+    share of roughly zero, which disables the strongest signal (a signal with
+    fewer than two distinct values is switched off entirely) and leaves the list
+    effectively unordered. The translation recorded at discovery time is reused
+    here so retrieval and ranking see the same query.
+    """
+    translation = project.doc.get("query_translation") or {}
+    translated = str(translation.get("translated") or "").strip()
+    if translated:
+        return translated
+    return str((project.doc.get("anchor") or {}).get("original_text") or "").strip()
 
 
 def citation_edges(store: V32Store, project: V32Project) -> list[dict[str, Any]]:
@@ -362,7 +427,7 @@ def rank_project(
     records.sort(key=lambda row: str(row.get("paper_id")))
     paper_ids = [str(row["paper_id"]) for row in records]
 
-    scores = topic_scores(documents["anchor"].get("original_text") or "", records)
+    scores = topic_scores(ranking_query_text(project), records)
     graph = pagerank_signal(citation_edges(state.store, project), paper_ids, config=cfg)
 
     seed_scores: dict[str, float] = {}
@@ -809,8 +874,28 @@ def run_discover(state: V32State, project: V32Project, job: Any) -> dict[str, An
     """Retrieve, save candidates, rank locally, commit a snapshot."""
     state.jobs.set_stage(job, str(JobStage.RETRIEVING), progress=0.1)
     anchor = project.doc.get("anchor") or {}
-    text = str(anchor.get("original_text") or "").strip()
-    variants = query_variants(text)
+    original_text = str(anchor.get("original_text") or "").strip()
+    # 中文研究方向必须先译成英文再检索：直接把中文发给 OpenAlex/Crossref 只会
+    # 拿回无关的英文记录，随后词法主题信号又近乎全 0，列表等于无序。原文保留在
+    # anchor 里不被覆盖，译文与所用模型版本一并记录。
+    translation = retrieval_text(original_text)
+    text = translation["text"]
+    variants = query_variants(
+        text,
+        source="translation" if translation["translated"] else "original",
+        generator_version=translation["revision"] or None,
+    )
+    if translation["translated"]:
+        # 派生检索文本，不属于用户意图，因此不改变 context_version；
+        # 后续由判断触发的重排也要用它，否则重排会再次退回中文打分。
+        project.doc["query_translation"] = {
+            "original": translation["original"],
+            "translated": translation["text"],
+            "engine": translation["engine"],
+            "revision": translation["revision"],
+            "recorded_at": now(),
+        }
+        state.store.save(project)
     outcome = retrieve_candidates(state, project, job, text=text, variants=variants)
 
     saved = _upsert_candidates(state, project, outcome.papers)
@@ -852,6 +937,8 @@ def run_discover(state: V32State, project: V32Project, job: Any) -> dict[str, An
         "recommended_paper_ids": list(ranking.recommended_paper_ids),
         "starter_paper_ids": list(ranking.starter_paper_ids),
         "query_variants": [variant["text"] for variant in variants],
+        "query_translation": project.doc.get("query_translation"),
+        "ranking_query": ranking_query_text(project),
         "ranking_stage": snapshot["ranking_stage"],
         "error_codes": [] if coverage["status"] == str(CoverageStatus.WITHIN_BUDGET) else ["source_failure"],
     }
