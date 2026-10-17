@@ -13,6 +13,7 @@ const paper = (id, title, eligibility = 'recommended') => ({
     year: 2024,
     abstract: 'Abstract text.',
     doi: `10.1000/${id}`,
+    venue: id === 'w1' ? 'Mint Journal' : 'Plant Methods',
     citation_count: 5,
     source_records: [{ provider: 'openalex', external_id: id, source_url: null, retrieved_at: '2026-10-17T00:00:00Z' }],
   },
@@ -293,6 +294,20 @@ describe('Workspace', () => {
     expect(text('[data-v32-leads]')).toContain('建议检索式')
     expect(text('[data-v32-leads]')).toContain('需要进一步核查')
     expect(text('[data-v32-insufficient]')).toContain('证据不足项')
+    mounted.unmount()
+  })
+
+  it('falls back to facts and venue counts when there are no branches (threads stage)', async () => {
+    const overview = { ...OVERVIEW, branches: [], trends: [] }
+    const mounted = mountComponent(Workspace, { client: fakeClient({ overview }), projectId: 'p1', stage: 'threads', lang: 'zh' })
+    await settle(60)
+    // 没有关系数据时不再只给一句"数据不足"，而是把这批文献本身说得清的事实列出来。
+    expect(text('[data-v32-threads-empty]')).toContain('引用')
+    expect(all('[data-v32-threads-facts] li').length).toBeGreaterThan(0)
+    expect(text('[data-v32-threads-facts]')).toContain('当前检索集')
+    // 期刊按出现次数统计；影响因子如实说明"没有授权数据源"。
+    expect(text('[data-v32-journals]')).toContain('Mint Journal')
+    expect(text('[data-v32-venue-note]')).toContain('授权')
     mounted.unmount()
   })
 

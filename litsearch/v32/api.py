@@ -1132,6 +1132,21 @@ def build_router(state: V32State) -> APIRouter:
         session = _session(state, request)
         return _project("CredentialStatuses", state.credentials.payload(session.session_id))
 
+    # -- venue cache (S10) ------------------------------------------------
+
+    @router.get("/venues")
+    def list_venues(request: Request, limit: int = 50) -> dict[str, Any]:
+        """Local journal cache: count per venue plus the bundled CCF rank.
+
+        No licensed impact factor exists locally, so it is not reported here —
+        the DTO simply omits it instead of showing a guess.
+        """
+        _session(state, request)
+        from litsearch.v32 import venue_cache
+
+        rows = venue_cache.summary(state.data_dir, limit=max(1, min(int(limit), 200)))
+        return {"items": rows, "total": len(rows)}
+
     # -- model endpoint (S9) ----------------------------------------------
     # 常见供应商预设 + 中转站 + 拉模型列表 + 「记住在本机」。
 

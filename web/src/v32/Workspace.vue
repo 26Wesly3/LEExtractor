@@ -42,6 +42,8 @@ const researchText = ref('')
 const modelMode = ref('basic')
 const project = ref(props.projectId ? { project_id: props.projectId, revision: 0, entry_mode: 'topic' } : null)
 const items = ref([])
+// 本地期刊缓存（S10）：name/count/ccf_rank，用来给「主要期刊」补分区。
+const venueCacheRows = ref([])
 const snapshotId = ref('')
 const listView = ref('recommended')
 const nextCursor = ref(null)
@@ -155,6 +157,41 @@ const insight = computed(() => {
     scope: data.coverage?.scope || '',
   }
 })
+
+/**
+ * 主要期刊：只统计检索记录里确实存在的期刊名，不猜影响因子。
+ * 记录到的期刊会进本地缓存（GET /venues），缓存自带 CCF 分区（仓库内的
+ * ccf_catalog.json，2026 第七版）；影响因子本机没有授权数据源，所以不显示、
+ * 也不估算，界面直说原因。
+ */
+const venueRankIndex = computed(() => {
+  const index = new Map()
+  for (const row of venueCacheRows.value) {
+    const key = normaliseVenue(row.name)
+    if (key && row.ccf_rank) index.set(key, row.ccf_rank)
+  }
+  return index
+})
+
+const journalRows = computed(() => {
+  const counts = new Map()
+  let known = 0
+  for (const item of items.value) {
+    const paper = item?.paper || item || {}
+    const venue = String(paper.venue || '').trim()
+    if (!venue) continue
+    known += 1
+    counts.set(venue, (counts.get(venue) || 0) + 1)
+  }
+  return [...counts.entries()]
+    .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
+    .slice(0, 8)
+    .map(([venue, count]) => ({ venue, count, share: known ? count / known : 0, ccf: venueRankIndex.value.get(normaliseVenue(venue)) || '' }))
+})
+
+function normaliseVenue(name) {
+  return String(name || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+}
 
 // 研究意图预览（doc 02「从研究方向开始」/ R05）。只读：后端目前没有接受
 // objects / tasks / methods / exclusions 的更新接口（discover 只收 research_text，
@@ -414,6 +451,18 @@ function pollJob(jobId) {
 async function loadOverview() {
   if (!props.projectId) return
   try { overview.value = await api.overview(props.projectId) } catch { overview.value = overview.value }
+  await loadVenueCache()
+}
+
+/** S10：本地期刊缓存（出现次数 + CCF 分区），拿不到就退回按本批统计。 */
+async function loadVenueCache() {
+  if (!props.projectId) return
+  try {
+    const data = await api.venueCache(200)
+    venueCacheRows.value = Array.isArray(data?.items) ? data.items : []
+  } catch {
+    venueCacheRows.value = []
+  }
 }
 
 /** 导入批次完成后刷新语料与概览；面板本身的逐项状态由 UploadPanel 负责。 */
@@ -780,14 +829,23 @@ if (props.projectId) {
                   </ul>
                 </article>
               </div>
-              <p v-else class="empty" data-v32-threads-empty>{{ t('关系数据不足，暂不给出分支结论。','The relationship data is insufficient, so no branch conclusion is offered.') }}</p>
+              <p v-else class="empty" data-v32-threads-empty>{{ t('这批文献之间还没有足够的引用/共引关系，做不出分支聚类。先看这批文献本身说明了什么：','This set does not yet carry enough citation or co-citation links to cluster into branches. What the set itself says:') }}</p>
+              <ul v-if="!insight.branches.length && insight.statements.length" class="brief-list le32-thread-facts" data-v32-threads-facts>
+                <li v-for="row in insight.statements" :key="row.text">{{ row.text }}</li>
+              </ul>
+              <h3>{{ t('主要期刊', 'Main venues') }}</h3>
+              <ul v-if="journalRows.length" class="brief-list" data-v32-journals>
+                <li v-for="row in journalRows" :key="row.venue">{{ row.venue }} · {{ row.count }} {{ t('篇', 'records') }}（{{ Math.round(row.share * 100) }}%）<span v-if="row.ccf" class="badge" :data-v32-venue-rank="row.venue">CCF {{ row.ccf }}</span></li>
+              </ul>
+              <p v-else class="muted" data-v32-journals-empty>{{ t('检索记录里没有期刊字段，无法统计。','The retrieved records carry no venue field, so there is nothing to count.') }}</p>
+              <p class="muted le32-venue-note" data-v32-venue-note>{{ t('期刊名与篇数来自本项目的检索记录，并会存进本地期刊缓存（换项目也能查）；CCF 分区来自仓库自带的 2026 第七版目录。影响因子本机没有授权数据源，因此不显示也不估算。','Venue names and counts come from this project and are kept in a local venue cache; CCF ranks come from the bundled 2026 seventh-edition catalogue. Impact factors have no licensed source here, so they are neither shown nor estimated.') }}</p>
               <h3>{{ t('时间线', 'Timeline') }}</h3>
               <ul class="le32-timeline" data-v32-timeline>
                 <li v-for="point in insight.timeline" :key="point.year === null ? 'unknown' : point.year">{{ point.year === null ? t('年份未知', 'Year unknown') : point.year }} · {{ point.count }}</li>
               </ul>
               <h3>{{ t('检索集内活跃方向', 'Active directions inside the retrieved set') }}</h3>
               <ul v-if="insight.trends.length" class="brief-list" data-v32-trends>
-                <li v-for="trend in insight.trends" :key="trend.branch_id">{{ trend.branch_id }} · {{ trend.recent_count }} / {{ trend.prior_count }}</li>
+                <li v-for="trend in insight.trends" :key="trend.branch_id">{{ t('近三年', 'Last 3 years') }} {{ trend.recent_count }} · {{ t('更早', 'Earlier') }} {{ trend.prior_count }}</li>
               </ul>
               <p v-else class="muted" data-v32-trends-empty>{{ t('暂不足以判断趋势。','There is not enough information to judge a trend.') }}</p>
             </template>
@@ -900,6 +958,8 @@ if (props.projectId) {
 
 <style scoped>
 .le32-workspace { max-width: 1180px; margin: 0 auto; padding: var(--s-6) var(--gutter) var(--s-16); }
+.le32-thread-facts { margin: var(--s-2) 0 var(--s-4); }
+.le32-venue-note { font-size: 12.5px; margin: var(--s-2) 0 var(--s-5); }
 /* S4：阶段条移到 shell/AppNav.vue（.le-nav-*），这里不再保留 .le32-stage-* 规则。 */
 .le32-ranking-stage { font-size: 13px; color: var(--text-2); margin-bottom: var(--s-3); }
 .le32-anchor { border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); padding: var(--s-6); display: flex; flex-direction: column; gap: var(--s-3); }

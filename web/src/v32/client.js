@@ -293,6 +293,9 @@ export function createV32Client({
 
     saveModelConfig: body => write('PUT', '/settings/model', { body, idempotencyRequired: false }),
 
+    // S10：本地期刊缓存（出现次数 + 本地 CCF 分区）。
+    venueCache: (limit = 50) => read('/venues', { limit }),
+
     zoteroImport: (pid, body, options = {}) => write('POST', `${project(pid)}/zotero/import`, { body, action: 'import', scope: 'zotero', retry: options.retry }),
 
     zoteroExportPreview: (pid, body) => write('POST', `${project(pid)}/zotero/export-preview`, { body, idempotencyRequired: false }),

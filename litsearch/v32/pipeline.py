@@ -2239,6 +2239,13 @@ def overview_payload(state: V32State, project: V32Project, session: Any = None) 
 
     records = [dict(record) for record in project.doc.get("papers", {}).values()]
     records.sort(key=lambda row: str(row.get("paper_id")))
+    # S10：把这批文献的期刊记进本地缓存（按项目幂等，不会因刷新而累加）。
+    try:
+        from litsearch.v32 import venue_cache
+
+        venue_cache.record(state.data_dir, project.project_id, records)
+    except Exception:  # noqa: BLE001 - 缓存失败不能影响概览
+        pass
     snapshot = load_current_snapshot(state, project)
     coverage = dict(snapshot.get("coverage") or {}) if snapshot else coverage_dto(
         status=str(CoverageStatus.NO_RESULTS if not records else CoverageStatus.WITHIN_BUDGET),
