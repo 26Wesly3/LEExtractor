@@ -30,6 +30,7 @@ surface or the legacy routes.
 from __future__ import annotations
 
 import hashlib
+import inspect
 import json
 import re
 import threading
@@ -75,6 +76,11 @@ __all__ = [
     "import_batch_dto",
     "overview_payload",
     "load_current_snapshot",
+    "auto_expansion_seeds",
+    "seed_external_id",
+    "schedule_ai_rerank",
+    "run_ai_rerank",
+    "ai_window_ids",
     "retrieve_candidates",
     "retrieve_neighbours",
     "paper_record",
@@ -638,6 +644,16 @@ class RetrievalOutcome:
     raised: str | None = None
     #: True only when the run could not be attempted at all (no provider client).
     unavailable: bool = False
+    #: ``provider -> {"returned", "kept", "cursor"}`` for the round log (doc 02).
+    provider_stats: dict[str, dict[str, Any]] = field(default_factory=dict)
+    #: The monotonic deadline this round ran against (shared by the auto round).
+    deadline: float | None = None
+    #: Seeds actually sent, as ``{"paper_id", "external_id"}`` rows.
+    used_seeds: list[dict[str, str]] = field(default_factory=list)
+    #: Seeds that carry no external identifier a provider could accept.
+    skipped_seeds: list[str] = field(default_factory=list)
+    #: Candidates this round added that the project did not already hold.
+    new_count: int = 0
 
     @property
     def status(self) -> str:
@@ -746,16 +762,122 @@ def record_identity(record: Mapping[str, Any]) -> str:
     return "title:" + title
 
 
+class _BudgetExceeded(Exception):
+    """The round budget ran out before (or while) a provider call finished."""
+
+
+def _accepts_keyword(call: Callable[..., Any], name: str) -> bool:
+    try:
+        parameters = inspect.signature(call).parameters
+    except (TypeError, ValueError):
+        return False
+    return name in parameters
+
+
+def _bounded_call(call: Callable[..., Any], args: Sequence[Any], kwargs: Mapping[str, Any], remaining: float) -> Any:
+    """Run one provider call with at most ``remaining`` seconds of wall clock.
+
+    The remaining round budget is handed to the call as ``timeout`` when it
+    accepts one, and the round stops waiting when the budget is spent either
+    way, so a stalled provider cannot hold the round past its 45 s (doc 02).
+    """
+    if remaining <= 0:
+        raise _BudgetExceeded()
+    arguments = dict(kwargs)
+    if _accepts_keyword(call, "timeout"):
+        arguments["timeout"] = remaining
+    box: dict[str, Any] = {}
+
+    def _target() -> None:
+        try:
+            box["value"] = call(*args, **arguments)
+        except BaseException as exc:  # noqa: BLE001 - re-raised in the caller's thread
+            box["error"] = exc
+
+    worker = threading.Thread(target=_target, name="v32-provider-call", daemon=True)
+    worker.start()
+    worker.join(remaining)
+    if worker.is_alive():
+        raise _BudgetExceeded()
+    if "error" in box:
+        raise box["error"]
+    return box.get("value")
+
+
+def _provider_order(names: Iterable[str]) -> list[str]:
+    """``provider_priority`` first, then any other provider by name: a fixed order."""
+    priority = [str(name) for name in contracts.discovery()["provider_priority"]]
+    present = list(dict.fromkeys(str(name) for name in names))
+    return [name for name in priority if name in present] + sorted(
+        name for name in present if name not in priority
+    )
+
+
+def _round_robin(per_provider: Mapping[str, Sequence[Any]]) -> list[tuple[str, Any]]:
+    """Interleave each provider's rows in the fixed provider order (doc 02 截断轮询)."""
+    order = _provider_order(per_provider)
+    out: list[tuple[str, Any]] = []
+    depth = max((len(per_provider[name]) for name in order), default=0)
+    for index in range(depth):
+        for name in order:
+            rows = per_provider[name]
+            if index < len(rows):
+                out.append((name, rows[index]))
+    return out
+
+
+def _note_provider(outcome: RetrievalOutcome, provider: str, result: Any, returned: int) -> None:
+    stats = outcome.provider_stats.setdefault(provider, {"returned": 0, "kept": 0, "cursor": None})
+    stats["returned"] += int(returned)
+    cursor = getattr(result, "next_cursor", None)
+    if cursor:
+        stats["cursor"] = str(cursor)
+
+
+def _select_round(
+    outcome: RetrievalOutcome,
+    per_provider: Mapping[str, Sequence[dict[str, Any]]],
+    cap: int,
+    *,
+    known: Iterable[str] = (),
+) -> None:
+    """De-duplicate the interleaved rows and keep at most ``cap`` new candidates.
+
+    Only candidates the project does not already hold count against the cap; a
+    record of an already-known work is kept so it can still enrich that record.
+    """
+    existing = set(known)
+    by_identity: dict[str, dict[str, Any]] = {}
+    new_count = 0
+    truncated = False
+    for provider, record in _round_robin(per_provider):
+        identity = record_identity(record)
+        if not identity or identity in by_identity:
+            continue
+        is_new = identity not in existing
+        if is_new and new_count >= cap:
+            truncated = True
+            continue
+        by_identity[identity] = record
+        outcome.provider_stats.setdefault(provider, {"returned": 0, "kept": 0, "cursor": None})["kept"] += 1
+        if is_new:
+            new_count += 1
+    if truncated:
+        outcome.stop_reasons.append("candidate_cap_reached")
+    outcome.papers = list(by_identity.values())
+    outcome.new_count = new_count
+
+
 def retrieve_candidates(
     state: V32State, project: V32Project, job: Any, *, text: str, variants: Sequence[Mapping[str, Any]]
 ) -> RetrievalOutcome:
     """Search every configured provider once, recording each failure by name.
 
     The candidate cap, the round budget and the per-seed limits all come from
-    ``contracts.discovery``.  The single provider client is asked once per round
-    (auto rounds in the contract is 1 this release); a provider that raises is
-    reported in ``failed_sources`` and never rolls back what other providers
-    already returned.
+    ``contracts.discovery``.  The single provider client is asked once per round;
+    a provider that raises is reported in ``failed_sources`` and never rolls back
+    what other providers already returned.  Over the cap, the providers' rows are
+    interleaved in ``provider_priority`` order before truncation (doc 02).
     """
     outcome = RetrievalOutcome()
     if not text.strip():
@@ -771,6 +893,7 @@ def retrieve_candidates(
     budget = contracts.discovery()
     limit = int(budget["candidate_cap"])
     deadline = time.monotonic() + float(budget["round_budget_seconds"])
+    outcome.deadline = deadline
     # Each provider receives the variant chosen for it (the original text plus
     # any rule variants), which is what ``discovery.query_variants`` budgets.
     texts = [str(variant.get("text") or "") for variant in variants if str(variant.get("text") or "").strip()]
@@ -779,40 +902,97 @@ def retrieve_candidates(
         provider: {"query": texts[index % len(texts)]} for index, provider in enumerate(providers)
     } if texts else None
     try:
-        results = client.search_all_sources_result(
-            text, limit=limit, query_plan=query_plan
+        results = _bounded_call(
+            client.search_all_sources_result,
+            (text,),
+            {"limit": limit, "query_plan": query_plan},
+            deadline - time.monotonic(),
         )
+    except _BudgetExceeded:
+        outcome.raised = "round_budget_exceeded"
+        outcome.failed_sources.append("timeout")
+        outcome.stop_reasons.append("round_budget_exceeded")
+        return outcome
     except Exception as exc:  # noqa: BLE001 - a provider failure is coverage, not a crash
         outcome.raised = type(exc).__name__
         outcome.failed_sources.append(type(exc).__name__)
         outcome.stop_reasons.append("provider_error")
         return outcome
 
-    by_identity: dict[str, dict[str, Any]] = {}
+    per_provider: dict[str, list[dict[str, Any]]] = {}
     for result in results or []:
         provider = str(getattr(result, "provider", "") or "unknown")
         if _result_failed(result):
             outcome.failed_sources.append(provider)
-        for paper in _result_papers(result):
+        papers = _result_papers(result)
+        _note_provider(outcome, provider, result, len(papers))
+        rows = per_provider.setdefault(provider, [])
+        for paper in papers:
             record = paper_record(paper)
             if not record["title"] and not record["doi"]:
                 continue
-            identity = record_identity(record)
-            if not identity or identity in by_identity:
-                continue
-            by_identity[identity] = record
+            rows.append(record)
     if time.monotonic() > deadline:
         outcome.stop_reasons.append("round_budget_exceeded")
-    if len(by_identity) > limit:
-        outcome.stop_reasons.append("candidate_cap_reached")
-    outcome.papers = list(by_identity.values())[:limit]
+    _select_round(outcome, per_provider, limit)
     return outcome
 
 
+_S2_ID_RE = re.compile(r"^[0-9a-f]{40}$")
+_OPENALEX_ID_RE = re.compile(r"^(?:https?://openalex\.org/|openalex:)?(W\d+)$", re.IGNORECASE)
+_S2_PROVIDERS = frozenset({"semantic_scholar", "s2", "semanticscholar"})
+
+
+def seed_external_id(project: V32Project, paper_id: str) -> str | None:
+    """The best external identifier for an internal paper: DOI, then S2, then OpenAlex.
+
+    The internal ``paper_id`` is an opaque uuid that no provider knows, so it is
+    never sent; a seed without any external identifier yields ``None``.
+    """
+    record = (project.doc.get("papers") or {}).get(str(paper_id))
+    if not record:
+        return None
+    aliases = [str(alias) for alias in (record.get("aliases") or []) if alias]
+    sources = [row for row in (record.get("source_records") or []) if isinstance(row, Mapping)]
+    doi = str(record.get("doi") or "").strip()
+    if not doi:
+        doi = next((alias for alias in aliases if alias.casefold().startswith("10.")), "")
+    if doi:
+        return doi
+    for row in sources:
+        if str(row.get("provider") or "").casefold() in _S2_PROVIDERS and row.get("external_id"):
+            return str(row["external_id"])
+    for alias in aliases:
+        if alias.casefold().startswith("s2:"):
+            return alias[3:]
+        if _S2_ID_RE.match(alias):
+            return alias
+    for row in sources:
+        if str(row.get("provider") or "").casefold() == "openalex" and row.get("external_id"):
+            return str(row["external_id"])
+    for alias in aliases:
+        match = _OPENALEX_ID_RE.match(alias)
+        if match:
+            return match.group(1)
+    return None
+
+
 def retrieve_neighbours(
-    state: V32State, project: V32Project, job: Any, *, seeds: Sequence[str]
+    state: V32State,
+    project: V32Project,
+    job: Any,
+    *,
+    seeds: Sequence[str],
+    cap: int | None = None,
+    deadline: float | None = None,
 ) -> RetrievalOutcome:
-    """One snowball round over the given seeds: citations and references."""
+    """One snowball round over the given seeds: citations and references.
+
+    Each seed is resolved to its record and sent by its external identifier
+    (never the internal uuid).  At most ``cap`` new candidates are kept, the
+    providers' rows interleaved in the fixed provider order, and every call gets
+    only what is left of the round budget.
+    """
     outcome = RetrievalOutcome()
     client = state.retrieval()
     if client is None:
@@ -823,33 +1003,62 @@ def retrieve_neighbours(
     budget = contracts.discovery()
     per_seed = int(budget["citations_per_seed"])
     ref_limit = int(budget["references_per_seed"])
-    deadline = time.monotonic() + float(budget["round_budget_seconds"])
-    by_identity: dict[str, dict[str, Any]] = {}
+    remaining_cap = int(budget["candidate_cap"]) if cap is None else max(0, int(cap))
+    if deadline is None:
+        deadline = time.monotonic() + float(budget["round_budget_seconds"])
+    outcome.deadline = deadline
+    if remaining_cap <= 0:
+        outcome.stop_reasons.append("candidate_cap_reached")
+        return outcome
+    per_provider: dict[str, list[dict[str, Any]]] = {}
+    stopped = False
     for seed in seeds:
-        if job.event.is_set() or time.monotonic() > deadline:
+        if job.event.is_set():
+            outcome.stop_reasons.append("cancel_requested")
+            break
+        if time.monotonic() > deadline:
             outcome.stop_reasons.append("round_budget_exceeded")
             break
+        external = seed_external_id(project, str(seed))
+        if not external:
+            outcome.skipped_seeds.append(str(seed))
+            continue
+        outcome.used_seeds.append({"paper_id": str(seed), "external_id": external})
         for method, limit in (("get_citations_result", per_seed), ("get_references_result", ref_limit)):
             call = getattr(client, method, None)
             if call is None:
                 outcome.failed_sources.append(f"missing:{method}")
                 continue
             try:
-                result = call(seed, limit=limit)
+                result = _bounded_call(
+                    call, (external,), {"limit": min(limit, remaining_cap)}, deadline - time.monotonic()
+                )
+            except _BudgetExceeded:
+                outcome.failed_sources.append("timeout")
+                outcome.stop_reasons.append("round_budget_exceeded")
+                stopped = True
+                break
             except Exception as exc:  # noqa: BLE001
                 outcome.failed_sources.append(type(exc).__name__)
                 continue
+            provider = str(getattr(result, "provider", "") or method)
             if _result_failed(result):
-                outcome.failed_sources.append(str(getattr(result, "provider", "") or method))
-            for paper in _result_papers(result):
+                outcome.failed_sources.append(provider)
+            papers = _result_papers(result)
+            _note_provider(outcome, provider, result, len(papers))
+            rows = per_provider.setdefault(provider, [])
+            for paper in papers:
                 record = paper_record(paper)
                 if not record["title"] and not record["doi"]:
                     continue
-                identity = record_identity(record)
-                if identity:
-                    by_identity.setdefault(identity, record)
-    outcome.papers = list(by_identity.values())
-    if not outcome.papers and not outcome.failed_sources:
+                rows.append(record)
+        if stopped:
+            break
+    if outcome.skipped_seeds:
+        outcome.stop_reasons.append("seed_without_external_id")
+    known = {record_identity(record) for record in (project.doc.get("papers") or {}).values()}
+    _select_round(outcome, per_provider, remaining_cap, known=known)
+    if not outcome.new_count and not outcome.failed_sources:
         outcome.stop_reasons.append("no_new_results")
     return outcome
 
@@ -944,6 +1153,21 @@ def run_discover(state: V32State, project: V32Project, job: Any) -> dict[str, An
     if status == "superseded":
         return {"superseded": True}
 
+    provider_stats = {name: dict(stats) for name, stats in outcome.provider_stats.items()}
+    auto = _auto_expansion_round(state, project, job, ranking, first=outcome, coverage=coverage)
+    if auto.get("snapshot") is not None:
+        snapshot = auto["snapshot"]
+        ranking = auto["ranking"]
+        coverage = auto["coverage"]
+        saved = saved + list(auto["saved"])
+    else:
+        coverage = coverage_dto(
+            status=coverage["status"],
+            candidate_count=coverage["candidate_count"],
+            failed_sources=coverage["failed_sources"],
+            stop_reasons=list(coverage["stop_reasons"]) + list(auto["stop_reasons"]),
+        )
+
     result = {
         "outcome": _outcome_for(coverage["status"]),
         "snapshot_id": snapshot["snapshot_id"],
@@ -957,6 +1181,9 @@ def run_discover(state: V32State, project: V32Project, job: Any) -> dict[str, An
         "query_translation": project.doc.get("query_translation"),
         "ranking_query": ranking_query_text(project),
         "ranking_stage": snapshot["ranking_stage"],
+        "provider_counts": {name: {"returned": s["returned"], "kept": s["kept"]} for name, s in provider_stats.items()},
+        "provider_cursors": {name: s["cursor"] for name, s in provider_stats.items()},
+        "auto_expansion": auto["report"],
         "error_codes": [] if coverage["status"] == str(CoverageStatus.WITHIN_BUDGET) else ["source_failure"],
     }
     mode = str(job.doc.get("mode") or "basic")
@@ -964,6 +1191,144 @@ def run_discover(state: V32State, project: V32Project, job: Any) -> dict[str, An
         result["ai_status"] = "skipped"
         result["ai_detail"] = "本轮无可用模型适配器：本地排序已提交，未被改写。"
     return result
+
+
+def _branch_of(state: V32State, project: V32Project, paper_ids: Sequence[str]) -> dict[str, str]:
+    """``paper_id -> community id`` when the relation data supports a map, else ``{}``."""
+    try:
+        from litsearch.v32 import mapping as mapping_mod
+
+        records = project.doc.get("papers", {})
+        node_ids = sorted(str(pid) for pid in records)
+        texts = {
+            str(pid): f"{record.get('title') or ''} {record.get('abstract') or ''}"
+            for pid, record in records.items()
+        }
+        community = mapping_mod.build_map(citation_edges(state.store, project), node_ids, texts=texts)
+    except Exception:  # noqa: BLE001 - branch diversity is a preference, never a failure
+        return {}
+    if getattr(community, "degraded", False):
+        return {}
+    wanted = set(paper_ids)
+    out: dict[str, str] = {}
+    for entry in getattr(community, "communities", None) or []:
+        for pid in entry.paper_ids:
+            if str(pid) in wanted:
+                out[str(pid)] = str(entry.community_id)
+    return out
+
+
+def auto_expansion_seeds(state: V32State, project: V32Project, ranking: Any) -> list[str]:
+    """At most ``seeds_per_round`` recommended papers, preferring different branches.
+
+    Only ``recommended`` items qualify: never an excluded one and never an
+    exploration-only one.  When the relation data yields branches the seeds are
+    taken round-robin across them; otherwise the starter list (an MMR diversity
+    selection) leads, then the rest of the recommended order.  These are system
+    choices and are never written into the user's anchor or seeds (doc 02).
+    """
+    per_round = int(contracts.discovery()["seeds_per_round"])
+    excluded = {
+        str(pid)
+        for pid, judgement in (project.doc.get("judgements") or {}).items()
+        if str(judgement.get("value")) == str(JudgementValue.EXCLUDED)
+    }
+    recommended = [
+        str(item.paper_id)
+        for item in ranking.items
+        if str(item.eligibility) == str(Eligibility.RECOMMENDED) and str(item.paper_id) not in excluded
+    ]
+    if per_round <= 0 or not recommended:
+        return []
+    branches = _branch_of(state, project, recommended)
+    if branches:
+        groups: dict[str, list[str]] = {}
+        for pid in recommended:
+            groups.setdefault(branches.get(pid, f"unassigned:{pid}"), []).append(pid)
+        ordered: list[str] = []
+        depth = max(len(rows) for rows in groups.values())
+        for index in range(depth):
+            for rows in groups.values():
+                if index < len(rows):
+                    ordered.append(rows[index])
+    else:
+        wanted = set(recommended)
+        starters = [str(pid) for pid in ranking.starter_paper_ids if str(pid) in wanted]
+        ordered = list(dict.fromkeys(starters + recommended))
+    return ordered[:per_round]
+
+
+def _auto_expansion_round(
+    state: V32State,
+    project: V32Project,
+    job: Any,
+    ranking: Any,
+    *,
+    first: RetrievalOutcome,
+    coverage: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Exactly one automatic neighbour round after a committed discovery (AC-01/AC-32).
+
+    It shares the discovery round's candidate cap and budget, commits its own
+    snapshot (or reports why it did not), and never starts a second round.
+    """
+    report: dict[str, Any] = {"rounds": 0, "seeds": [], "skipped_seeds": [], "stop_reasons": []}
+    out: dict[str, Any] = {"snapshot": None, "stop_reasons": [], "report": report, "saved": []}
+
+    def _stop(*reasons: str) -> dict[str, Any]:
+        report["stop_reasons"] = sorted(set(report["stop_reasons"]) | set(reasons))
+        out["stop_reasons"] = list(report["stop_reasons"])
+        return out
+
+    discovery = contracts.discovery()
+    if int(discovery["auto_rounds"]) < 1:
+        return _stop("auto_rounds_disabled")
+    if job.event.is_set():
+        return _stop("cancel_requested")
+    seeds = auto_expansion_seeds(state, project, ranking)
+    if not seeds:
+        return _stop("auto_expansion_no_seeds")
+
+    state.jobs.set_stage(job, str(JobStage.RETRIEVING), progress=0.7)
+    cap = int(discovery["candidate_cap"]) - len(first.papers)
+    neighbours = retrieve_neighbours(
+        state, project, job, seeds=seeds, cap=cap, deadline=first.deadline
+    )
+    report["rounds"] = 1
+    report["seeds"] = [{**row, "origin": "system"} for row in neighbours.used_seeds]
+    report["skipped_seeds"] = list(neighbours.skipped_seeds)
+    report["provider_counts"] = {
+        name: {"returned": s["returned"], "kept": s["kept"]} for name, s in neighbours.provider_stats.items()
+    }
+    report["provider_cursors"] = {name: s["cursor"] for name, s in neighbours.provider_stats.items()}
+    report["new_papers"] = int(neighbours.new_count)
+    _stop("auto_round_limit_reached", *neighbours.stop_reasons)
+
+    saved = _upsert_candidates(state, project, neighbours.papers)
+    if saved:
+        state.store.save(project, touch_corpus=True)
+    with job.lock:
+        job.doc["corpus_version"] = project.corpus_version
+
+    state.jobs.set_stage(job, str(JobStage.FAST_RANKING), progress=0.85)
+    expanded = rank_project(state, project)
+    statuses = {str(coverage["status"]), neighbours.status}
+    if str(CoverageStatus.PARTIAL) in statuses:
+        status = str(CoverageStatus.PARTIAL)
+    else:
+        status = str(coverage["status"])
+    merged = coverage_dto(
+        status=status,
+        candidate_count=len(project.doc.get("papers", {})),
+        failed_sources=list(coverage["failed_sources"]) + list(neighbours.failed_sources),
+        stop_reasons=list(coverage["stop_reasons"]) + list(report["stop_reasons"]),
+    )
+    snapshot = build_snapshot(state, project, expanded, frozen=_frozen_versions(job), coverage=merged)
+    if _commit(state, project, job, snapshot) == "superseded":
+        # The first-round snapshot stands; the newer context owns what follows.
+        return _stop("superseded")
+    out.update(snapshot=snapshot, ranking=expanded, coverage=merged, saved=saved)
+    return out
 
 
 def _outcome_for(coverage_status: str) -> str:
@@ -993,7 +1358,8 @@ def run_expand(state: V32State, project: V32Project, job: Any) -> dict[str, Any]
                 if str(item.get("eligibility")) == str(Eligibility.RECOMMENDED)
             ]
     per_round = int(contracts.discovery()["seeds_per_round"])
-    seeds = [pid for pid in seeds if state.store.resolve_paper_id(project, pid)][:per_round]
+    resolved = [state.store.resolve_paper_id(project, pid) for pid in seeds]
+    seeds = list(dict.fromkeys(str(pid) for pid in resolved if pid))[:per_round]
     if not seeds:
         outcome = RetrievalOutcome(stop_reasons=["no_seeds"])
     else:
@@ -1022,6 +1388,9 @@ def run_expand(state: V32State, project: V32Project, job: Any) -> dict[str, Any]
         "snapshot_id": snapshot["snapshot_id"],
         "coverage": coverage,
         "seeds": seeds,
+        "skipped_seeds": list(outcome.skipped_seeds),
+        "provider_counts": {name: {"returned": s["returned"], "kept": s["kept"]} for name, s in outcome.provider_stats.items()},
+        "provider_cursors": {name: s["cursor"] for name, s in outcome.provider_stats.items()},
         "new_papers": len(saved),
         "candidate_count": coverage["candidate_count"],
         "error_codes": [] if coverage["status"] == str(CoverageStatus.WITHIN_BUDGET) else ["source_failure"],
@@ -1030,18 +1399,15 @@ def run_expand(state: V32State, project: V32Project, job: Any) -> dict[str, Any]
 
 
 def run_rerank(state: V32State, project: V32Project, job: Any) -> dict[str, Any]:
-    """Recompute the local ranking and (when a model exists) refine it."""
+    """Recompute the local ranking and commit it; the AI pass is a separate job.
+
+    Doc 17: the local snapshot is committed first and never waits on a model.
+    When an adapter is configured, an ``ai_rerank`` job based on that snapshot
+    (``parent_snapshot_id``) is queued behind ``jobs.ai_idle_delay_ms``.
+    """
     state.jobs.set_stage(job, str(JobStage.FAST_RANKING), progress=0.2)
     ranking = rank_project(state, project)
     local_order = [str(item.paper_id) for item in ranking.items]
-    ai_report: dict[str, Any] = {"status": "skipped", "error_code": "ai_not_configured"}
-
-    adapter = state.ai()
-    if adapter is not None and len(local_order) >= 1:
-        state.jobs.set_stage(job, str(JobStage.ENHANCING), progress=0.6)
-        ai_report = _apply_ai(state, project, job, ranking, local_order)
-        if ai_report.get("applied_order"):
-            ranking = _reorder(ranking, ai_report["applied_order"])
 
     coverage = coverage_dto(
         status=ranking.coverage.get("status") or str(CoverageStatus.WITHIN_BUDGET),
@@ -1050,53 +1416,145 @@ def run_rerank(state: V32State, project: V32Project, job: Any) -> dict[str, Any]
         stop_reasons=ranking.coverage.get("stop_reasons") or (),
         scope="local_rerank",
     )
-    stage = "ai_refined" if ai_report.get("status") == "applied" else None
-    snapshot = build_snapshot(
-        state, project, ranking, frozen=_frozen_versions(job), coverage=coverage, ranking_stage=stage
-    )
+    snapshot = build_snapshot(state, project, ranking, frozen=_frozen_versions(job), coverage=coverage)
     if _commit(state, project, job, snapshot) == "superseded":
         return {"superseded": True}
+
+    ai_status, ai_error, ai_job_id = "skipped", "ai_not_configured", None
+    if state.ai() is not None and local_order:
+        try:
+            ai_job = schedule_ai_rerank(state, project, job, snapshot)
+            ai_status, ai_error, ai_job_id = "queued", None, ai_job.job_id
+        except V32Error as exc:
+            ai_error = str(getattr(exc, "code", "") or "ai_queue_unavailable")
     result = {
         "outcome": "succeeded",
         "snapshot_id": snapshot["snapshot_id"],
         "coverage": coverage,
         "ranking_stage": snapshot["ranking_stage"],
-        "ai_status": ai_report.get("status"),
-        "ai_error_code": ai_report.get("error_code"),
+        "ai_status": ai_status,
+        "ai_error_code": ai_error,
+        "ai_job_id": ai_job_id,
         "recommended_count": len(ranking.recommended_paper_ids),
         "error_codes": [],
     }
     return result
 
 
-def _reorder(ranking: Any, order: Sequence[str]) -> Any:
-    """Renumber a ranking in ``order``.  Scores are never modified (AC-17)."""
-    by_id = {str(item.paper_id): item for item in ranking.items}
-    items = []
+def schedule_ai_rerank(state: V32State, project: V32Project, job: Any, snapshot: Mapping[str, Any]) -> Any:
+    """Queue the AI pass over a committed local snapshot (doc 17 staging).
+
+    The delay is ``jobs.ai_idle_delay_ms`` from the contract.  A still-queued AI
+    pass of the same project is superseded: only the newest local snapshot is
+    worth refining.
+    """
+    from litsearch.v32.types import JobState
+
+    delay_ms = int(contracts.job_defaults()["ai_idle_delay_ms"])
+    jobs = state.jobs
+    with jobs.lock:
+        pending = [
+            other
+            for other in jobs.jobs.values()
+            if other.project_id == project.project_id
+            and other.doc.get("kind") == "ai_rerank"
+            and other.state == str(JobState.QUEUED)
+            and not other.thread
+        ]
+    for other in pending:
+        jobs.transition(
+            other,
+            str(JobState.SUPERSEDED),
+            error_codes=sorted(set(other.doc.get("error_codes") or []) | {"superseded_by_newer_context"}),
+        )
+        detach = getattr(jobs, "_detach", None)
+        if callable(detach):
+            detach(other)
+    return jobs.submit(
+        project,
+        "ai_rerank",
+        parent_job_id=getattr(job, "job_id", None),
+        parent_snapshot_id=str(snapshot["snapshot_id"]),
+        debounce_until=time.monotonic() + delay_ms / 1000.0,
+        context_version=int(snapshot["context_version"]),
+        corpus_version=int(snapshot["corpus_version"]),
+        config_hash=job.doc.get("config_hash"),
+        model_revision=job.doc.get("model_revision"),
+        mode=job.doc.get("mode"),
+    )
+
+
+def run_ai_rerank(state: V32State, project: V32Project, job: Any) -> dict[str, Any]:
+    """Refine one committed local snapshot with the model, or keep it unchanged."""
+    parent_id = str(job.doc.get("parent_snapshot_id") or "")
+    if not parent_id or project.doc.get("current_snapshot_id") != parent_id:
+        return {"superseded": True}
+    parent = load_current_snapshot(state, project, parent_id)
+    if parent is None:
+        return {"superseded": True}
+    coverage = dict(parent.get("coverage") or {})
+    result: dict[str, Any] = {
+        "outcome": "succeeded",
+        "snapshot_id": parent_id,
+        "parent_snapshot_id": parent_id,
+        "coverage": coverage,
+        "ranking_stage": parent.get("ranking_stage"),
+        "error_codes": [],
+    }
+    if state.ai() is None:
+        result.update(ai_status="skipped", ai_error_code="ai_not_configured")
+        return result
+    state.jobs.set_stage(job, str(JobStage.ENHANCING), progress=0.4)
+    items = [dict(item) for item in parent.get("items") or []]
+    report = _apply_ai(state, project, job, items, parent_id)
+    result.update(ai_status=report.get("status"), ai_error_code=report.get("error_code"))
+    order = report.get("applied_order")
+    if not order:
+        return result
+    by_id = {str(item["paper_id"]): item for item in items}
+    reordered = []
     for index, paper_id in enumerate(order):
         item = by_id.get(str(paper_id))
         if item is None:
             continue
-        item.rank = index + 1
-        items.append(item)
-    ranking.items = items
-    return ranking
+        reordered.append({**item, "rank": index + 1})  # scores untouched (AC-17)
+    snapshot = {
+        **parent,
+        "snapshot_id": uuid.uuid4().hex,
+        "parent_snapshot_id": parent_id,
+        "ranking_stage": "ai_refined",
+        "items": reordered,
+    }
+    if _commit(state, project, job, snapshot) == "superseded":
+        return {"superseded": True}
+    result.update(snapshot_id=snapshot["snapshot_id"], ranking_stage="ai_refined")
+    return result
+
+
+def ai_window_ids(items: Sequence[Mapping[str, Any]]) -> list[str]:
+    """The AI window: the top ``ai.top_n`` of the *recommended* list only (doc 17)."""
+    top_n = int(contracts.ai_defaults()["top_n"])
+    recommended = [
+        str(item["paper_id"])
+        for item in sorted(items, key=lambda row: int(row.get("rank") or 0))
+        if str(item.get("eligibility")) == str(Eligibility.RECOMMENDED)
+    ]
+    return recommended[:top_n]
 
 
 def _apply_ai(
-    state: V32State, project: V32Project, job: Any, ranking: Any, local_order: Sequence[str]
+    state: V32State, project: V32Project, job: Any, items: Sequence[Mapping[str, Any]], parent: str
 ) -> dict[str, Any]:
-    """Run the AI stage over the frozen local order; any failure keeps it."""
+    """Run the AI stage over a committed snapshot's order; any failure keeps it."""
     try:
         from litsearch.v32.ai_rerank import RerankInput, apply_window, build_window, rerank
     except ImportError as exc:  # pragma: no cover - module ships with the package
         return {"status": "failed", "error_code": "ai_module_unavailable", "detail": str(exc)}
 
     ai_cfg = contracts.ai_defaults()
-    top_n = int(ai_cfg["top_n"])
     minimum_n = int(ai_cfg["minimum_n"])
-    by_id = {str(item.paper_id): item for item in ranking.items}
-    window_ids = [pid for pid in local_order if by_id.get(pid) is not None][:top_n]
+    local_order = [str(item["paper_id"]) for item in sorted(items, key=lambda row: int(row.get("rank") or 0))]
+    window_ids = ai_window_ids(items)
     if len(window_ids) < minimum_n:
         return {"status": "skipped", "error_code": "window_too_small"}
 
@@ -1113,7 +1571,6 @@ def _apply_ai(
                 doc_type=record.get("doc_type"),
             )
         )
-    parent = project.doc.get("current_snapshot_id") or ""
     context_hash = hashlib.sha256(
         json.dumps(
             {
@@ -1182,6 +1639,10 @@ def run_import(state: V32State, project: V32Project, job: Any) -> dict[str, Any]
     added: list[str] = []
     for index, item_id in enumerate(item_ids):
         item = (record.get("items") or {}).get(item_id) or {}
+        if str(item.get("status") or ImportStatus.UPLOADED) != str(ImportStatus.UPLOADED):
+            # Doc 08: a retry reprocesses only the items it named (reset to
+            # ``uploaded``); every other row is left exactly as it was.
+            continue
         attachment_id = str(item.get("attachment_id") or "")
         display_name = str(item.get("display_name") or "document.pdf")
         try:
@@ -1528,6 +1989,7 @@ def register_handlers(state: V32State) -> None:
     state.jobs.register("discover", lambda project, job: run_discover(state, project, job))
     state.jobs.register("expand", lambda project, job: run_expand(state, project, job))
     state.jobs.register("rerank", lambda project, job: run_rerank(state, project, job))
+    state.jobs.register("ai_rerank", lambda project, job: run_ai_rerank(state, project, job))
     state.jobs.register("import", lambda project, job: run_import(state, project, job))
     state.jobs.register("zotero_import", lambda project, job: run_zotero_import(state, project, job))
     state.jobs.register("zotero_export", lambda project, job: run_zotero_export(state, project, job))
