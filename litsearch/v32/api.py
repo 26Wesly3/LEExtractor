@@ -729,6 +729,18 @@ def build_router(state: V32State) -> APIRouter:
         )
         return payload
 
+    # v3.2 之后新增：项目列表（S8）。只列当前会话 owner 的项目，最新在前；
+    # 契约文档仍按 3.2 的 25 个操作冻结，这里是记录在案的扩展。
+    @router.get("/projects")
+    def list_projects(request: Request) -> dict[str, Any]:
+        session = _session(state, request)
+        rows = [
+            _project("Project", state.store.project_dto(project))
+            for project in state.store.all_for_owner(session.owner_id)
+        ]
+        rows.sort(key=lambda row: str(row.get("updated_at") or ""), reverse=True)
+        return {"items": rows, "total": len(rows)}
+
     @router.get("/projects/{pid}")
     def get_project(request: Request, pid: str) -> dict[str, Any]:
         session = _session(state, request)
