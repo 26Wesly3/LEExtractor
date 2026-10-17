@@ -1,0 +1,50 @@
+{
+  "base": "http://127.0.0.1:8000",
+  "steps": [
+    {
+      "step": "entry page",
+      "entry_buttons": 2
+    },
+    {
+      "step": "create project + enter workspace",
+      "path": "/v32/projects/2371798719c4473bb38dff6e9c5dc157/anchors"
+    },
+    {
+      "step": "workspace stage tabs",
+      "tabs": 4,
+      "has_research_textarea": 1
+    },
+    {
+      "step": "progress bar",
+      "visible": true,
+      "stage": "排队等待",
+      "percent": "10%"
+    },
+    {
+      "step": "job finished",
+      "finished": true,
+      "notice": "排序已更新"
+    },
+    {
+      "step": "papers stage",
+      "cards": 19,
+      "first_title": "Variation in leaf anatomical traits of grassland plants in different vegetation ",
+      "coverage": "已获取部分文献，部分来源暂不可用。 查看详情"
+    },
+    {
+      "step": "insight stage",
+      "text_length": 880
+    }
+  ],
+  "problems": [],
+  "shots": [
+    "e2e-shots/01-entries.png",
+    "e2e-shots/02-workspace.png",
+    "e2e-shots/03-typed.png",
+    "e2e-shots/04-progress.png",
+    "e2e-shots/05-finished.png",
+    "e2e-shots/06-papers.png",
+    "e2e-shots/07-insight.png"
+  ],
+  "ok": true
+}

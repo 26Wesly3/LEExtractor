@@ -63,6 +63,35 @@ const coverage = computed(() => coverageLine(overview.value?.coverage || job.val
 const degradation = computed(() => enhancementNotice(job.value, LANG.value))
 const snapshot = computed(() => snapshotLabel(snapshotId.value, LANG.value))
 
+// 任务进度。以前这里只有一行状态文字，而一次发现任务最长有 45 秒预算，
+// 界面在等待期间看上去完全没反应（用户明确反馈「进度条也没有」）。
+// 现在：任务未结束就显示进度条；拿不到真实百分比时用不确定态动画，
+// 有进度时显示百分比，并遵守 prefers-reduced-motion。
+const jobActive = computed(() => !!job.value && ['queued', 'running', 'cancel_requested'].includes(job.value.state))
+const jobProgress = computed(() => {
+  const raw = job.value?.progress
+  // 0 与缺省都按「不确定」处理：显示 0% 会被误读成卡死。
+  return typeof raw === 'number' && Number.isFinite(raw) && raw > 0 ? Math.min(1, raw) : null
+})
+const jobProgressPercent = computed(() => (jobProgress.value === null ? 0 : Math.round(jobProgress.value * 100)))
+const JOB_STAGE_COPY = {
+  queued: ['排队等待', 'Queued'],
+  parsing: ['正在解析文件', 'Parsing files'],
+  matching: ['正在匹配文献身份', 'Matching identities'],
+  retrieving: ['正在检索来源', 'Retrieving from sources'],
+  fast_ranking: ['正在快速排序', 'Fast ranking'],
+  enhancing: ['正在完善排序', 'Enhancing the ranking'],
+  mapping: ['正在构建研究脉络', 'Building the research map'],
+  exporting: ['正在导出', 'Exporting'],
+  finished: ['已结束', 'Finished'],
+}
+const jobStageCopy = computed(() => {
+  const key = job.value?.stage || job.value?.state || ''
+  const pair = JOB_STAGE_COPY[key]
+  if (pair) return LANG.value === 'zh' ? pair[0] : pair[1]
+  return key
+})
+
 const recommendedItems = computed(() => items.value.filter(item => item?.ranking?.eligibility === 'recommended'))
 
 const visibleItems = computed(() => {
@@ -438,6 +467,26 @@ if (props.projectId) {
           >{{ stage.label }}</button>
         </nav>
 
+        <div
+          v-if="jobActive"
+          class="le32-progress"
+          data-v32-progress
+          role="progressbar"
+          :aria-label="t('任务进度', 'Job progress')"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          :aria-valuenow="jobProgress === null ? null : jobProgressPercent"
+          :aria-valuetext="jobStageCopy + (jobProgress === null ? '' : ' ' + jobProgressPercent + '%')"
+        >
+          <div class="le32-progress-head">
+            <span data-v32-progress-stage>{{ jobStageCopy }}</span>
+            <span v-if="jobProgress !== null" data-v32-progress-percent>{{ jobProgressPercent }}%</span>
+          </div>
+          <div class="le32-progress-track" :class="{ 'is-indeterminate': jobProgress === null }">
+            <div class="le32-progress-fill" :style="jobProgress === null ? {} : { width: jobProgressPercent + '%' }"></div>
+          </div>
+        </div>
+
         <p v-if="stageNotice" class="le32-ranking-stage" data-v32-ranking-stage role="status">{{ stageNotice }}</p>
 
         <template v-if="activeStage === 'anchors'">
@@ -636,6 +685,21 @@ if (props.projectId) {
 .le32-ranking-stage { font-size: 13px; color: var(--text-2); margin-bottom: var(--s-3); }
 .le32-anchor { border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); padding: var(--s-6); display: flex; flex-direction: column; gap: var(--s-3); }
 .le32-anchor textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font: inherit; font-size: 14px; }
+
+/* 任务进度条：等待期间必须有可见反馈（最长 45 秒的检索窗口）。 */
+.le32-progress { margin: 14px 0 6px; }
+.le32-progress-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 6px; font-size: 13px; color: var(--text-2); }
+.le32-progress-track { position: relative; height: 4px; border-radius: 999px; background: rgba(0, 0, 0, .08); overflow: hidden; }
+.le32-progress-fill { height: 100%; width: 0; border-radius: 999px; background: var(--ink, #18181b); transition: width .35s ease; }
+.le32-progress-track.is-indeterminate .le32-progress-fill { width: 35%; animation: le32-progress-slide 1.2s ease-in-out infinite; }
+@keyframes le32-progress-slide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(285%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .le32-progress-fill { transition: none; }
+  .le32-progress-track.is-indeterminate .le32-progress-fill { animation: none; width: 100%; opacity: .35; }
+}
 .le32-mode-row { display: flex; gap: var(--s-2); flex-wrap: wrap; }
 .le32-mode { padding: 8px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--text-2); font-size: 13px; }
 .le32-mode.is-active { border-color: var(--ink); color: var(--ink); background: var(--surface-3); }
