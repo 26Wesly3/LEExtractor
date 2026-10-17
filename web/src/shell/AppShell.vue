@@ -18,5 +18,6 @@ const t = (zh, en) => (lang.value === 'zh' ? zh : en)
     <a class="skip-link" href="#main">{{ t('跳到主要内容', 'Skip to content') }}</a>
     <AppNav />
     <main id="main"><router-view /></main>
+    <footer class="footer"><router-link to="/">LEExtractor</router-link><span>{{ t('惟学无际，际于天地', 'Knowledge without limits') }}</span><span>{{ t('证据留下，判断由你。', 'Keep the evidence. Make the judgment.') }}</span></footer>
   </v-app>
 </template>

@@ -11,6 +11,7 @@
 //   questions→insight  export→papers?export=1  paper→papers?paper=:paperKey
 import App from './App.vue'
 import EntryChoice from './v32/EntryChoice.vue'
+import ProjectList from './shell/ProjectList.vue'
 import SettingsPanels from './v32/SettingsPanels.vue'
 import Workspace from './v32/Workspace.vue'
 
@@ -28,9 +29,8 @@ export const LEGACY_STAGE = {
   'project-questions': 'insight',
 }
 
-// 项目列表仍由 App.vue 渲染：S6 会把它迁出成 shell/ProjectList.vue。
-// 在迁移完成前必须挂 App，否则 /projects 会是一张空白页（S2 曾经就是这样）。
-const ProjectListPlaceholder = App
+// 项目列表（S6）：旧版只读列表，取代 App.vue 里的旧项目页。
+const ProjectListPlaceholder = ProjectList
 
 const toWorkspace = (to, stage) => ({ name: 'workspace', params: { projectId: to.params.projectId, stage } })
 const queryOf = (to, extra) => ({ ...to.query, ...extra })

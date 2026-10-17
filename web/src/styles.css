@@ -15,18 +15,6 @@
 @media(max-width:599px){.actions>.v-btn,.review-controls>.v-btn,.selection-bar>.v-btn{height:auto!important;min-height:36px;padding-top:8px;padding-bottom:8px;max-width:100%}.actions>.v-btn .v-btn__content,.review-controls>.v-btn .v-btn__content,.selection-bar>.v-btn .v-btn__content{white-space:normal;max-width:100%;text-align:center}.topbar>.brand{flex-shrink:1;min-width:0}.toplinks{flex-shrink:0}.provider-pick>p{width:100%}.review-paper{padding:20px}.paper-links>a,.paper-links>button{overflow-wrap:anywhere;max-width:100%}}
 body.reduced *,body.reduced *:before,body.reduced *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
-.graph-edge{fill:none}
-.network .graph-node{animation:graphFade .32s ease-out both}
-@keyframes graphFade{from{opacity:0}to{opacity:1}}
-.graph-node__ring{fill:none;stroke:#1f6feb;stroke-width:2;opacity:0;transition:opacity .12s}
-.graph-node:hover .graph-node__ring,.graph-node:focus-visible .graph-node__ring{opacity:1}
-.graph-node text{pointer-events:none}
-.graph-legend{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:12.5px;color:var(--text-2)}
-.graph-legend b{font-variant-numeric:tabular-nums}
-.graph-legend i.swatch{display:inline-block;width:16px;border-top:2px solid #aab3bf;margin-right:6px;vertical-align:middle}
-.graph-legend i.swatch.bibliographic_coupling{border-top-style:dashed;border-color:#8a6da4}
-.graph-legend i.swatch.co_citation{border-top-style:dashed;border-color:#5b8c81}
-.graph-legend i.swatch.text_similarity{border-top-style:dashed;border-color:#9a7a44}
 .meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px 24px;margin:0}
 .meta-grid dt{font-size:12px;color:var(--muted);letter-spacing:.04em}
 .meta-grid dd{margin:4px 0 0;font-size:13.5px;overflow-wrap:anywhere}
@@ -81,7 +69,6 @@ body.reduced *,body.reduced *:before,body.reduced *:after{animation:none!importa
 /* ==== 封面点击进入：入场期间不接收点击（原型 body.entering 的等价做法） ==== */
 .cover.is-entering{pointer-events:none}
 /* ==== 抽屉退场：内容先淡出右移，容器卸载交给 Vuetify 过渡 ==== */
-.paper-drawer.is-closing .drawer-inner{animation:le-drawer-out 240ms cubic-bezier(.4,0,.8,1) both}
 @keyframes le-drawer-out{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(18px)}}
 @media (prefers-reduced-motion: reduce){
   .nav-panel{transition:none}
@@ -92,20 +79,8 @@ body.reduced *,body.reduced *:before,body.reduced *:after{animation:none!importa
 .facet-rail .v-input + .v-input{margin-top:20px}
 /* ==== 详情抽屉：遮罩柔化 + 内容分段错峰入场（原型 overlay 的 blur 与 drawer 的景深） ==== */
 .v-navigation-drawer__scrim{backdrop-filter:blur(3px)}
-.paper-drawer .drawer-inner{transition:transform 260ms cubic-bezier(.16,1,.3,1),opacity 200ms ease}
-.paper-drawer.is-closing .drawer-inner{transform:translateX(18px)}
-.paper-drawer.is-open .drawer-inner > *{animation-name:le-drawer-in;animation-duration:320ms;animation-timing-function:cubic-bezier(.16,1,.3,1);animation-fill-mode:both}
-.paper-drawer.is-open .drawer-inner > *:nth-child(2){animation-delay:40ms}
-.paper-drawer.is-open .drawer-inner > *:nth-child(3){animation-delay:80ms}
-.paper-drawer.is-open .drawer-inner > *:nth-child(4){animation-delay:120ms}
-.paper-drawer.is-open .drawer-inner > *:nth-child(5){animation-delay:160ms}
-.paper-drawer.is-open .drawer-inner > *:nth-child(6){animation-delay:200ms}
-.paper-drawer.is-open .drawer-inner > *:nth-child(7){animation-delay:240ms}
-.paper-drawer.is-open .drawer-inner > *:nth-child(n+8){animation-delay:280ms}
 @keyframes le-drawer-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @media (prefers-reduced-motion: reduce){
-  .paper-drawer.is-open .drawer-inner > *{animation-name:none}
-  .paper-drawer .drawer-inner{transition:none}
 }
 /* ==== 菜单遮罩：点它关闭（原型 dialog::backdrop 的 rgba(35,47,62,.28) + blur(2px)） ==== */
 .nav-scrim{position:fixed;left:0;right:0;bottom:0;top:var(--topbar-h);background:rgba(35,47,62,.28);backdrop-filter:blur(2px);opacity:0;transition-property:opacity;transition-duration:200ms;z-index:100}
@@ -163,6 +138,24 @@ body.reduced *,body.reduced *:before,body.reduced *:after{animation:none!importa
 .le-nav-export:hover{background:var(--surface-3)}
 .le-nav-export:focus-visible{outline:3px solid #677b94;outline-offset:2px}
 @media(max-width:599px){.le-nav-stages .project-name{display:none}}
+
+/* 旧版项目列表（S6，D1：只读 + RIS 导出）。 */
+.le-list{max-width:1180px;margin:0 auto;padding:40px var(--gutter) 64px}
+.le-list-head{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:28px}
+.le-list-lead{max-width:70ch;margin-top:12px;font-size:14px}
+.le-list-primary{min-height:40px;padding:8px 18px;border:1px solid #000;border-radius:8px;background:#000;color:#fff;font-size:14px}
+.le-list-primary:hover{opacity:.88}
+.le-list-error{margin:0 0 20px;padding:12px 14px;border:1px solid #b3261e;border-radius:8px;color:#b3261e;font-size:13px}
+.le-list-rows{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.le-list-row{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:18px 20px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.le-list-row-main strong{font-size:16px}
+.le-list-row-main p{margin:4px 0 0;font-size:13px}
+.le-list-meta{display:flex;align-items:center;gap:12px;font-size:12px;color:var(--muted)}
+.le-list-badge{padding:2px 8px;border:1px solid var(--line);border-radius:999px;font-size:11px;letter-spacing:.02em}
+.le-list-action{min-height:36px;padding:7px 14px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-size:13px}
+.le-list-action:hover:not([disabled]){background:var(--surface-3)}
+.le-list-action[disabled]{opacity:.55;cursor:not-allowed}
+@media(max-width:599px){.le-list-row{flex-direction:column;align-items:flex-start}}
 
 /* 详情抽屉的 A8 动效（S5）：入场滑入 + 子元素错峰，退场先播 260ms 再卸载。
    规则放在全局，因为 .le32-drawer 的子元素是组件内部的，scoped 选择器够不到。 */
