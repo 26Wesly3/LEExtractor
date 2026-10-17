@@ -110,6 +110,24 @@
 
 ## 7. 实施步骤
 
+**实施状态（2026-10-17 收尾核对，均为本地提交，未推送）**
+
+| 步 | 状态 | 提交 | 证据 |
+|---|---|---|---|
+| S0 | ✅ 完成 | `91aaa1c` | 首页模板冻结 8 行 / 3877 字节，`home-first-screen.test.js` 逐字节断言；`e2e-home-baseline.mjs` 生成 7 张基线图 |
+| S1 | ✅ 完成 | `21e8eea` | `src/router.js` 一张表，12 个旧名重定向；路由测试 10 passed |
+| S2 | ✅ 完成 | `338c9e6` | AppShell 接管 `v-app`/顶栏/常驻 `main`；prefs 共享语言与减弱动效 |
+| S3 | ✅ 完成 | `97e08d7` | AppNav 新导航（9 项）+ 焦点/Tab/Esc；107 passed，截图 7/7 字节相同 |
+| S4 | ✅ 完成 | `b657ff2` | 阶段由路由驱动，阶段条进 AppNav（roving tabindex）；109 passed |
+| S5 | ✅ 完成 | `d791114` | `?paper=` 详情态 + 抽屉 A8 + `?export=1`；110 passed；比较器改为逐像素 + 0.01% 预算 |
+| 回归修复 | ✅ 完成 | `8be9fae` | `<router-view/>` 未传参导致工作区落回入口页；`/projects` 曾是空白页 |
+| S6 | ⬜ 未开始 | — | 删除 App.vue 旧工作区分支与 CSS、迁出 `ProjectList.vue`、App.dom.test.js 只留首页 |
+| S7 | ⬜ 未开始 | — | token 收口，挂上 `.theme-v32`（接受标题字号变化） |
+| S8 | ⬜ 未开始 | — | `GET /projects` 与演示项目接口，首页三按钮换内部调用 |
+
+当前测试账：前端 `npx vitest run` → 17 文件 / 110 passed；后端全量 `python -m pytest -q` → 1347 passed, 2 failed（均为基线既有的发布文档链接检查，见 `handoff/IMPLEMENTATION_STATUS.md`）。
+
+
 | 步 | 目标 | 改动文件 | 证明它成立的测试 | 回滚 | 规模 |
 |---|---|---|---|---|---|
 | S0 | 建立基线：首页模板快照、截图脚本、before 截图 | `web/src/__baseline__/home-template.html`、`web/e2e-home-baseline.mjs`、`home-first-screen.test.js` | `npx vitest run src/v32/home-first-screen.test.js`；`node e2e-home-baseline.mjs --tag before` | 删掉新增文件 | 小 |
