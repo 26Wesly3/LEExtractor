@@ -9,6 +9,7 @@
 //   * 推荐、空与错误状态各自有独立文案；
 //   * 本轮没有校园登录入口与 CAS 调用。
 import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { createV32Client, errorLine, safeUrl } from './client.js'
 import { anchorFrom, coverageLine, emptyStateCopy, enhancementNotice, rankingStageForJob, rankingStageLabel, reasonTextForError, resolvePinned, restoreAnchor, resultState, stageLabel, STAGES } from './states.js'
 import { judgementStateLabel, snapshotLabel } from './card.js'
@@ -330,9 +331,45 @@ async function continueDiscovery() {
   }
 }
 
-async function openEntry(mode) {
-  entryMode.value = mode
+// 入口选择：**先创建项目，再进入研究起点**。
+//
+// 这里曾经只写 `entryMode.value = mode; activeStage.value = 'anchors'`：在
+// /v32（路由里没有 projectId）下 Workspace 会渲染入口选择，于是两个主入口
+// 变成死按钮——不发任何请求、不跳转，界面看上去就是"点不开"。入口选择的语义
+// 是"建立项目并开始"，因此必须走 API 并路由到该项目，与 App.vue 的
+// startV32Entry 保持一致。
+//
+// EntryChoice 通过 emit 传的是 `{ mode }` 对象；这里同时兼容字符串，避免把对象
+// 写进 entryMode 而在界面上渲染成 [object Object]。
+const router = useRouter()
+
+async function openEntry(payload) {
+  if (busy.value) return
+  const requested = typeof payload === 'string' ? payload : payload?.mode
+  const chosen = requested === 'pdf' ? 'pdf' : 'topic'
+  entryMode.value = chosen
   activeStage.value = 'anchors'
+  error.value = ''
+  notice.value = ''
+  busy.value = true
+  try {
+    await api.session()
+    const created = await api.createProject({
+      name: chosen === 'pdf'
+        ? t('已有文献项目', 'Existing literature project')
+        : t('研究方向项目', 'Research direction project'),
+      entry_mode: chosen,
+    })
+    await router.push(`/v32/projects/${encodeURIComponent(created.project_id)}/anchors`)
+  } catch (failure) {
+    // 失败只显示一行状态，不阻断页面其余内容。
+    error.value = errorLine(
+      failure,
+      t('未能创建项目，请确认本地服务仍在运行。', 'The project could not be created; check that the local service is running.'),
+    )
+  } finally {
+    busy.value = false
+  }
 }
 
 async function loadMore() {
