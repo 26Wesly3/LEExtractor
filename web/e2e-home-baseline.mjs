@@ -15,7 +15,6 @@
 // 判断「像素差为 0」用的是同一浏览器、同一视口下 PNG 字节相同：输入确定时
 // Chrome 的截图编码是确定的，字节不同即说明渲染结果真的变了。
 import { chromium } from 'playwright'
-import { createHash } from 'node:crypto'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import http from 'node:http'
@@ -83,10 +82,6 @@ function startStaticServer() {
   return new Promise(resolve => server.listen(PORT, '127.0.0.1', () => resolve(server)))
 }
 
-function sha256(buffer) {
-  return createHash('sha256').update(buffer).digest('hex')
-}
-
 /** 给定 tag，返回该 tag 下所有截图文件的 { 视口键: 路径 }。 */
 function shotsFor(tag) {
   const found = {}
@@ -102,27 +97,91 @@ function shotsFor(tag) {
   return found
 }
 
-function compare(from, to) {
+/** 用 Chromium 自己解码两张 PNG 并逐像素比较（不引入新的图像依赖）。 */
+async function pixelDiff(browser, fileA, fileB) {
+  const page = await browser.newPage()
+  try {
+    const toUrl = file => `data:image/png;base64,${readFileSync(file).toString('base64')}`
+    return await page.evaluate(async ([a, b]) => {
+      const load = src => new Promise((resolve, reject) => {
+        const image = new Image()
+        image.onload = () => resolve(image)
+        image.onerror = () => reject(new Error('decode failed'))
+        image.src = src
+      })
+      const [left, right] = await Promise.all([load(a), load(b)])
+      if (left.width !== right.width || left.height !== right.height) {
+        return { sizeMismatch: true, left: [left.width, left.height], right: [right.width, right.height], count: Infinity }
+      }
+      const canvas = document.createElement('canvas')
+      canvas.width = left.width
+      canvas.height = left.height
+      const context = canvas.getContext('2d', { willReadFrequently: true })
+      context.drawImage(left, 0, 0)
+      const dataA = context.getImageData(0, 0, left.width, left.height).data
+      context.clearRect(0, 0, left.width, left.height)
+      context.drawImage(right, 0, 0)
+      const dataB = context.getImageData(0, 0, left.width, left.height).data
+      let count = 0
+      let minX = 1e9; let minY = 1e9; let maxX = -1; let maxY = -1
+      for (let index = 0; index < dataA.length; index += 4) {
+        if (dataA[index] !== dataB[index] || dataA[index + 1] !== dataB[index + 1]
+          || dataA[index + 2] !== dataB[index + 2] || dataA[index + 3] !== dataB[index + 3]) {
+          const pixel = index / 4
+          const x = pixel % left.width
+          const y = (pixel - x) / left.width
+          count += 1
+          if (x < minX) minX = x
+          if (x > maxX) maxX = x
+          if (y < minY) minY = y
+          if (y > maxY) maxY = y
+        }
+      }
+      return { width: left.width, height: left.height, count, bbox: count ? [minX, minY, maxX, maxY] : null }
+    }, [toUrl(fileA), toUrl(fileB)])
+  } finally {
+    await page.close()
+  }
+}
+
+/**
+ * 逐像素比较 from 与 to 两套截图。
+ *
+ * 判定用「差异像素 ≤ 总像素 0.01%」而不是字节相等：同一个构建连拍时，字标的
+ * 亚像素原点会停在两种位置之一（实测 59 个抗锯齿像素），字节比较会把这种渲染
+ * 噪声当成回归。0.01% 的预算（1440x900 约 130 像素）远高于实测噪声（59），
+ * 又远低于任何真实布局变化（一个元素移动就会有上千像素）。
+ */
+async function compare(from, to) {
   const before = shotsFor(from)
   const after = shotsFor(to)
   const keys = [...new Set([...Object.keys(before), ...Object.keys(after)])].sort()
+  const browser = await chromium.launch({ channel: 'chrome', headless: true })
   const rows = []
-  let identical = 0
-  let different = 0
-  for (const key of keys) {
-    if (!before[key] || !after[key]) {
-      rows.push({ shot: key, identical: false, reason: before[key] ? `missing in ${to}` : `missing in ${from}` })
-      different += 1
-      continue
+  let passed = 0
+  let failed = 0
+  try {
+    for (const key of keys) {
+      if (!before[key] || !after[key]) {
+        rows.push({ shot: key, pass: false, reason: before[key] ? `missing in ${to}` : `missing in ${from}` })
+        failed += 1
+        continue
+      }
+      const sameBytes = readFileSync(before[key]).equals(readFileSync(after[key]))
+      const diff = sameBytes
+        ? { count: 0, bbox: null }
+        : await pixelDiff(browser, before[key], after[key])
+      const total = Number.isFinite(diff.count) && diff.width ? diff.width * diff.height : 0
+      const budget = Math.round(total * 0.0001)
+      const pass = diff.count <= Math.max(budget, 60)
+      rows.push({ shot: key, pass, byte_identical: sameBytes, differing_pixels: diff.count, budget: Math.max(budget, 60), bbox: diff.bbox || undefined, size_mismatch: diff.sizeMismatch || undefined })
+      if (pass) passed += 1; else failed += 1
     }
-    const a = readFileSync(before[key])
-    const b = readFileSync(after[key])
-    const same = a.equals(b)
-    if (same) identical += 1; else different += 1
-    rows.push({ shot: key, identical: same, bytes_before: a.length, bytes_after: b.length, sha_before: sha256(a).slice(0, 16), sha_after: sha256(b).slice(0, 16) })
+  } finally {
+    await browser.close()
   }
-  console.log(JSON.stringify({ compare: { from, to }, identical, different, rows }, null, 2))
-  return different === 0 ? 0 : 1
+  console.log(JSON.stringify({ compare: { from, to }, passed, failed, rows }, null, 2))
+  return failed === 0 ? 0 : 1
 }
 
 /** 在页面里盖住 #eagle：字符画逐帧重绘，不参与像素比较。 */
@@ -139,6 +198,25 @@ async function maskEagle(page) {
     })
     document.body.appendChild(cover)
   })
+}
+
+/**
+ * 等到「字体真的已经参与布局」再截图。
+ *
+ * `document.fonts.ready` 只保证加载结束，不保证重排完成；Anton 字体晚到时文字会用
+ * 回退字形先排一次，再按 Anton 重排，最终字标的亚像素原点会停在两种位置之一
+ * （实测同一构建连拍会得到两种字节，差 59 个抗锯齿像素）。所以这里显式 load 该
+ * 字体、等两帧、再等一次排版稳定后才允许截图。
+ */
+async function settleFonts(page) {
+  await page.evaluate(async () => {
+    if (document.fonts) {
+      try { await document.fonts.load('16px Anton') } catch { /* 字体缺失时照常截图 */ }
+      await document.fonts.ready
+    }
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+  })
+  await page.waitForTimeout(300)
 }
 
 function fulfillApi(route) {
@@ -169,8 +247,7 @@ async function collect(base, tag) {
       await page.route('**/api/**', fulfillApi)
       await page.emulateMedia({ reducedMotion: 'reduce' })
       await page.goto(`${base}/`, { waitUntil: 'load' })
-      await page.evaluate(() => document.fonts.ready)
-      await page.waitForTimeout(400)
+      await settleFonts(page)
 
       const key = `${viewport.width}x${viewport.height}`
       const top = path.join(OUT, `home-${tag}-${key}.png`)
@@ -186,9 +263,8 @@ async function collect(base, tag) {
         const motionPage = await browser.newPage({ viewport, deviceScaleFactor: 1 })
         await motionPage.route('**/api/**', fulfillApi)
         await motionPage.goto(`${base}/`, { waitUntil: 'load' })
-        await motionPage.evaluate(() => document.fonts.ready)
+        await settleFonts(motionPage)
         await maskEagle(motionPage)
-        await motionPage.waitForTimeout(400)
         const motion = path.join(OUT, `home-${tag}-motion.png`)
         await motionPage.screenshot({ path: motion, caret: 'hide' })
         shots.push(motion)
@@ -207,7 +283,7 @@ async function main() {
   if (process.argv.includes('--compare')) {
     const from = process.env.E2E_FROM || 'before'
     const to = process.env.E2E_TO || 'after'
-    process.exitCode = compare(from, to)
+    process.exitCode = await compare(from, to)
     return
   }
 

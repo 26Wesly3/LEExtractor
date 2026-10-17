@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 // 工作区：四阶段、等待状态、三种空状态、独立校园资源访问动作。
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { createMemoryHistory, createRouter } from 'vue-router'
 import Workspace from './Workspace.vue'
 import { all, click, mountComponent, settle, text } from './test-harness.js'
 
@@ -184,6 +185,37 @@ describe('Workspace', () => {
     expect(text('[data-v32-degraded]')).toContain('已使用基础排序')
     expect(text('[data-v32-degraded]')).toContain('本次增强排序未完成')
     expect(document.body.textContent).not.toContain('Traceback')
+    mounted.unmount()
+  })
+
+  it('keeps the open record in ?paper= and plays the exit before unmounting (S5)', async () => {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: '/projects/:projectId/:stage', name: 'workspace', component: { template: '<span />' } }],
+    })
+    await router.push('/projects/p1/papers')
+    await router.isReady()
+    const mounted = mountComponent(Workspace, { client: fakeClient(), projectId: 'p1', stage: 'papers', lang: 'zh' }, { router })
+    await settle(60)
+    click('[data-v32-view="all"]')
+    await settle()
+    click('[data-paper-id="w2"] .le32-card-open')
+    await settle(20)
+
+    // 详情进 URL：刷新、前进后退、分享链接都能回到同一条记录。
+    expect(router.currentRoute.value.query.paper).toBe('w2')
+    expect(document.querySelector('[data-v32-drawer]').classList.contains('is-open')).toBe(true)
+
+    click('[data-v32-drawer-close]')
+    await settle(20)
+    expect(router.currentRoute.value.query.paper).toBeUndefined()
+    const closing = document.querySelector('[data-v32-drawer]')
+    expect(closing, 'the drawer must stay mounted for its 260ms exit').toBeTruthy()
+    expect(closing.classList.contains('is-closing')).toBe(true)
+
+    await new Promise(resolve => setTimeout(resolve, 300))
+    await settle()
+    expect(document.querySelector('[data-v32-drawer]')).toBeNull()
     mounted.unmount()
   })
 

@@ -9,7 +9,7 @@
 //   * 推荐、空与错误状态各自有独立文案；
 //   * 本轮没有校园登录入口与 CAS 调用。
 import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { createV32Client, errorLine, safeUrl } from './client.js'
 import { anchorFrom, coverageLine, emptyStateCopy, enhancementNotice, rankingStageForJob, rankingStageLabel, reasonTextForError, resolvePinned, restoreAnchor, resultState, stageLabel, STAGES } from './states.js'
 import { judgementStateLabel, snapshotLabel } from './card.js'
@@ -50,7 +50,20 @@ const error = ref('')
 const notice = ref('')
 const job = ref(null)
 const overview = ref(null)
-const pinnedId = ref('')
+// S5：详情态由 ?paper= 驱动。刷新、前进后退、直接粘贴链接都能回到同一条记录，
+// 抽屉的打开/关闭也就不再是组件私有状态。
+// 单测里 Workspace 可以在没有路由的情况下挂载（只测渲染），所以这里允许缺席。
+const injectedRoute = useRoute()
+const route = injectedRoute || { query: {} }
+const pinnedId = ref(String(route.query.paper || ''))
+const drawerClosing = ref(false)
+let drawerTimer = null
+const paperQuery = paperId => {
+  const query = { ...route.query }
+  if (paperId) query.paper = paperId
+  else delete query.paper
+  return query
+}
 const judged = reactive({})
 const reasons = reactive({})
 // paper_id -> 后端枚举 exclusion_reason（not_relevant / read / duplicate / not_now / unspecified）。
@@ -443,13 +456,23 @@ async function judge({ paperId, value, reason, exclusionReason }) {
 }
 
 function openPaper(paperId) {
+  clearTimeout(drawerTimer)
+  drawerClosing.value = false
   pinnedId.value = paperId
   accessOptions.value = []
   copyState.value = ''
   loadAccessOptions(paperId)
+  // S5：详情进 URL，刷新和前进后退都能回到同一条记录。
+  if (injectedRoute && String(route.query.paper || '') !== paperId) router.replace({ query: paperQuery(paperId) })
 }
 
-function closePaper() { pinnedId.value = '' }
+function closePaper() {
+  if (!pinnedId.value && !drawerClosing.value) return
+  drawerClosing.value = true
+  clearTimeout(drawerTimer)
+  drawerTimer = setTimeout(() => { drawerClosing.value = false; pinnedId.value = '' }, 260)
+  if (injectedRoute && route.query.paper) router.replace({ query: paperQuery('') })
+}
 
 /** 校园资源访问是独立动作：只读取入口，不发起任何校园登录调用。 */
 async function loadAccessOptions(paperId) {
@@ -560,7 +583,38 @@ watch(activeStage, async value => {
   if (value === 'threads' || value === 'insight') await loadOverview()
 })
 
-onBeforeUnmount(() => { stopped = true; stopPolling() })
+// 外部导航（后退、粘贴 ?paper=）同步抽屉；关掉 query 时走同一套退场。
+watch(() => route.query.paper, value => {
+  const wanted = String(value || '')
+  if (wanted === pinnedId.value) return
+  if (!wanted) {
+    if (pinnedId.value) closePaper()
+    return
+  }
+  clearTimeout(drawerTimer)
+  drawerClosing.value = false
+  pinnedId.value = wanted
+  accessOptions.value = []
+  copyState.value = ''
+  loadAccessOptions(wanted)
+})
+
+/** ?export=1 打开导出菜单：它是 <details>，用属性打开并滚到可见处。 */
+async function openExportIfRequested() {
+  if (String(route.query.export || '') !== '1') return
+  await nextTick()
+  const nodes = [...document.querySelectorAll('[data-v32-export]')]
+  const target = nodes.find(node => node.offsetParent !== null) || nodes[0]
+  if (!target) return
+  target.open = true
+  target.scrollIntoView({ block: 'center' })
+  const summary = target.querySelector('summary')
+  if (summary && typeof summary.focus === 'function') summary.focus()
+}
+
+watch(() => route.query.export, () => { openExportIfRequested() })
+
+onBeforeUnmount(() => { stopped = true; stopPolling(); clearTimeout(drawerTimer) })
 
 /** 测试与父级集成使用：纯状态访问，不改变既有行为。 */
 defineExpose({
@@ -576,7 +630,7 @@ defineExpose({
 })
 
 if (props.projectId) {
-  ensureSession().then(() => { loadProject(); loadPapers({ keepAnchor: false }); loadOverview() })
+  ensureSession().then(() => { loadProject(); loadPapers({ keepAnchor: false }); loadOverview() }).then(() => openExportIfRequested())
 }
 </script>
 
@@ -790,7 +844,7 @@ if (props.projectId) {
       </template>
     </template>
 
-    <aside v-if="pinnedItem" class="le32-drawer" data-v32-drawer role="dialog" :aria-label="t('文献详情','Record details')">
+    <aside v-if="pinnedItem || drawerClosing" class="le32-drawer" :class="{ 'is-open': !!pinnedItem && !drawerClosing, 'is-closing': drawerClosing }" data-v32-drawer role="dialog" :aria-label="t('文献详情','Record details')">
       <div class="le32-drawer-head">
         <span class="eyebrow">{{ t('文献详情', 'Record details') }}</span>
         <button type="button" class="le32-action" data-v32-drawer-close @click="closePaper">{{ t('关闭', 'Close') }}</button>

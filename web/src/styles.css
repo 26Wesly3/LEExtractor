@@ -164,6 +164,21 @@ body.reduced *,body.reduced *:before,body.reduced *:after{animation:none!importa
 .le-nav-export:focus-visible{outline:3px solid #677b94;outline-offset:2px}
 @media(max-width:599px){.le-nav-stages .project-name{display:none}}
 
+/* 详情抽屉的 A8 动效（S5）：入场滑入 + 子元素错峰，退场先播 260ms 再卸载。
+   规则放在全局，因为 .le32-drawer 的子元素是组件内部的，scoped 选择器够不到。 */
+.le32-drawer.is-open{animation:le32-drawer-panel-in 260ms cubic-bezier(.16,1,.3,1) both}
+.le32-drawer.is-closing{animation:le32-drawer-panel-out 260ms cubic-bezier(.4,0,.8,1) both;pointer-events:none}
+.le32-drawer.is-open>*{animation:le-drawer-in 320ms cubic-bezier(.16,1,.3,1) both}
+.le32-drawer.is-open>*:nth-child(2){animation-delay:40ms}
+.le32-drawer.is-open>*:nth-child(3){animation-delay:80ms}
+.le32-drawer.is-open>*:nth-child(4){animation-delay:120ms}
+.le32-drawer.is-open>*:nth-child(5){animation-delay:160ms}
+.le32-drawer.is-open>*:nth-child(6){animation-delay:200ms}
+.le32-drawer.is-open>*:nth-child(n+7){animation-delay:240ms}
+@keyframes le32-drawer-panel-in{from{opacity:.6;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
+@keyframes le32-drawer-panel-out{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(24px)}}
+@media(prefers-reduced-motion:reduce){.le32-drawer.is-open,.le32-drawer.is-closing{animation:none}.le32-drawer.is-open>*{animation:none}}
+
 /* 首页保持基线原样：这里不再覆盖 .theme-home .cover。
    之前为了让「从研究方向开始 / 从已有文献开始」进入首屏，曾把封面改成自动高度加
    视口比例上限（具体数值故意不写在这里，见 web/src/v32/home-first-screen.test.js
