@@ -258,6 +258,26 @@ class CredentialWriteBody(_Body):
     endpoint_profile_id: _Id | None = None
 
 
+class ModelProbeBody(_Body):
+    """S9：探测模型端点（只读 /models，不产生 token 计费）。"""
+
+    preset_id: str | None = None
+    base_url: str | None = None
+    dialect: str | None = None
+    api_key: str = Field(min_length=1, max_length=8192)
+
+
+class ModelConfigBody(_Body):
+    """S9：保存模型端点配置（常见预设或中转站），可选记住在本机。"""
+
+    preset_id: str | None = None
+    base_url: str | None = None
+    dialect: str | None = None
+    model: str | None = None
+    api_key: str = Field(min_length=1, max_length=8192)
+    persist: bool = False
+
+
 class ZoteroImportBody(RevisionBody):
     library_type: _literal("ZoteroImportRequest", "library_type")
     library_id: _Id
@@ -416,7 +436,7 @@ def _resolve_model_adapter(state: Any, session: Any) -> Any:
     never logged, never returned, and never put in an error message.
     """
     try:
-        credential = state.credentials.model_credential(session.session_id)
+        credential = _model_credential(state, session)
         if not credential:
             return None
         from litsearch.v32 import contracts
@@ -427,10 +447,30 @@ def _resolve_model_adapter(state: Any, session: Any) -> Any:
             credential.get("endpoint_profile_id") or "openai",
             credential["secret"],
             model=credential.get("model"),
+            base_url=credential.get("base_url"),
+            dialect=credential.get("dialect"),
             timeout=timeout,
         )
     except Exception:  # noqa: BLE001 - a bad profile must not break the request
         return None
+
+
+def _model_credential(state: Any, session: Any) -> dict[str, Any] | None:
+    """This session's model credential, else the offline-persisted one (S9).
+
+    The persisted record is what makes 「记住在本机」 work; it is only read by
+    the model adapter path and never returned through a DTO.
+    """
+    if session is not None:
+        try:
+            credential = state.credentials.model_credential(session.session_id)
+        except Exception:  # noqa: BLE001
+            credential = None
+        if credential:
+            return credential
+    from litsearch.v32 import model_settings
+
+    return model_settings.load_persisted(getattr(state, "data_dir", None) or ".")
 
 
 def _capability(capability_id: str, status: str, reason_code: str | None) -> dict[str, Any]:
@@ -511,7 +551,7 @@ def capabilities_payload(state: V32State, session: Any) -> dict[str, Any]:
     # A configured model credential makes AI rerank usable even before an adapter
     # has been constructed for a request; without one it stays not_configured.
     try:
-        model_configured = bool(state.credentials.model_credential(session.session_id))
+        model_configured = bool(_model_credential(state, session))
     except Exception:  # noqa: BLE001
         model_configured = False
     ai_ready = state.ai() is not None or model_configured
@@ -1080,12 +1120,109 @@ def build_router(state: V32State) -> APIRouter:
     def delete_credential(request: Request, provider_id: str) -> JSONResponse:
         session = _mutate(state, request)
         state.credentials.delete(session.session_id, provider_id)
+        if str(provider_id) == "ai_model":
+            # S9：删除模型凭据时，本机记住的那份也要一起清掉，否则「删除」名不副实。
+            from litsearch.v32 import model_settings
+
+            model_settings.clear_persisted(state.data_dir)
         return JSONResponse(status_code=204, content=None)
 
     @router.get("/settings/credentials")
     def list_credentials(request: Request) -> dict[str, Any]:
         session = _session(state, request)
         return _project("CredentialStatuses", state.credentials.payload(session.session_id))
+
+    # -- model endpoint (S9) ----------------------------------------------
+    # 常见供应商预设 + 中转站 + 拉模型列表 + 「记住在本机」。
+
+    @router.get("/settings/model/presets")
+    def model_presets(request: Request) -> dict[str, Any]:
+        _session(state, request)
+        from litsearch.v32 import model_settings
+
+        return {
+            "items": [dict(row) for row in model_settings.PRESETS],
+            "dialects": list(model_settings.DIALECTS),
+            "deployment": "public" if model_settings.public_deployment() else "offline",
+        }
+
+    @router.post("/settings/model/probe")
+    def model_probe(request: Request, body: ModelProbeBody) -> dict[str, Any]:
+        _session(state, request)
+        from litsearch.v32 import model_settings
+
+        base = str(body.base_url or "").strip()
+        if not base and body.preset_id:
+            preset = model_settings.preset(body.preset_id) or {}
+            base = str(preset.get("base_url") or "")
+        try:
+            result = model_settings.probe_endpoint(
+                base, body.api_key, dialect=body.dialect
+            )
+        except model_settings.ModelEndpointError as error:
+            raise V32Error(400, error.code, error.message) from error
+        return {
+            "ok": True,
+            "dialect": result["dialect"],
+            "host": result["host"],
+            "models": result["models"],
+            "latency_ms": result["latency_ms"],
+        }
+
+    @router.put("/settings/model")
+    def write_model_config(request: Request, body: ModelConfigBody) -> dict[str, Any]:
+        session = _mutate(state, request)
+        from litsearch.v32 import model_settings
+
+        preset_row = model_settings.preset(body.preset_id) or {}
+        try:
+            base_url = model_settings.normalize_base_url(
+                str(body.base_url or preset_row.get("base_url") or "")
+            )
+        except model_settings.ModelEndpointError as error:
+            raise V32Error(400, error.code, error.message) from error
+        dialect = str(body.dialect or preset_row.get("dialect") or "openai_compatible")
+        if dialect not in model_settings.DIALECTS:
+            raise V32Error(400, "dialect_invalid", "未知的模型协议。")
+        model = str(body.model or preset_row.get("default_model") or "").strip() or None
+        profile = str(body.preset_id or "custom")
+        status = state.credentials.put(
+            session.session_id,
+            "ai_model",
+            "model",
+            body.api_key,
+            model=model,
+            endpoint_profile_id=profile,
+            base_url=base_url,
+            dialect=dialect,
+        )
+        persisted = False
+        if body.persist:
+            model_settings.save_persisted(
+                state.data_dir,
+                {
+                    "provider_id": "ai_model",
+                    "base_url": base_url,
+                    "dialect": dialect,
+                    "model": model or "",
+                    "api_key": body.api_key,
+                },
+            )
+            persisted = True
+        else:
+            model_settings.clear_persisted(state.data_dir)
+        state.ai_profile = {
+            "provider_id": "ai_model",
+            "endpoint_profile_id": profile,
+            "model": model,
+        }
+        payload = dict(status.as_dict())
+        payload["persisted"] = persisted
+        payload["host"] = model_settings.endpoint_host(base_url)
+        payload["dialect"] = dialect
+        # 这是 3.2 契约之外的扩展端点，所以直接返回扩展后的对象，不套 _project
+        # （_project 只保留 CredentialStatus 的四个字段）。
+        return payload
 
     # -- import -----------------------------------------------------------
 

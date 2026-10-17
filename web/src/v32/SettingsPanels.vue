@@ -22,13 +22,56 @@ const emptyDrafts = () => ({
   semantic_scholar: { secret: '', model: '' },
   openalex: { secret: '', model: '' },
   crossref: { secret: '', model: '' },
-  ai_model: { secret: '', model: '', profile: 'openai' },
+  // S9：预设 + 中转站地址 + 协议 + 「记住在本机」。
+  ai_model: { secret: '', model: '', preset: 'openai', base_url: 'https://api.openai.com/v1', dialect: 'openai_compatible', persist: true },
   zotero: { secret: '', model: '' },
 })
 const drafts = reactive(emptyDrafts())
 const busy = ref('')
 const message = ref('')
 const error = ref('')
+const presets = ref([])
+const probeBusy = ref('')
+const probeState = reactive({})
+
+function presetRow(presetId) {
+  return presets.value.find(row => row.id === presetId) || null
+}
+
+/** 换服务商时把地址与默认模型带上；「自定义 / 中转站」保留用户已填的地址。 */
+function applyPreset(providerId) {
+  const draft = drafts[providerId]
+  const row = presetRow(draft.preset)
+  if (!row) return
+  draft.dialect = row.dialect
+  if (row.base_url) draft.base_url = row.base_url
+  if (row.default_model) draft.model = row.default_model
+  delete probeState[providerId]
+}
+
+/** 粘贴 Key 后一次拿到：能否连通、是哪套协议、有哪些模型。 */
+async function probeModel(provider) {
+  const draft = drafts[provider.id]
+  if (!draft || !draft.secret) return
+  probeBusy.value = provider.id
+  delete probeState[provider.id]
+  try {
+    const result = await props.client.probeModel({
+      preset_id: draft.preset,
+      base_url: draft.base_url || undefined,
+      dialect: draft.dialect || undefined,
+      api_key: draft.secret,
+    })
+    const models = Array.isArray(result?.models) ? result.models : []
+    probeState[provider.id] = { dialect: result?.dialect || '', host: result?.host || '', models }
+    draft.dialect = result?.dialect || draft.dialect
+    if (models.length && !models.includes(draft.model)) draft.model = models[0]
+  } catch (problem) {
+    probeState[provider.id] = { error: errorLine(problem, t('检测失败。', 'Detection failed.')) }
+  } finally {
+    probeBusy.value = ''
+  }
+}
 
 const AREAS = [
   {
@@ -97,6 +140,12 @@ async function load() {
     try { await props.client.session() } catch { /* 会话失败时下面会给出可读错误 */ }
     const data = await props.client.credentials()
     statuses.value = Array.isArray(data?.items) ? data.items : []
+    try {
+      const list = await props.client.modelPresets()
+      presets.value = Array.isArray(list?.items) ? list.items : []
+      const row = presetRow(drafts.ai_model.preset)
+      if (row && !drafts.ai_model.base_url) drafts.ai_model.base_url = row.base_url
+    } catch { /* 预设拿不到时仍可用默认的三个选项 */ }
     error.value = ''
   } catch (problem) {
     error.value = errorLine(problem, t('未能读取凭据状态。', 'Could not read credential status.'))
@@ -111,6 +160,23 @@ async function save(area) {
   message.value = ''
   error.value = ''
   try {
+    if (area.kind === 'model') {
+      const saved = await props.client.saveModelConfig({
+        preset_id: draft.preset,
+        base_url: draft.base_url || undefined,
+        dialect: draft.dialect || undefined,
+        model: draft.model && draft.model.trim() ? draft.model.trim() : undefined,
+        api_key: draft.secret,
+        persist: Boolean(draft.persist),
+      })
+      draft.secret = ''
+      const existing = statuses.value.filter(row => row.provider_id !== provider.id)
+      statuses.value = [...existing, { ...saved, provider_id: provider.id }].filter(Boolean)
+      message.value = saved?.persisted
+        ? t('已保存到本机，下次打开仍然可用（只有本机可以读取）。', 'Saved on this machine and still available next time (readable only by this machine).')
+        : t('已保存，仅在本次会话有效。', 'Saved for this session only.')
+      return
+    }
     const body = { kind: area.kind, secret: draft.secret }
     if (area.kind === 'model') {
       if (draft.profile) body.endpoint_profile_id = draft.profile
@@ -205,22 +271,56 @@ defineExpose({ load })
               :placeholder="t('输入后保存，明文不会回显','Enter and save; the plaintext is never echoed')"
               :data-settings-secret="provider.id"
             />
-            <label v-if="area.kind === 'model'" class="field-label" :for="`v32-profile-${provider.id}`">{{ t('模型服务', 'Model service') }}</label>
+            <label v-if="area.kind === 'model'" class="field-label" :for="`v32-preset-${provider.id}`">{{ t('服务商', 'Provider') }}</label>
             <select
               v-if="area.kind === 'model'"
-              :id="`v32-profile-${provider.id}`"
-              v-model="drafts[provider.id].profile"
-              :data-settings-profile="provider.id"
+              :id="`v32-preset-${provider.id}`"
+              v-model="drafts[provider.id].preset"
+              :data-settings-preset="provider.id"
+              @change="applyPreset(provider.id)"
             >
-              <option v-for="option in area.profiles" :key="option.value" :value="option.value">{{ option.label }} · {{ option.model }}</option>
+              <option v-for="row in presets" :key="row.id" :value="row.id">{{ row.label }}</option>
             </select>
+            <label v-if="area.kind === 'model'" class="field-label" :for="`v32-base-${provider.id}`">{{ t('服务地址', 'Endpoint') }}</label>
             <input
               v-if="area.kind === 'model'"
+              :id="`v32-base-${provider.id}`"
+              v-model="drafts[provider.id].base_url"
+              type="url"
+              :placeholder="t('https://…/v1（中转站填这里）', 'https://…/v1 (relay base URL)')"
+              :data-settings-base-url="provider.id"
+            />
+            <button
+              v-if="area.kind === 'model'"
+              type="button"
+              class="le32-action"
+              :disabled="probeBusy === provider.id || !drafts[provider.id].secret"
+              :data-settings-probe="provider.id"
+              @click="probeModel(provider)"
+            >{{ probeBusy === provider.id ? t('检测中…', 'Detecting…') : t('检测并拉取模型', 'Detect and list models') }}</button>
+            <p v-if="probeState[provider.id]?.error" class="error-text" role="alert" data-settings-probe-error>{{ probeState[provider.id].error }}</p>
+            <p v-else-if="probeState[provider.id]?.dialect" class="muted" data-settings-probe-ok>{{ probeState[provider.id].dialect }} · {{ probeState[provider.id].host }} · {{ probeState[provider.id].models.length }} {{ t('个模型', 'models') }}</p>
+            <label v-if="area.kind === 'model'" class="field-label" :for="`v32-modelname-${provider.id}`">{{ t('模型', 'Model') }}</label>
+            <select
+              v-if="area.kind === 'model' && probeState[provider.id]?.models?.length"
+              :id="`v32-modelname-${provider.id}`"
+              v-model="drafts[provider.id].model"
+              :data-settings-model="provider.id"
+            >
+              <option v-for="name in probeState[provider.id].models" :key="name" :value="name">{{ name }}</option>
+            </select>
+            <input
+              v-else-if="area.kind === 'model'"
+              :id="`v32-modelname-${provider.id}`"
               v-model="drafts[provider.id].model"
               type="text"
-              :placeholder="t('模型名称（可选，留空用上面的默认值）','Model name (optional; blank uses the default above)')"
+              :placeholder="t('模型名称（先检测可拉取列表）', 'Model name (detect to load the list)')"
               :data-settings-model="provider.id"
             />
+            <label v-if="area.kind === 'model'" class="le32-inline-check">
+              <input v-model="drafts[provider.id].persist" type="checkbox" :data-settings-persist="provider.id" />
+              {{ t('记住在本机（下次打开仍可用）', 'Remember on this machine') }}
+            </label>
             <button type="submit" class="le32-primary" :disabled="busy === provider.id" :data-settings-save="provider.id">{{ t('保存', 'Save') }}</button>
             <button type="button" class="le32-action" :disabled="busy === provider.id || !isConfigured(provider.id)" :data-settings-delete="provider.id" @click="clear(area)">{{ t('删除', 'Remove') }}</button>
           </form>
@@ -241,6 +341,8 @@ defineExpose({ load })
 .le32-settings-provider { margin-top: var(--s-4); padding-top: var(--s-4); border-top: 1px solid var(--border); }
 .le32-settings-state { display: flex; justify-content: space-between; align-items: center; gap: var(--s-3); }
 .le32-settings-form { display: flex; flex-direction: column; gap: var(--s-2); margin-top: var(--s-3); }
+.le32-inline-check { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); }
+.le32-inline-check input { min-height: 0; }
 .le32-settings-form input { min-height: 38px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); font-size: 13px; }
 .le32-settings-form select { min-height: 38px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); font-size: 13px; }
 .le32-primary { min-height: 38px; padding: 8px 16px; border: 1px solid var(--ink); border-radius: 8px; background: var(--ink); color: #fff; font-size: 13px; font-weight: 550; }

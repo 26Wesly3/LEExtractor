@@ -286,6 +286,13 @@ export function createV32Client({
 
     deleteCredential: providerId => write('DELETE', `/settings/credentials/${encodeURIComponent(providerId)}`, { idempotencyRequired: false }),
 
+    // S9：模型端点（常见供应商 / 中转站 / 拉模型列表 / 记住在本机）。
+    modelPresets: () => read('/settings/model/presets'),
+
+    probeModel: body => write('POST', '/settings/model/probe', { body, idempotencyRequired: false }),
+
+    saveModelConfig: body => write('PUT', '/settings/model', { body, idempotencyRequired: false }),
+
     zoteroImport: (pid, body, options = {}) => write('POST', `${project(pid)}/zotero/import`, { body, action: 'import', scope: 'zotero', retry: options.retry }),
 
     zoteroExportPreview: (pid, body) => write('POST', `${project(pid)}/zotero/export-preview`, { body, idempotencyRequired: false }),

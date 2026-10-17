@@ -16,6 +16,14 @@ function fakeClient(overrides = {}) {
     })),
     saveCredential: vi.fn(async (providerId, body) => ({ provider_id: providerId, kind: body.kind, configured: true, updated_at: '2026-10-17T00:00:00Z' })),
     deleteCredential: vi.fn(async () => null),
+    modelPresets: vi.fn(async () => ({
+      items: [
+        { id: 'openai', label: 'OpenAI', base_url: 'https://api.openai.com/v1', dialect: 'openai_compatible', default_model: 'gpt-5.5' },
+        { id: 'custom', label: '自定义 / 中转站', base_url: '', dialect: 'openai_compatible', default_model: '' },
+      ],
+    })),
+    probeModel: vi.fn(async () => ({ ok: true, dialect: 'openai_compatible', host: 'relay.example.com', models: ['gpt-4o', 'gpt-4o-mini'], latency_ms: 12 })),
+    saveModelConfig: vi.fn(async body => ({ provider_id: 'ai_model', kind: 'model', configured: true, updated_at: '2026-10-17T00:00:00Z', persisted: Boolean(body.persist), host: 'relay.example.com', dialect: 'openai_compatible' })),
     ...overrides,
   }
 }
@@ -83,28 +91,43 @@ describe('SettingsPanels', () => {
     mounted.unmount()
   })
 
-  it('sends the model kind, the chosen provider and never a secret in the URL', async () => {
+  it('probes a relay, lists its models and saves the endpoint without echoing the key', async () => {
     const client = fakeClient()
     const mounted = mountComponent(SettingsPanels, { lang: 'zh', client })
     await settle()
-    // 必须能选供应商：只有一个笼统的凭据槽时，填了 Key 也不知道发去哪家。
-    const profile = document.querySelector('[data-settings-profile="ai_model"]')
-    expect(profile, 'the model area must offer a provider choice').toBeTruthy()
-    expect([...profile.options].map(option => option.value)).toEqual(['openai', 'deepseek', 'anthropic'])
-    setValue('[data-settings-profile="ai_model"]', 'deepseek')
-    // v-model on a <select> listens to `change`, not `input`.
-    profile.dispatchEvent(new Event('change', { bubbles: true }))
+    // 必须能选服务商，也必须能填中转站地址。
+    const preset = document.querySelector('[data-settings-preset="ai_model"]')
+    expect(preset, 'the model area must offer a provider choice').toBeTruthy()
+    expect([...preset.options].map(option => option.value)).toEqual(['openai', 'custom'])
+    setValue('[data-settings-preset="ai_model"]', 'custom')
+    preset.dispatchEvent(new Event('change', { bubbles: true }))
+    setValue('[data-settings-base-url="ai_model"]', 'https://relay.example.com/v1')
     setValue('[data-settings-secret="ai_model"]', 'placeholder-model-credential')
-    setValue('[data-settings-model="ai_model"]', 'gpt-local')
     await settle()
+
+    click('[data-settings-probe="ai_model"]')
+    await settle()
+    expect(client.probeModel.mock.calls[0][0]).toMatchObject({
+      preset_id: 'custom',
+      base_url: 'https://relay.example.com/v1',
+      api_key: 'placeholder-model-credential',
+    })
+    expect(text('[data-settings-probe-ok]')).toContain('relay.example.com')
+    // 拉到的模型进入选择框，默认选第一个。
+    const modelSelect = document.querySelector('[data-settings-model="ai_model"]')
+    expect(modelSelect.tagName).toBe('SELECT')
+    expect([...modelSelect.options].map(option => option.value)).toEqual(['gpt-4o', 'gpt-4o-mini'])
+
     click('[data-settings-area="model"] [data-settings-save]')
     await settle()
-    expect(client.saveCredential.mock.calls[0]).toEqual(['ai_model', {
-      kind: 'model',
-      secret: 'placeholder-model-credential',
-      model: 'gpt-local',
-      endpoint_profile_id: 'deepseek',
-    }])
+    expect(client.saveModelConfig.mock.calls[0][0]).toMatchObject({
+      preset_id: 'custom',
+      base_url: 'https://relay.example.com/v1',
+      dialect: 'openai_compatible',
+      model: 'gpt-4o',
+      api_key: 'placeholder-model-credential',
+      persist: true,
+    })
     expect(document.body.textContent).not.toContain('placeholder-model-credential')
     mounted.unmount()
   })

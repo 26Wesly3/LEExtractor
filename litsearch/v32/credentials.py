@@ -230,6 +230,11 @@ class _Entry:
     #: reported back — the secret never is.
     model: str | None = None
     endpoint_profile_id: str | None = None
+    #: S9: a custom endpoint (relay) and the protocol it speaks. Both are
+    #: configuration, not secrets, but they are only reported as a host, never
+    #: as a full URL with credentials in it.
+    base_url: str | None = None
+    dialect: str | None = None
 
     def __repr__(self) -> str:  # pragma: no cover - defensive
         return f"_Entry(kind={self.kind!r}, updated_at={self.updated_at.isoformat()!r})"
@@ -297,6 +302,8 @@ class CredentialStore:
         *,
         model: str | None = None,
         endpoint_profile_id: str | None = None,
+        base_url: str | None = None,
+        dialect: str | None = None,
     ) -> CredentialStatus:
         """Store ``secret`` for one session and provider.
 
@@ -358,6 +365,8 @@ class CredentialStore:
             endpoint_profile_id=(
                 str(endpoint_profile_id).strip() or None
             ) if endpoint_profile_id is not None else None,
+            base_url=(str(base_url).strip() or None) if base_url is not None else None,
+            dialect=(str(dialect).strip() or None) if dialect is not None else None,
         )
         logger.info(
             "credential_stored",
@@ -443,6 +452,8 @@ class CredentialStore:
                 "secret": live.secret,
                 "model": live.model,
                 "endpoint_profile_id": live.endpoint_profile_id,
+                "base_url": live.base_url,
+                "dialect": live.dialect,
             }
         return None
 

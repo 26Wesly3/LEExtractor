@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import json
 import re
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from typing import Any, Callable, Mapping
 from urllib.parse import urlsplit
 
@@ -183,9 +183,20 @@ class ModelAdapter:
         model: str | None = None,
         transport: Transport | None = None,
         timeout: float = 20.0,
+        base_url: str | None = None,
+        dialect: str | None = None,
     ):
         if not api_key or not str(api_key).strip():
             raise ProviderError("no_key", f"{spec.label} 未配置密钥")
+        # S9: a relay / self-hosted gateway may override the official endpoint.
+        # Only the URL and the dialect change; the key handling and the
+        # redaction rules below stay exactly the same.
+        if base_url or dialect:
+            spec = replace(
+                spec,
+                base_url=(str(base_url).strip().rstrip("/") or spec.base_url),
+                dialect=(str(dialect).strip() or spec.dialect),
+            )
         self.spec = spec
         self._key = str(api_key).strip()
         self.model = (model or spec.default_model).strip()
@@ -371,15 +382,34 @@ def create_adapter(
     model: str | None = None,
     transport: Transport | None = None,
     timeout: float = 20.0,
+    base_url: str | None = None,
+    dialect: str | None = None,
 ) -> ModelAdapter:
-    """Build an adapter for ``provider_id``, or raise if the provider is unknown."""
-    spec = PROVIDERS.get(str(provider_id or "").strip().lower())
+    """Build an adapter for ``provider_id``, or raise if the provider is unknown.
+
+    ``provider_id="custom"`` builds an OpenAI-compatible adapter for a relay:
+    the caller must pass ``base_url`` (validated by ``model_settings``).
+    """
+    key = str(provider_id or "").strip().lower()
+    spec = PROVIDERS.get(key)
+    if spec is None and key == "custom":
+        spec = replace(PROVIDERS["openai"], id="custom", label="自定义 / 中转站", base_url="")
     if spec is None:
         raise ProviderError(
             "unknown_provider",
             f"不支持的模型服务：{provider_id!r}（可用：{', '.join(provider_ids())}）",
         )
-    return ModelAdapter(spec, api_key, model=model, transport=transport, timeout=timeout)
+    if not base_url and not spec.base_url:
+        raise ProviderError("no_endpoint", "自定义模型服务需要填写服务地址")
+    return ModelAdapter(
+        spec,
+        api_key,
+        model=model,
+        transport=transport,
+        timeout=timeout,
+        base_url=base_url,
+        dialect=dialect,
+    )
 
 
 def _urllib_transport(url: str, headers: dict[str, str], payload: dict[str, Any], timeout: float) -> dict[str, Any]:
