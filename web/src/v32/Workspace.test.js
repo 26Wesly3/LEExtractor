@@ -307,7 +307,8 @@ describe('Workspace', () => {
     expect(text('[data-v32-threads-facts]')).toContain('当前检索集')
     // 期刊按出现次数统计；影响因子如实说明"没有授权数据源"。
     expect(text('[data-v32-journals]')).toContain('Mint Journal')
-    expect(text('[data-v32-venue-note]')).toContain('授权')
+    // 影响因子要么来自导入的本地期刊表，要么如实说明"没有就不显示"。
+    expect(text('[data-v32-venue-note]')).toContain('影响因子')
     mounted.unmount()
   })
 

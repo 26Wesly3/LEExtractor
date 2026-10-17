@@ -50,6 +50,31 @@ def test_cache_file_is_plain_json_without_credentials(tmp_path):
     assert vc.summary(tmp_path) == []
 
 
+def test_import_csv_merges_impact_factor_without_touching_counts(tmp_path):
+    vc.record(tmp_path, "p1", [{"venue": "Mint Journal", "year": 2024}, {"venue": "Mint Journal", "year": 2022}])
+    source = tmp_path / "journals.csv"
+    source.write_text("期刊,影响因子,分区\nMint Journal,4.2,Q1\n", encoding="utf-8")
+    result = vc.import_csv(tmp_path, source)
+    assert result["merged"] == 1
+    row = vc.summary(tmp_path)[0]
+    assert row["impact_factor"] == "4.2"
+    assert row["quartile"] == "Q1"
+    assert row["count"] == 2  # 导入元数据不影响计数
+    # 同一份文件再导一次，不产生重复条目
+    vc.import_csv(tmp_path, source)
+    assert len(vc.summary(tmp_path)) == 1
+
+
+def test_import_csv_accepts_english_headers_and_skips_nameless_rows(tmp_path):
+    source = tmp_path / "if.csv"
+    source.write_text("name,IF,quartile\nPlant Methods,3.1,Q2\n,9.9,Q1\n", encoding="utf-8")
+    result = vc.import_csv(tmp_path, source)
+    assert result["merged"] == 1
+    assert result["skipped"] == 1
+    rows = {row["name"]: row for row in vc.summary(tmp_path)}
+    assert rows["Plant Methods"]["impact_factor"] == "3.1"
+
+
 def test_venues_endpoint_needs_a_session_and_then_lists_the_cache(client):
     assert client.get("/api/v3/venues").status_code == 401
     _csrf(client)

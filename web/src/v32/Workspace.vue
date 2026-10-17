@@ -168,7 +168,7 @@ const venueRankIndex = computed(() => {
   const index = new Map()
   for (const row of venueCacheRows.value) {
     const key = normaliseVenue(row.name)
-    if (key && row.ccf_rank) index.set(key, row.ccf_rank)
+    if (key) index.set(key, { ccf: row.ccf_rank || '', impactFactor: row.impact_factor || '', quartile: row.quartile || '' })
   }
   return index
 })
@@ -186,7 +186,10 @@ const journalRows = computed(() => {
   return [...counts.entries()]
     .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
     .slice(0, 8)
-    .map(([venue, count]) => ({ venue, count, share: known ? count / known : 0, ccf: venueRankIndex.value.get(normaliseVenue(venue)) || '' }))
+    .map(([venue, count]) => {
+      const meta = venueRankIndex.value.get(normaliseVenue(venue)) || {}
+      return { venue, count, share: known ? count / known : 0, ccf: meta.ccf || '', impactFactor: meta.impactFactor || '', quartile: meta.quartile || '' }
+    })
 })
 
 function normaliseVenue(name) {
@@ -835,10 +838,10 @@ if (props.projectId) {
               </ul>
               <h3>{{ t('主要期刊', 'Main venues') }}</h3>
               <ul v-if="journalRows.length" class="brief-list" data-v32-journals>
-                <li v-for="row in journalRows" :key="row.venue">{{ row.venue }} · {{ row.count }} {{ t('篇', 'records') }}（{{ Math.round(row.share * 100) }}%）<span v-if="row.ccf" class="badge" :data-v32-venue-rank="row.venue">CCF {{ row.ccf }}</span></li>
+                <li v-for="row in journalRows" :key="row.venue">{{ row.venue }} · {{ row.count }} {{ t('篇', 'records') }}（{{ Math.round(row.share * 100) }}%）<span v-if="row.ccf" class="badge" :data-v32-venue-rank="row.venue">CCF {{ row.ccf }}</span><span v-if="row.impactFactor" class="badge" :data-v32-venue-if="row.venue">IF {{ row.impactFactor }}<template v-if="row.quartile"> · {{ row.quartile }}</template></span></li>
               </ul>
               <p v-else class="muted" data-v32-journals-empty>{{ t('检索记录里没有期刊字段，无法统计。','The retrieved records carry no venue field, so there is nothing to count.') }}</p>
-              <p class="muted le32-venue-note" data-v32-venue-note>{{ t('期刊名与篇数来自本项目的检索记录，并会存进本地期刊缓存（换项目也能查）；CCF 分区来自仓库自带的 2026 第七版目录。影响因子本机没有授权数据源，因此不显示也不估算。','Venue names and counts come from this project and are kept in a local venue cache; CCF ranks come from the bundled 2026 seventh-edition catalogue. Impact factors have no licensed source here, so they are neither shown nor estimated.') }}</p>
+              <p class="muted le32-venue-note" data-v32-venue-note>{{ t('期刊名与篇数来自本项目的检索记录，并会存进本地期刊缓存（换项目也能查）；CCF 分区来自仓库自带的 2026 第七版目录（只覆盖计算机领域）。影响因子可选：把期刊表用 scripts/import_journal_csv.py 导入本机缓存后，这里会显示 IF 与分区；没有导入就不显示，也不估算。','Venue names and counts come from this project and are kept in a local venue cache; CCF ranks come from the bundled 2026 catalogue (computer science only). Impact factors are optional: import a journal table with scripts/import_journal_csv.py and they appear here; without an import they are neither shown nor estimated.') }}</p>
               <h3>{{ t('时间线', 'Timeline') }}</h3>
               <ul class="le32-timeline" data-v32-timeline>
                 <li v-for="point in insight.timeline" :key="point.year === null ? 'unknown' : point.year">{{ point.year === null ? t('年份未知', 'Year unknown') : point.year }} · {{ point.count }}</li>
