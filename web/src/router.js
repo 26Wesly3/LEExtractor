@@ -10,7 +10,6 @@
 //   search→anchors  results,review→papers  expand,landscape→threads
 //   questions→insight  export→papers?export=1  paper→papers?paper=:paperKey
 import App from './App.vue'
-import EntryChoice from './v32/EntryChoice.vue'
 import ProjectList from './shell/ProjectList.vue'
 import SettingsPanels from './v32/SettingsPanels.vue'
 import Workspace from './v32/Workspace.vue'
@@ -38,7 +37,14 @@ const queryOf = (to, extra) => ({ ...to.query, ...extra })
 export function createAppRoutes() {
   return [
     { path: '/', name: 'home', component: App, meta: { home: true } },
-    { path: '/search', name: 'search', component: EntryChoice },
+    // /search 是「无项目状态的工作区」：入口选择的两个按钮由 Workspace 处理
+    // （它负责建项目并跳阶段）。直接挂 EntryChoice 会让事件没人接，按钮点不动。
+    {
+      path: '/search',
+      name: 'search',
+      component: Workspace,
+      props: route => ({ projectId: '', stage: 'anchors', view: '', lang: route.query.lang === 'en' ? 'en' : 'zh' }),
+    },
     { path: '/projects', name: 'projects', component: ProjectListPlaceholder },
     { path: '/settings', name: 'settings', component: SettingsPanels },
 
