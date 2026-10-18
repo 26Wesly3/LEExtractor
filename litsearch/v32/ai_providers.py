@@ -240,13 +240,29 @@ class ModelAdapter:
             return str(request["system_prompt"])
         schema = request.get("response_schema") or {}
         return (
-            "You re-rank an already-retrieved list of papers for one research intent.\n"
+            "You re-rank a short list of candidate papers for one research intent.\n"
+            "The list arrives in a good local order. Your job is to fix clear ordering "
+            "errors, not to rewrite the list.\n"
+            "\n"
+            "Decide relevance from the supplied title and abstract only:\n"
+            "- SUPPORTS: the text states a finding that directly supports or answers the intent.\n"
+            "- PARTIAL: on topic and plausibly useful, but the text does not state that result.\n"
+            "- BACKGROUND: review, definition or context only.\n"
+            "- UNRELATED: different topic, population, intervention or outcome, or the text "
+            "never addresses the intent.\n"
+            "Order: SUPPORTS first (strongest evidence first), then PARTIAL, then BACKGROUND, "
+            "then UNRELATED.\n"
+            "\n"
             "Rules:\n"
-            "1. Every id you return MUST come from allowed_paper_ids. Never invent a paper, "
-            "author, year, citation count or graph edge.\n"
-            "2. Return every allowed id exactly once in ordered_paper_ids.\n"
-            "3. Echo context_hash unchanged.\n"
-            "4. Output ONE JSON object and nothing else. No prose, no markdown fence.\n"
+            "1. Move a paper only when the supplied text gives a concrete reason to move it.\n"
+            "2. Keep the existing order when two papers are equally supported: that order may "
+            "already encode evidence you cannot see (citation graph, user decisions).\n"
+            "3. Never rank by word overlap alone, by venue prestige, or by guessing metadata "
+            "that is not in the text.\n"
+            "4. Every id you return MUST come from allowed_paper_ids; return each exactly once. "
+            "Never invent a paper, author, year, citation count or graph edge.\n"
+            "5. Echo context_hash unchanged.\n"
+            "6. Output ONE JSON object and nothing else. No prose, no markdown fence.\n"
             f"JSON Schema: {json.dumps(schema, ensure_ascii=False)}"
         )
 
@@ -263,6 +279,7 @@ class ModelAdapter:
             "allowed_paper_ids": request.get("allowed_paper_ids"),
             "papers": request.get("papers"),
         }
+        # 用户消息保持纯 JSON：测试与集成方按 JSON 解析它；任务说明全部放在 system。
         return json.dumps(compact, ensure_ascii=False)
 
     def build_payload(self, request: Mapping[str, Any], *, max_tokens: int = 2000) -> tuple[str, dict[str, Any]]:

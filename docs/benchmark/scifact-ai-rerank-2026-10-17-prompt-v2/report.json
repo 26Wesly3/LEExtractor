@@ -1,0 +1,904 @@
+{
+  "dataset": "BEIR SciFact test pilot (30 queries)",
+  "run_dir": "benchmarks\\results\\scifact-pilot-2026-10-10",
+  "window": 20,
+  "model": {
+    "profile": "deepseek",
+    "model": "deepseek-flash",
+    "host": "api.deepseek.com"
+  },
+  "cases": 30,
+  "skipped": [
+    "142",
+    "185"
+  ],
+  "ai_rerank": {
+    "precision@20": 0.0467,
+    "ndcg@20": 0.6771,
+    "recall@50": 0.8767,
+    "mrr@50": 0.634,
+    "cases": 30
+  },
+  "ai_rerank_applied_only": {
+    "precision@20": 0.0464,
+    "ndcg@20": 0.6804,
+    "recall@50": 0.8679,
+    "mrr@50": 0.6408,
+    "cases": 28
+  },
+  "call_budget_seconds": 90.0,
+  "recomputed_frozen": {
+    "bm25": {
+      "precision@20": 0.045,
+      "ndcg@20": 0.6631,
+      "recall@50": 0.8433,
+      "mrr@50": 0.6367
+    },
+    "lexical": {
+      "precision@20": 0.045,
+      "ndcg@20": 0.5941,
+      "recall@50": 0.81,
+      "mrr@50": 0.5339
+    },
+    "minilm_title_abstract": {
+      "precision@20": 0.0383,
+      "ndcg@20": 0.4856,
+      "recall@50": 0.7367,
+      "mrr@50": 0.4268
+    },
+    "minilm_title": {
+      "precision@20": 0.035,
+      "ndcg@20": 0.5438,
+      "recall@50": 0.73,
+      "mrr@50": 0.504
+    },
+    "current_hybrid": {
+      "precision@20": 0.0467,
+      "ndcg@20": 0.68,
+      "recall@50": 0.8767,
+      "mrr@50": 0.6379
+    }
+  },
+  "per_case": [
+    {
+      "case_id": "1014",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "changed": false,
+      "moved": 0,
+      "ai_order_head": [
+        "6277638",
+        "18557974",
+        "15615957",
+        "5785219",
+        "2266471"
+      ],
+      "local_order_head": [
+        "6277638",
+        "18557974",
+        "15615957",
+        "5785219",
+        "2266471"
+      ],
+      "seconds": 6.3,
+      "precision@20": 0.05,
+      "ndcg@20": 1.0,
+      "recall@50": 1.0,
+      "mrr@50": 1.0
+    },
+    {
+      "case_id": "1086",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "changed": false,
+      "moved": 0,
+      "ai_order_head": [
+        "39281140",
+        "3981244",
+        "5850219",
+        "4036038",
+        "15669393"
+      ],
+      "local_order_head": [
+        "39281140",
+        "3981244",
+        "5850219",
+        "4036038",
+        "15669393"
+      ],
+      "seconds": 8.82,
+      "precision@20": 0.05,
+      "ndcg@20": 1.0,
+      "recall@50": 1.0,
+      "mrr@50": 1.0
+    },
+    {
+      "case_id": "1088",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "changed": false,
+      "moved": 0,
+      "ai_order_head": [
+        "33638477",
+        "37549932",
+        "41548287",
+        "3730196",
+        "11900630"
+      ],
+      "local_order_head": [
+        "33638477",
+        "37549932",
+        "41548287",
+        "3730196",
+        "11900630"
+      ],
+      "seconds": 6.25,
+      "precision@20": 0.05,
+      "ndcg@20": 0.6309,
+      "recall@50": 1.0,
+      "mrr@50": 0.5
+    },
+    {
+      "case_id": "1099",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "changed": false,
+      "moved": 0,
+      "ai_order_head": [
+        "21557614",
+        "7662206",
+        "22420524",
+        "30981192",
+        "7454794"
+      ],
+      "local_order_head": [
+        "21557614",
+        "7662206",
+        "22420524",
+        "30981192",
+        "7454794"
+      ],
+      "seconds": 40.45,
+      "precision@20": 0.05,
+      "ndcg@20": 0.6309,
+      "recall@50": 1.0,
+      "mrr@50": 0.5
+    },
+    {
+      "case_id": "1100",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "changed": false,
+      "moved": 0,
+      "ai_order_head": [
+        "21557614",
+        "7662206",
+        "30981192",
+        "31890716",
+        "27449472"
+      ],
+      "local_order_head": [
+        "21557614",
+        "7662206",
+        "30981192",
+        "31890716",
+        "27449472"
+      ],
+      "seconds": 7.17,
+      "precision@20": 0.05,
+      "ndcg@20": 0.6309,
+      "recall@50": 1.0,
+      "mrr@50": 0.5
+    },
+    {
+      "case_id": "1204",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "changed": false,
+      "moved": 0,
+      "ai_order_head": [
+        "31141365",
+        "15907458",
+        "10165258",
+        "16630060",
+        "2701077"
+      ],
+      "local_order_head": [
+        "31141365",
+        "15907458",
+        "10165258",
+        "16630060",
+        "2701077"
+      ],
+      "seconds": 13.06,
+      "precision@20": 0.05,
+      "ndcg@20": 1.0,
+      "recall@50": 1.0,
+      "mrr@50": 1.0
+    },
+    {
+      "case_id": "1216",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "changed": false,
+      "moved": 0,
+      "ai_order_head": [
+        "24142891",
+        "17695748",
+        "13368032",
+        "19756935",
+        "38485364"
+      ],
+      "local_order_head": [
+        "24142891",
+        "17695748",
+        "13368032",
+        "19756935",
+        "38485364"
+      ],
+      "seconds": 6.0,
+      "precision@20": 0.05,
+      "ndcg@20": 1.0,
+      "recall@50": 1.0,
+      "mrr@50": 1.0
+    },
+    {
+      "case_id": "124",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "changed": true,
+      "moved": 14,
+      "ai_order_head": [
+        "4883040",
+        "7111021",
+        "16787954",
+        "32012666",
+        "31363207"
+      ],
+      "local_order_head": [
+        "4883040",
+        "7111021",
+        "16787954",
+        "32012666",
+        "4424888"
+      ],
+      "seconds": 66.0,
+      "precision@20": 0.05,
+      "ndcg@20": 1.0,
+      "recall@50": 1.0,
+      "mrr@50": 1.0
+    },
+    {
+      "case_id": "1266",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "changed": false,
+      "moved": 0,
+      "ai_order_head": [
+        "37480103",
+        "13831842",
+        "27123743",
+        "13765757",
+        "25973484"
+      ],
+      "local_order_head": [
+        "37480103",
+        "13831842",
+        "27123743",
+        "13765757",
+        "25973484"
+      ],
+      "seconds": 12.43,
+      "precision@20": 0.05,
+      "ndcg@20": 1.0,
+      "recall@50": 1.0,
+      "mrr@50": 1.0
+    },
+    {
+      "case_id": "1290",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "changed": true,
+      "moved": 17,
+      "ai_order_head": [
+        "11246427",
+        "19878070",
+        "26000593",
+        "4687948",
+        "16812091"
+      ],
+      "local_order_head": [
+        "4687948",
+        "16812091",
+        "1711571",
+        "9555784",
+        "19529370"
+      ],
+      "seconds": 39.85,
+      "precision@20": 0.05,
+      "ndcg@20": 0.4307,
+      "recall@50": 1.0,
+      "mrr@50": 0.25
+    },
+    {
+      "case_id": "132",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "changed": false,
+      "moved": 0,
+      "ai_order_head": [
+        "9159125",
+        "6945691",
+        "21181273",
+        "2443495",
+        "27615329"
+      ],
+      "local_order_head": [
+        "9159125",
+        "6945691",
+        "21181273",
+        "2443495",
+        "27615329"
+      ],
+      "seconds": 14.74,
+      "precision@20": 0.0,
+      "ndcg@20": 0.0,
+      "recall@50": 0.0,
+      "mrr@50": 0.0
+    },
+    {
+      "case_id": "133",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "changed": false,
+      "moved": 0,
+      "ai_order_head": [
+        "12785130",
+        "35884026",
+        "16280642",
+        "86694016",
+        "19752008"
+      ],
+      "local_order_head": [
+        "12785130",
+        "35884026",
+        "16280642",
+        "86694016",
+        "19752008"
+      ],
+      "seconds": 22.08,
+      "precision@20": 0.15,
+      "ndcg@20": 0.3925,
+      "recall@50": 0.8,
+      "mrr@50": 0.3333
+    },
+    {
+      "case_id": "142",
+      "status": "rejected",
+      "error_code": "schema_invalid",
+      "detail": "结构化输出未通过校验（schema_invalid），整批拒绝，保留本地排序",
+      "window": 20,
+      "changed": false,
+      "moved": 0,
+      "ai_order_head": [
+        "10582939",
+        "19511011",
+        "24766509",
+        "25985964",
+        "24101431"
+      ],
+      "local_order_head": [
+        "10582939",
+        "19511011",
+        "24766509",
+        "25985964",
+        "24101431"
+      ],
+      "seconds": 9.55,
+      "precision@20": 0.05,
+      "ndcg@20": 1.0,
+      "recall@50": 1.0,
+      "mrr@50": 1.0
+    },
+    {
+      "case_id": "185",
+      "status": "rejected",
+      "error_code": "schema_invalid",
+      "detail": "结构化输出未通过校验（schema_invalid），整批拒绝，保留本地排序",
+      "window": 20,
+      "changed": false,
+      "moved": 0,
+      "ai_order_head": [
+        "21874312",
+        "13519661",
+        "23557241",
+        "5864770",
+        "27123743"
+      ],
+      "local_order_head": [
+        "21874312",
+        "13519661",
+        "23557241",
+        "5864770",
+        "27123743"
+      ],
+      "seconds": 38.53,
+      "precision@20": 0.05,
+      "ndcg@20": 0.2626,
+      "recall@50": 1.0,
+      "mrr@50": 0.0769
+    },
+    {
+      "case_id": "198",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "changed": false,
+      "moved": 0,
+      "ai_order_head": [
+        "27602752",
+        "15414628",
+        "40590358",
+        "470625",
+        "15425958"
+      ],
+      "local_order_head": [
+        "27602752",
+        "15414628",
+        "40590358",
+        "470625",
+        "15425958"
+      ],
+      "seconds": 5.12,
+      "precision@20": 0.05,
+      "ndcg@20": 0.2398,
+      "recall@50": 1.0,
+      "mrr@50": 0.0588
+    },
+    {
+      "case_id": "208",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "changed": false,
+      "moved": 0,
+      "ai_order_head": [
+        "13519661",
+        "16734530",
+        "7821634",
+        "21439640",
+        "1389264"
+      ],
+      "local_order_head": [
+        "13519661",
+        "16734530",
+        "7821634",
+        "21439640",
+        "1389264"
+      ],
+      "seconds": 9.78,
+      "precision@20": 0.05,
+      "ndcg@20": 1.0,
+      "recall@50": 1.0,
+      "mrr@50": 1.0
+    },
+    {
+      "case_id": "213",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "changed": true,
+      "moved": 19,
+      "ai_order_head": [
+        "27054878",
+        "20887554",
+        "13625993",
+        "25028913",
+        "21048969"
+      ],
+      "local_order_head": [
+        "27054878",
+        "750781",
+        "20887554",
+        "40156901",
+        "13625993"
+      ],
+      "seconds": 30.12,
+      "precision@20": 0.05,
+      "ndcg@20": 0.5,
+      "recall@50": 1.0,
+      "mrr@50": 0.3333
+    },
+    {
+      "case_id": "230",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "changed": true,
+      "moved": 19,
+      "ai_order_head": [
+        "3067015",
+        "52072815",
+        "20526907",
+        "38028419",
+        "46437558"
+      ],
+      "local_order_head": [
+        "3067015",
+        "71625969",
+        "24019260",
+        "14663842",
+        "38028419"
+      ],
+      "seconds": 30.52,
+      "precision@20": 0.05,
+      "ndcg@20": 1.0,
+      "recall@50": 1.0,
+      "mrr@50": 1.0
+    },
+    {
+      "case_id": "239",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "changed": false,
+      "moved": 0,
+      "ai_order_head": [
+        "16233471",
+        "3230557",
+        "40349336",
+        "22264117",
+        "7042304"
+      ],
+      "local_order_head": [
+        "16233471",
+        "3230557",
+        "40349336",
+        "22264117",
+        "7042304"
+      ],
+      "seconds": 8.29,
+      "precision@20": 0.0,
+      "ndcg@20": 0.0,
+      "recall@50": 1.0,
+      "mrr@50": 0.0333
+    },
+    {
+      "case_id": "312",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "changed": false,
+      "moved": 0,
+      "ai_order_head": [
+        "32770503",
+        "13123189",
+        "14464451",
+        "14185503",
+        "25041967"
+      ],
+      "local_order_head": [
+        "32770503",
+        "13123189",
+        "14464451",
+        "14185503",
+        "25041967"
+      ],
+      "seconds": 9.2,
+      "precision@20": 0.05,
+      "ndcg@20": 0.2891,
+      "recall@50": 1.0,
+      "mrr@50": 0.1
+    },
+    {
+      "case_id": "324",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "changed": false,
+      "moved": 0,
+      "ai_order_head": [
+        "23601616",
+        "13172737",
+        "8724666",
+        "24612804",
+        "30981192"
+      ],
+      "local_order_head": [
+        "23601616",
+        "13172737",
+        "8724666",
+        "24612804",
+        "30981192"
+      ],
+      "seconds": 6.45,
+      "precision@20": 0.0,
+      "ndcg@20": 0.0,
+      "recall@50": 0.0,
+      "mrr@50": 0.0
+    },
+    {
+      "case_id": "491",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "changed": false,
+      "moved": 0,
+      "ai_order_head": [
+        "56893404",
+        "834336",
+        "43311750",
+        "13450938",
+        "24521894"
+      ],
+      "local_order_head": [
+        "56893404",
+        "834336",
+        "43311750",
+        "13450938",
+        "24521894"
+      ],
+      "seconds": 6.94,
+      "precision@20": 0.05,
+      "ndcg@20": 1.0,
+      "recall@50": 1.0,
+      "mrr@50": 1.0
+    },
+    {
+      "case_id": "50",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "changed": false,
+      "moved": 0,
+      "ai_order_head": [
+        "12580014",
+        "42279414",
+        "12489130",
+        "43014661",
+        "18488986"
+      ],
+      "local_order_head": [
+        "12580014",
+        "42279414",
+        "12489130",
+        "43014661",
+        "18488986"
+      ],
+      "seconds": 12.61,
+      "precision@20": 0.05,
+      "ndcg@20": 1.0,
+      "recall@50": 1.0,
+      "mrr@50": 1.0
+    },
+    {
+      "case_id": "54",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "changed": true,
+      "moved": 17,
+      "ai_order_head": [
+        "49556906",
+        "3973445",
+        "3619931",
+        "22621251",
+        "11535539"
+      ],
+      "local_order_head": [
+        "3973445",
+        "49556906",
+        "1800734",
+        "15381976",
+        "9752604"
+      ],
+      "seconds": 29.79,
+      "precision@20": 0.05,
+      "ndcg@20": 1.0,
+      "recall@50": 1.0,
+      "mrr@50": 1.0
+    },
+    {
+      "case_id": "619",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "changed": false,
+      "moved": 0,
+      "ai_order_head": [
+        "22482820",
+        "23420807",
+        "20888849",
+        "21258863",
+        "6334188"
+      ],
+      "local_order_head": [
+        "22482820",
+        "23420807",
+        "20888849",
+        "21258863",
+        "6334188"
+      ],
+      "seconds": 8.08,
+      "precision@20": 0.05,
+      "ndcg@20": 0.3066,
+      "recall@50": 0.5,
+      "mrr@50": 0.3333
+    },
+    {
+      "case_id": "628",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "changed": true,
+      "moved": 12,
+      "ai_order_head": [
+        "24512064",
+        "29134911",
+        "5735492",
+        "23915841",
+        "22705234"
+      ],
+      "local_order_head": [
+        "24512064",
+        "29134911",
+        "5735492",
+        "23915841",
+        "22705234"
+      ],
+      "seconds": 56.19,
+      "precision@20": 0.05,
+      "ndcg@20": 1.0,
+      "recall@50": 1.0,
+      "mrr@50": 1.0
+    },
+    {
+      "case_id": "693",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "changed": false,
+      "moved": 0,
+      "ai_order_head": [
+        "24088502",
+        "3698758",
+        "17682477",
+        "27243019",
+        "27602752"
+      ],
+      "local_order_head": [
+        "24088502",
+        "3698758",
+        "17682477",
+        "27243019",
+        "27602752"
+      ],
+      "seconds": 7.64,
+      "precision@20": 0.05,
+      "ndcg@20": 1.0,
+      "recall@50": 1.0,
+      "mrr@50": 1.0
+    },
+    {
+      "case_id": "808",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "changed": true,
+      "moved": 14,
+      "ai_order_head": [
+        "36606083",
+        "24307695",
+        "5223817",
+        "25787749",
+        "25842866"
+      ],
+      "local_order_head": [
+        "36606083",
+        "4313478",
+        "24307695",
+        "3981729",
+        "25799020"
+      ],
+      "seconds": 31.88,
+      "precision@20": 0.05,
+      "ndcg@20": 1.0,
+      "recall@50": 1.0,
+      "mrr@50": 1.0
+    },
+    {
+      "case_id": "887",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "changed": false,
+      "moved": 0,
+      "ai_order_head": [
+        "9641846",
+        "9988425",
+        "7506409",
+        "3173489",
+        "13441537"
+      ],
+      "local_order_head": [
+        "9641846",
+        "9988425",
+        "7506409",
+        "3173489",
+        "13441537"
+      ],
+      "seconds": 33.04,
+      "precision@20": 0.0,
+      "ndcg@20": 0.0,
+      "recall@50": 0.0,
+      "mrr@50": 0.0
+    },
+    {
+      "case_id": "922",
+      "status": "applied",
+      "error_code": null,
+      "detail": "模型输出通过 schema 与语义校验，仅重排窗口内已有位置",
+      "window": 20,
+      "changed": false,
+      "moved": 0,
+      "ai_order_head": [
+        "17077004",
+        "46353045",
+        "25134146",
+        "11230569",
+        "22227889"
+      ],
+      "local_order_head": [
+        "17077004",
+        "46353045",
+        "25134146",
+        "11230569",
+        "22227889"
+      ],
+      "seconds": 7.09,
+      "precision@20": 0.05,
+      "ndcg@20": 1.0,
+      "recall@50": 1.0,
+      "mrr@50": 1.0
+    }
+  ]
+}

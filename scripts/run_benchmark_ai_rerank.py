@@ -105,6 +105,7 @@ def main(argv=None) -> int:
     parser.add_argument("--out", default="docs/benchmark/scifact-ai-rerank-2026-10-17")
     parser.add_argument("--window", type=int, default=20, help="送进 AI 窗口的条数")
     parser.add_argument("--limit", type=int, default=0, help="只跑前 N 题（试水用）")
+    parser.add_argument("--budget", type=float, default=90.0, help="单次模型调用预算（秒）")
     args = parser.parse_args(argv)
 
     run_dir = Path(args.run_dir)
@@ -144,6 +145,8 @@ def main(argv=None) -> int:
         model=credentials.get("model"),
         base_url=credentials.get("base_url"),
         dialect=credentials.get("dialect"),
+        # 适配器自己的 timeout 才是硬上限；只改 rerank 的 config 不够。
+        timeout=float(args.budget),
     )
 
     ordered_case_ids = [str(case_id) for case_id in systems]
@@ -154,9 +157,9 @@ def main(argv=None) -> int:
     applied_rows: list[dict[str, float]] = []
     per_case: list[dict] = []
     skipped: list[str] = []
-    # 产品默认 20 秒调用预算；基准里 20 篇元数据常超过它，这里放宽到 45 秒并在
-    # 报告里写明，否则测出来的是"超时"而不是重排能力。
-    config = {"top_n": args.window, "call_budget_seconds": 45.0}
+    # 产品默认 20 秒调用预算；基准里 20 篇元数据常超过它，这里用 --budget 放宽
+    # 并在报告里写明，否则测出来的是"超时"而不是重排能力。
+    config = {"top_n": args.window, "call_budget_seconds": float(args.budget)}
     for index, case_id in enumerate(ordered_case_ids, start=1):
         case = cases[case_id]
         hybrid = list(systems[case_id]["current_hybrid"]["ranked_ids"])[:50]
@@ -200,6 +203,10 @@ def main(argv=None) -> int:
                 "error_code": outcome.error_code,
                 "detail": (outcome.detail or "")[:160],
                 "window": len(outcome.ordered_paper_ids),
+                "changed": final != hybrid,
+                "moved": sum(1 for a, b in zip(final, hybrid, strict=False) if a != b),
+                "ai_order_head": list(outcome.ordered_paper_ids[:5]),
+                "local_order_head": hybrid[:5],
                 "seconds": round(elapsed, 2),
                 **{key: round(value, 4) for key, value in metrics.items()},
             }
