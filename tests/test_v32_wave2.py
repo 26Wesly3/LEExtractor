@@ -336,7 +336,8 @@ def model_calls(monkeypatch):
     calls = []
     built = []
 
-    def create_adapter(provider_id, api_key, *, model=None, transport=None, timeout=20.0):
+    def create_adapter(provider_id, api_key, *, model=None, transport=None, timeout=20.0, **extra):
+        # 真实签名还接受 base_url / dialect（自定义端点与两种协议），这里一并吞掉。
         built.append(api_key)
         return ModelAdapter(api_key, calls)
 

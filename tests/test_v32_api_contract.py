@@ -599,6 +599,9 @@ def test_an_unconfigured_zotero_capability_is_a_503_envelope(tmp_path):
         "StubWorkflow", (), {"sources": sources})())
     state = v32_from_app(application)
     state.source_manager = sources
+    # 本机 Zotero 可能正在运行（本地 API 可达），那"未配置"就不成立。
+    # 这个用例要测的是没有适配器时的 503 信封，所以显式拿掉适配器。
+    state.zotero = lambda: None
     with TestClient(application) as client:
         csrf = _csrf(client)
         created = client.post("/api/v3/projects", json={"name": "no-zotero", "entry_mode": "topic"},

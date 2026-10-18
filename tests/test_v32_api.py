@@ -640,7 +640,11 @@ def test_the_view_filter_separates_recommended_exploration_and_excluded(client):
 # ---------------------------------------------------------------------------
 
 
-def test_capabilities_report_every_dependency_honestly(client):
+def test_capabilities_report_every_dependency_honestly(client, app, monkeypatch):
+    # 本机可能真的开着 Zotero（本地 API 可用），那样 zotero:web_api 就是
+    # available。这个用例要证明的是「没有任何 Zotero 适配器时如实说不可用」，
+    # 所以它必须自己制造这个条件，而不是依赖宿主机没装/没开 Zotero。
+    monkeypatch.setattr(v32_from_app(app), "zotero", lambda: None)
     body = client.get("/api/v3/capabilities").json()
     assert body["deployment_mode"] == contracts.runtime_defaults()["default_mode"]
     assert body["limits"] == {
@@ -955,7 +959,9 @@ def test_zotero_import_and_export_run_through_an_injected_adapter(client):
     }
 
 
-def test_zotero_is_refused_when_no_credential_is_configured(client):
+def test_zotero_is_refused_when_no_credential_is_configured(client, app, monkeypatch):
+    # 同上：本机 Zotero 可能正在运行，那"没有凭据"就不成立。这里显式拿掉适配器。
+    monkeypatch.setattr(v32_from_app(app), "zotero", lambda: None)
     csrf = _csrf(client)
     project = _project(client, csrf)
     pid = project["project_id"]
