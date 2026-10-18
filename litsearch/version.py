@@ -12,7 +12,7 @@ only needs a version string must not depend on the runtime environment.
 
 from __future__ import annotations
 
-__version__ = "0.9.22"
+__version__ = "0.9.23"
 
 APP_NAME = "LEExtractor"
 
