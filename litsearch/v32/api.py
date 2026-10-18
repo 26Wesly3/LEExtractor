@@ -1182,6 +1182,14 @@ def build_router(state: V32State) -> APIRouter:
         rows = zotero_local.items(query=q, collection=collection, limit=limit, offset=offset)
         return {"items": rows, "total": len(rows)}
 
+    @router.get("/zotero/local/items/{item_key}")
+    def zotero_local_item(request: Request, item_key: str) -> dict[str, Any]:
+        """按条目键取单条：Zotero 插件传来的条目可能不在默认前 N 条里。"""
+        _session(state, request)
+        from litsearch.v32 import zotero_local
+
+        return zotero_local.item(item_key)
+
     @router.post("/projects/{pid}/zotero-local/import", status_code=201)
     def import_from_local_zotero(
         request: Request, pid: str, body: ZoteroLocalImportBody

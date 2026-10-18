@@ -303,6 +303,9 @@ export function createV32Client({
 
     zoteroLocalItems: ({ q = '', collection = '', limit = 30 } = {}) => read('/zotero/local/items', { q, collection, limit }),
 
+    // 插件只给一个条目键，可能不在默认前 N 条里：单独取这一条。
+    zoteroLocalItem: (itemKey) => read(`/zotero/local/items/${encodeURIComponent(itemKey)}`),
+
     importZoteroLocal: (pid, body) => write('POST', `${project(pid)}/zotero-local/import`, { body, idempotencyRequired: false }),
 
     zoteroImport: (pid, body, options = {}) => write('POST', `${project(pid)}/zotero/import`, { body, action: 'import', scope: 'zotero', retry: options.retry }),

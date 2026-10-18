@@ -44,9 +44,20 @@ async function search() {
   error.value = ''
   try {
     const data = await props.client.zoteroLocalItems({ q: query.value, collection: collection.value, limit: 30 })
-    rows.value = Array.isArray(data?.items) ? data.items : []
+    const listed = Array.isArray(data?.items) ? data.items : []
     const wanted = String(props.preselect || '').trim()
-    selected.value = wanted && rows.value.some(row => row.item_key === wanted) ? [wanted] : []
+    let rowsOut = listed
+    // 插件传来的条目可能不在默认前 30 条里：单独取出来放最前面，再勾上。
+    if (wanted && !listed.some(row => row.item_key === wanted) && typeof props.client.zoteroLocalItem === 'function') {
+      try {
+        const single = await props.client.zoteroLocalItem(wanted)
+        if (single && single.item_key) rowsOut = [single, ...listed]
+      } catch {
+        /* 取不到就退回普通列表 */
+      }
+    }
+    rows.value = rowsOut
+    selected.value = wanted && rowsOut.some(row => row.item_key === wanted) ? [wanted] : []
   } catch (problem) {
     error.value = errorLine(problem, t('读取 Zotero 条目失败。', 'Could not read Zotero items.'))
   } finally {
