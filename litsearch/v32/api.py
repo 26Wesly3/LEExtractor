@@ -1207,12 +1207,32 @@ def build_router(state: V32State) -> APIRouter:
         created = len(project.doc.get("papers", {})) - before
         if paper_ids:
             state.store.save(project, touch_corpus=True)
-            # 导入的条目是本项目真实持有的记录，重排一次，列表才有排序可用。
+            # 导入的条目是本项目真实持有的记录：重排并提交快照，否则「全部」里也是空的
+            # （列表只遍历已提交的快照，这是录素材时实际踩到的）。
             try:
-                from litsearch.v32.pipeline import rank_project
+                from litsearch.v32.pipeline import build_snapshot, coverage_dto, rank_project
 
-                rank_project(state, project)
-            except Exception:  # noqa: BLE001 - 排序失败不该丢掉已导入的记录
+                ranking = rank_project(state, project)
+                pinned = _submit_config(state, project)
+                frozen = {
+                    "context_version": int(project.context_version),
+                    "corpus_version": int(project.corpus_version),
+                    "config_hash": pinned["config_hash"],
+                    "model_revision": pinned["model_revision"],
+                }
+                snapshot = build_snapshot(
+                    state,
+                    project,
+                    ranking,
+                    frozen=frozen,
+                    coverage=coverage_dto(
+                        status="partial",
+                        candidate_count=len(project.doc.get("papers", {})),
+                        scope="zotero_local_import",
+                    ),
+                )
+                state.store.commit_snapshot(project, snapshot, frozen=frozen)
+            except Exception:  # noqa: BLE001 - 排序/快照失败不该丢掉已导入的记录
                 pass
         pdfs = 0
         pdf_problems: list[str] = []
