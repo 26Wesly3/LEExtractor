@@ -38,7 +38,13 @@ Get-FileHash litsearch/web/static/index.html -Algorithm SHA256
 Get-FileHash download/LEExtractor_v0.9.23_Windows_portable.zip -Algorithm SHA256
 ```
 
-## 3. 线上现状（2026-10-21 16:38 +08 实测）
+## 3. 线上现状
+
+- 域名：<https://leextractor.duckdns.org>（Caddy + Let's Encrypt 正常）
+- 服务器：`43.156.2.250`（新加坡，Ubuntu 24.04，Docker Compose）
+- 部署目录：`/opt/leextractor`（compose 在此，源码在 `./repo`，数据在 `./data ./models ./cache ./logs`）
+
+### 3.1 更新前（2026-10-21 16:38 +08 实测）
 
 ```json
 {"status":"ok","app_name":"LEExtractor","version":"0.9.14","ui":"vue","local_only":false,
@@ -46,14 +52,15 @@ Get-FileHash download/LEExtractor_v0.9.23_Windows_portable.zip -Algorithm SHA256
  "storage":{"data":"writable","cache":"writable","logs":"writable","models":"present"}}
 ```
 
-- 域名：<https://leextractor.duckdns.org>（Caddy + Let's Encrypt 正常，`/` 返回 405 是对 HEAD 的正常响应）
-- 服务器：`43.156.2.250`（新加坡，Ubuntu 24.04，2 vCPU / 2 GB）
-- 部署目录：`/opt/leextractor`（compose 在此，源码在 `./repo`，数据在 `./data ./models ./cache ./logs`）
-- 差距：线上 **0.9.14** → 目标 **0.9.23**，跨 9 个版本（v0.9.15 合并、v3.2 分阶段、期刊缓存、AI 模型设置、Zotero 导入等）
+### 3.2 更新后（2026-10-21 16:52 +08，已部署）
 
-> 本机没有该服务器的 SSH 私钥或已保存凭据（`~/.ssh` 只有 `known_hosts`，PuTTY/WinSCP 无会话），所以本次**没有改动线上**。
+**线上已是 0.9.23**，部署来源为本 tag（`v0.9.23-web-checkpoint`，提交 `c681fd3`）：
 
-## 4. 同步更新线上（在服务器上执行）
+- 在 `/opt/leextractor/repo` 检出该 tag，`docker compose --profile proxy up -d --build` 重建镜像与 `leextractor-leextractor-1` 容器；Caddy 继续服务，`data/ models/ cache/ logs` 未动
+- 线上自检：`/api/health` → `version: 0.9.23`、`ui: vue`、`local_only: false`、`translation.ready: true`、`embedding.ready: true`；`/api/health/live` → `{"status":"ok"}`；首页标题 `LEExtractor — 惟学无际`；`/api/projects` → `total: 25`（历史项目全部保留）
+- **注意：线上前端哈希与第 2 节不同**。Dockerfile 会在镜像内重新执行 `npm run build`，同一份源码在容器 Node 版本下产出不同内容哈希：线上为 `assets/index-DyH0PlE1.js`（702 291 B，SHA-256 `b7951e207afcd24f4e0d08ba03aa311dec486a336791b10e9e4c7e86e2e387f6`）与 `assets/index-Zqlpy4dr.css`。第 2 节的哈希只用于校验**仓库/便携版**里的静态包，不能拿去比对容器内重建的产物。
+
+## 4. 复现这次更新（在服务器上执行）
 
 ```bash
 ssh ubuntu@43.156.2.250
@@ -87,5 +94,5 @@ docker compose build leextractor && docker compose up -d
 ## 6. 本冻结点之后
 
 - 网页/前端任何新改动都不再属于这一版演示；要上线新版请另建 checkpoint 并重新验证。
-- 便携版与网页版共用同一份 `litsearch/web/static`，所以两者 UI 天然一致；便携版哈希见第 2 节。
+- 便携版直接使用仓库里的 `litsearch/web/static`；容器版用同一份源码在镜像内重新构建。两者 UI 代码一致，但构建产物哈希不同（见 3.2），比对时不要拿第 2 节的哈希去要求容器产物一致。
 - 若线上更新后需要对比，用 `/api/health` 的 `version` 与 `score_context_id` 前缀即可判断是否为新版排序器。
