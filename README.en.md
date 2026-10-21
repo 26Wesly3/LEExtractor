@@ -34,9 +34,9 @@ Search literature. Trace evidence. Build understanding.
 
 <br>
 
-![LEExtractor in real use: enter a Chinese research intent, review the translation and per-database queries, run the multi-provider search, then browse results, the evidence landscape, candidate questions, human screening and export](docs/demo/leextractor-demo.gif)
+![LEExtractor in real use: three entry points (a research direction, your own PDFs, or a local Zotero library), then a concurrent multi-provider search, ranked core papers with plain-language reasons, and the evidence export](docs/demo/leextractor-demo.gif)
 
-*Real screen recording · hot sample "LLM hallucination" · 40 real records · 3 providers in 8.0 s (2 succeeded / 1 rate-limited) · [lighter GIF](docs/demo/leextractor-demo-small.gif)*
+*Real screen recording (v3.2 workspace) · three entry points: research direction / existing PDFs / local Zotero · concurrent multi-provider search · every record traceable to an evidence pack · [lighter GIF](docs/demo/leextractor-demo-small.gif)*
 
 ---
 

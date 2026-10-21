@@ -34,9 +34,9 @@ Search literature. Trace evidence. Build understanding.
 
 <br>
 
-![LEExtractor 实际操作录屏：输入中文研究意图，查看译文与分库检索式，执行多源检索，浏览文献结果、证据版图、候选问题、人工筛选与导出](docs/demo/leextractor-demo.gif)
+![LEExtractor 实际操作录屏：三条入口（输入研究方向 / 上传已有 PDF / 从本机 Zotero 导入）→ 多源并发检索 → 核心文献与推荐理由 → 证据导出](docs/demo/leextractor-demo.gif)
 
-*实际操作录屏 · 热门样例「大语言模型幻觉」· 40 篇真实结果 · 3 个来源 8.0 秒（2 成功 / 1 受限）· [轻量版 GIF](docs/demo/leextractor-demo-small.gif)*
+*实际操作录屏（v3.2 工作台）· 三条入口：研究方向 / 已有 PDF / 本机 Zotero · 多源并发检索 · 每条记录可追溯到证据包 · [轻量版 GIF](docs/demo/leextractor-demo-small.gif)*
 
 ---
 
